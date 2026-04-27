@@ -32,12 +32,20 @@ export function MobileMenu({ phone }: { phone: string }) {
       </button>
 
       {open && (
-        <div className="mobile-overlay" onClick={() => setOpen(false)}>
+        <div className="mobile-overlay" onClick={() => setOpen(false)} onTouchEnd={() => setOpen(false)}>
           <nav
             className="mobile-nav"
             onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             aria-label="Мобильная навигация"
           >
+            <button
+              className="mobile-nav-close"
+              aria-label="Закрыть меню"
+              onClick={() => setOpen(false)}
+            >
+              ✕
+            </button>
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
                 {item.label}

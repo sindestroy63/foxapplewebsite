@@ -1402,6 +1402,11 @@ a.contact-item:hover {
   padding-top: 0;
 }
 
+.footer-seller {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
 .footer-legal-links {
   display: flex;
   gap: 18px;
@@ -1687,6 +1692,8 @@ a.contact-item:hover {
   border: none;
   background: none;
   cursor: pointer;
+  position: relative;
+  z-index: 110;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1748,8 +1755,8 @@ a.contact-item:hover {
   width: min(300px, 80vw);
   height: 100dvh;
   padding: 80px 24px 32px;
-  background: var(--surface);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.25);
   overflow-y: auto;
   animation: slideIn 0.25s ease;
 }
@@ -1759,12 +1766,30 @@ a.contact-item:hover {
   font-size: 17px;
   font-weight: 500;
   color: var(--ink);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   transition: color var(--transition);
 }
 
 .mobile-nav a:hover {
   color: var(--accent, #007aff);
+}
+
+.mobile-nav-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--bg);
+  border-radius: 50%;
+  font-size: 18px;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-call-btn {

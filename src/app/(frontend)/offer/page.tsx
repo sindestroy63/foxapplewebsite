@@ -85,6 +85,14 @@ export default function OfferPage() {
             9.2. Все споры решаются путем переговоров, а при невозможности урегулирования — в
             судебном порядке.
           </p>
+
+          <h2>Реквизиты продавца</h2>
+          <p>
+            {SELLER.typeAndName}<br />
+            ИНН: {SELLER.inn}<br />
+            ОГРНИП: {SELLER.ogrnip}<br />
+            Адрес: {SELLER.address}
+          </p>
         </div>
       </div>
     </section>

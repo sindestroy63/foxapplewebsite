@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { BrandWordmark } from '@/components/BrandWordmark'
+import { SELLER } from '@/lib/constants'
 import { normalizePhone, telegramLinkProps } from '@/lib/format'
 import type { SiteSettings } from '@/lib/types'
 
@@ -45,6 +46,9 @@ export function Footer({ settings }: { settings: SiteSettings }) {
       </div>
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} FOX APPLE</span>
+        <span className="footer-seller">
+          {SELLER.typeAndName} · ИНН {SELLER.inn} · ОГРНИП {SELLER.ogrnip}
+        </span>
       </div>
     </footer>
   )
