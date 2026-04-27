@@ -1,0 +1,251 @@
+import type { Payload, SanitizedConfig } from 'payload'
+import { getPayload } from 'payload'
+
+import { CATEGORY_SEED, CONTACTS } from './lib/constants'
+import { slugify } from './payload/utils/slugify'
+import { ALL_PRODUCTS, type ProductSeed as ProductSeedNew } from './seed-products'
+
+type RichText = {
+  root: {
+    type: 'root'
+    children: Array<{
+      type: 'paragraph' | 'heading' | 'list'
+      tag?: 'h2' | 'h3'
+      children: Array<{ type?: 'listitem'; children?: Array<{ type: 'text'; text: string }> } | { type: 'text'; text: string }>
+    }>
+  }
+}
+
+const richText = (paragraphs: string[]): RichText => ({
+  root: {
+    type: 'root',
+    children: paragraphs.map((text) => ({
+      type: 'paragraph',
+      children: [{ type: 'text', text }],
+    })),
+  },
+})
+
+const pageText: Record<string, string[]> = {
+  installment: [
+    'Рассрочка помогает забрать нужную технику сейчас и распределить платежи. Точные условия зависят от выбранной модели и решения партнера.',
+    'Перед оформлением сотрудник FOX APPLE проверит наличие, подберет комплектацию и расскажет все условия без скрытых платежей.',
+  ],
+  'trade-in': [
+    'Принесите свое устройство в магазин, чтобы сотрудник оценил состояние, комплектацию и рыночную стоимость.',
+    'Сумму оценки можно использовать как часть оплаты новой техники. Финальное предложение зависит от состояния устройства.',
+  ],
+  warranty: [],
+  repair: [],
+  contacts: [
+    'Магазин FOX APPLE находится в Самаре. Напишите в Telegram или позвоните, чтобы уточнить наличие нужной модели перед визитом.',
+  ],
+}
+
+function buildFromNew(seed: ProductSeedNew): ProductSeedNew & { shortDescription: string; slug: string } {
+  const slug = seed.slug || slugify([seed.name, seed.memory, seed.simType].filter(Boolean).join(' '))
+  const memoryText = seed.memory ? ` ${seed.memory}` : ''
+  const simText = seed.simType ? `, ${seed.simType}` : ''
+  return {
+    ...seed,
+    shortDescription:
+      seed.shortDescription ||
+      `${seed.name}${memoryText}${simText}. Актуальная поставка FOX APPLE, наличие и итоговую комплектацию уточнит сотрудник магазина. Имеет недостаток в виде невозможности предустановки RuStore.`,
+    slug,
+  }
+}
+
+const products = ALL_PRODUCTS.map(buildFromNew)
+
+async function upsertBySlug<T extends Record<string, unknown>>(
+  payload: Payload,
+  collection: 'categories' | 'products' | 'pages',
+  slug: string,
+  data: T,
+) {
+  const existing = await payload.find({
+    collection,
+    limit: 1,
+    depth: 0,
+    where: {
+      slug: {
+        equals: slug,
+      },
+    },
+  })
+
+  if (existing.docs[0]) {
+    return payload.update({
+      collection,
+      id: existing.docs[0].id,
+      data: data as any,
+      draft: false,
+    })
+  }
+
+  return payload.create({
+    collection,
+    data: data as any,
+    draft: false,
+  })
+}
+
+async function upsertProduct(
+  payload: Payload,
+  categoryId: number,
+  product: ProductSeedNew & { shortDescription: string; slug: string },
+  sortOrder: number,
+) {
+  const bySlug = await payload.find({
+    collection: 'products',
+    depth: 0,
+    limit: 1,
+    where: {
+      slug: {
+        equals: product.slug,
+      },
+    },
+  })
+
+  const byIdentity =
+    bySlug.docs[0] ||
+    (
+      await payload.find({
+        collection: 'products',
+        depth: 0,
+        limit: 1,
+        where: {
+          and: [
+            { category: { equals: categoryId } },
+            { model: { equals: product.model } },
+            ...(product.memory ? [{ memory: { equals: product.memory } }] : []),
+            ...(product.simType ? [{ simType: { equals: product.simType } }] : []),
+          ],
+        },
+      })
+    ).docs[0]
+
+  const data: Record<string, unknown> = {
+    category: categoryId,
+    name: product.name,
+    slug: product.slug,
+    model: product.model,
+    memory: product.memory,
+    color: product.color,
+    simType: product.simType,
+    price: product.price,
+    oldPrice: product.oldPrice,
+    status: product.status || 'in_stock',
+    isAvailable: true,
+    isFeatured: product.isFeatured,
+    isNew: product.isNew,
+    sortOrder,
+    shortDescription: product.shortDescription,
+    description: richText([product.shortDescription]),
+    seoTitle: product.name,
+    seoDescription: `${product.name} в FOX APPLE, Самара. Актуальная цена и наличие.`,
+  }
+
+  if (byIdentity) {
+    return payload.update({
+      collection: 'products',
+      id: byIdentity.id,
+      data: data as any,
+      draft: false,
+    })
+  }
+
+  return payload.create({
+    collection: 'products',
+    data: data as any,
+    draft: false,
+  })
+}
+
+export const script = async (config: SanitizedConfig) => {
+  const payload = await getPayload({ config })
+
+  await payload.updateGlobal({
+    slug: 'site-settings',
+    data: {
+      ...CONTACTS,
+      whatsappUrl: '',
+      mapUrl: '',
+    },
+  })
+
+  const categoriesBySlug = new Map<string, number>()
+
+  for (const [index, category] of CATEGORY_SEED.entries()) {
+    const doc = await upsertBySlug(payload, 'categories', category.slug, {
+      name: category.name,
+      slug: category.slug,
+      sortOrder: index + 1,
+      isActive: true,
+    })
+    categoriesBySlug.set(category.slug, doc.id as number)
+  }
+
+  for (const [index, product] of products.entries()) {
+    const categoryId = categoriesBySlug.get(product.categorySlug)
+    if (!categoryId) {
+      continue
+    }
+
+    await upsertProduct(payload, categoryId, product, index + 1)
+  }
+
+  const pages = [
+    { slug: 'installment', title: 'Рассрочка на технику Apple' },
+    { slug: 'trade-in', title: 'Trade-In в FOX APPLE' },
+    { slug: 'warranty', title: 'Гарантия 12 месяцев' },
+    { slug: 'repair', title: 'Ремонт техники Apple' },
+    { slug: 'contacts', title: 'Контакты FOX APPLE' },
+  ]
+
+  for (const page of pages) {
+    const texts = pageText[page.slug] || []
+    const data: Record<string, unknown> = {
+      ...page,
+      content: texts.length > 0 ? richText(texts) : null,
+      seoTitle: page.title,
+      seoDescription: `${page.title}. FOX APPLE, Самара.`,
+    }
+    await upsertBySlug(payload, 'pages', page.slug, data)
+  }
+
+  const adminUsers = [
+    {
+      email: 'IntellexGroup@foxapple.ru',
+      password: 'Fx!Adm1n_2026$Grp',
+      name: 'IntellexGroup',
+      role: 'superadmin',
+    },
+    {
+      email: 'Danil@foxapple.ru',
+      password: 'Fx!Dnl_2026$Mgr',
+      name: 'Danil',
+      role: 'admin',
+    },
+  ]
+
+  const existingUsers = await payload.find({
+    collection: 'users',
+    limit: 100,
+    depth: 0,
+  })
+
+  for (const user of existingUsers.docs) {
+    await payload.delete({ collection: 'users', id: user.id })
+  }
+
+  for (const admin of adminUsers) {
+    await payload.create({
+      collection: 'users',
+      data: admin,
+    })
+  }
+
+  payload.logger.info('FOX APPLE seed completed (users reset)')
+  process.exit(0)
+}

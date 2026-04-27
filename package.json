@@ -1,0 +1,33 @@
+{
+  "name": "foxapple-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts NODE_OPTIONS=--no-deprecation payload",
+    "seed": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts NODE_OPTIONS=--no-deprecation payload seed"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.84.1",
+    "@payloadcms/next": "3.84.1",
+    "@payloadcms/richtext-lexical": "3.84.1",
+    "cross-env": "7.0.3",
+    "graphql": "16.13.2",
+    "next": "16.2.4",
+    "payload": "3.84.1",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "sharp": "0.34.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "19.2.6",
+    "@types/react-dom": "19.2.3",
+    "sass": "1.99.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,145 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 559B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 775B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#3 DONE 1.7s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 135B done
+#4 DONE 0.0s
+
+#5 [deps 1/5] FROM docker.io/library/node:22-bookworm-slim@sha256:d415caac2f1f77b98caaf9415c5f807e14bc8d7bdea62561ea2fef4fbd08a73c
+#5 resolve docker.io/library/node:22-bookworm-slim@sha256:d415caac2f1f77b98caaf9415c5f807e14bc8d7bdea62561ea2fef4fbd08a73c 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 4.45kB 0.0s done
+#6 DONE 0.0s
+
+#7 [deps 3/5] RUN apt-get update   && apt-get install -y --no-install-recommends ca-certificates   && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [deps 4/5] COPY package.json ./
+#8 CACHED
+
+#9 [deps 5/5] RUN npm install --legacy-peer-deps
+#9 CACHED
+
+#10 [deps 2/5] WORKDIR /app
+#10 CACHED
+
+#11 [builder 1/3] WORKDIR /app
+#11 CACHED
+
+#12 [builder 2/3] COPY . .
+#12 DONE 0.1s
+
+#13 [builder 3/3] RUN npm run build
+#13 0.363 
+#13 0.363 > foxapple-site@1.0.0 build
+#13 0.363 > next build
+#13 0.363 
+#13 0.766 ▲ Next.js 16.2.4 (Turbopack)
+#13 0.767 - Experiments (use with caution):
+#13 0.767   ⨯ turbopackServerFastRefresh
+#13 0.767 
+#13 0.793   Creating an optimized production build ...
+#13 11.11 ✓ Compiled successfully in 10.0s
+#13 11.12   Running TypeScript ...
+#13 11.38 
+#13 11.38   We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+#13 11.38   The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+#13 11.38 
+#13 11.38   	- include was updated to add '.next/dev/types/**/*.ts'
+#13 11.38 
+#13 14.49   Finished TypeScript in 3.4s ...
+#13 14.50   Collecting page data using 15 workers ...
+#13 15.93   Generating static pages using 15 workers (0/4) ...
+#13 16.19   Generating static pages using 15 workers (1/4) 
+#13 16.28   Generating static pages using 15 workers (2/4) 
+#13 16.30   Generating static pages using 15 workers (3/4) 
+#13 16.31 ✓ Generating static pages using 15 workers (4/4) in 378ms
+#13 16.31   Finalizing page optimization ...
+#13 16.32 
+#13 16.32 Route (app)
+#13 16.32 ┌ ƒ /
+#13 16.32 ├ ○ /_not-found
+#13 16.32 ├ ƒ /admin/[[...segments]]
+#13 16.32 ├ ƒ /api/[...slug]
+#13 16.32 ├ ƒ /api/graphql
+#13 16.32 ├ ƒ /api/graphql-playground
+#13 16.32 ├ ƒ /catalog
+#13 16.32 ├ ƒ /catalog/[categorySlug]
+#13 16.32 ├ ƒ /catalog/[categorySlug]/[productSlug]
+#13 16.32 ├ ƒ /contacts
+#13 16.32 ├ ƒ /installment
+#13 16.32 ├ ƒ /sitemap.xml
+#13 16.32 ├ ƒ /trade-in
+#13 16.32 └ ƒ /warranty
+#13 16.32 
+#13 16.32 
+#13 16.32 ○  (Static)   prerendered as static content
+#13 16.32 ƒ  (Dynamic)  server-rendered on demand
+#13 16.32 
+#13 DONE 16.6s
+
+#14 [runner 3/5] RUN apt-get update   && apt-get install -y --no-install-recommends ca-certificates   && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [runner 4/5] COPY --from=builder /app ./
+#15 DONE 9.6s
+
+#16 [runner 5/5] RUN npm prune --omit=dev --legacy-peer-deps   && chmod +x /app/docker/entrypoint.sh   && mkdir -p /app/media
+#16 7.628 
+#16 7.628 added 3 packages, and audited 383 packages in 7s
+#16 7.628 
+#16 7.628 102 packages are looking for funding
+#16 7.628   run `npm fund` for details
+#16 7.714 
+#16 7.714 13 moderate severity vulnerabilities
+#16 7.714 
+#16 7.714 To address issues that do not require attention, run:
+#16 7.714   npm audit fix
+#16 7.714 
+#16 7.714 To address all issues possible (including breaking changes), run:
+#16 7.714   npm audit fix --force
+#16 7.714 
+#16 7.714 Some issues need review, and may require choosing
+#16 7.714 a different dependency.
+#16 7.714 
+#16 7.714 Run `npm audit` for details.
+#16 7.715 npm notice
+#16 7.715 npm notice New major version of npm available! 10.9.7 -> 11.13.0
+#16 7.715 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.13.0
+#16 7.715 npm notice To update run: npm install -g npm@11.13.0
+#16 7.715 npm notice
+#16 DONE 8.2s
+
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 20.0s done
+#17 exporting manifest sha256:48a41f1645b63135fea6458454280536d65edaf82b248dbde034ec15caf01523 0.0s done
+#17 exporting config sha256:f6c15c7609a4e8b7e8fe8fc43b588e903fa1c3b012db960278b8cddfaa361f66 0.0s done
+#17 exporting attestation manifest sha256:fc3bb5fc4f245a2bd1e49a2164d64af7ba02640cf75f8b1eba3e480e509610a1 0.0s done
+#17 exporting manifest list sha256:22920cb4dc71d8102d73890ae886f41cb4b5349fdef06adf866137016f0482e0 0.0s done
+#17 naming to docker.io/library/foxapple-app:latest done
+#17 unpacking to docker.io/library/foxapple-app:latest
+#17 unpacking to docker.io/library/foxapple-app:latest 13.4s done
+#17 DONE 33.6s
+
+#18 resolving provenance for metadata file
+#18 DONE 0.0s
+ Image foxapple-app Built 
+ Container foxapple-postgres-1 Running 
+ Container foxapple-app-1 Recreate 
+ Container foxapple-app-1 Recreated 
+ Container foxapple-nginx-1 Running 
+ Container foxapple-postgres-1 Waiting 
+ Container foxapple-postgres-1 Healthy 
+ Container foxapple-app-1 Starting 
+ Container foxapple-app-1 Started 

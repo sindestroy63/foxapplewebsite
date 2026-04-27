@@ -1,0 +1,67 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 559B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 775B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#3 DONE 1.1s
+
+#4 [deps 1/5] FROM docker.io/library/node:22-bookworm-slim@sha256:d415caac2f1f77b98caaf9415c5f807e14bc8d7bdea62561ea2fef4fbd08a73c
+#4 resolve docker.io/library/node:22-bookworm-slim@sha256:d415caac2f1f77b98caaf9415c5f807e14bc8d7bdea62561ea2fef4fbd08a73c 0.0s done
+#4 DONE 0.0s
+
+#5 [deps 2/5] WORKDIR /app
+#5 CACHED
+
+#6 [runner 3/5] RUN apt-get update   && apt-get install -y --no-install-recommends ca-certificates   && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [internal] load .dockerignore
+#7 transferring context: 135B done
+#7 DONE 0.0s
+
+#8 [internal] load build context
+#8 transferring context: 169.11kB 0.1s done
+#8 DONE 0.1s
+
+#9 [builder 1/3] WORKDIR /app
+#9 CACHED
+
+#10 [deps 3/5] RUN apt-get update   && apt-get install -y --no-install-recommends ca-certificates   && rm -rf /var/lib/apt/lists/*
+#10 CACHED
+
+#11 [deps 4/5] COPY package.json ./
+#11 CACHED
+
+#12 [deps 5/5] RUN npm install --legacy-peer-deps
+#12 CACHED
+
+#13 [builder 1/3] WORKDIR /app
+#13 CACHED
+
+#14 [builder 2/3] COPY . .
+#14 DONE 0.1s
+
+#15 [builder 3/3] RUN npm run build
+#15 0.355 
+#15 0.355 > foxapple-site@1.0.0 build
+#15 0.355 > next build
+#15 0.355 
+#15 0.755 ▲ Next.js 16.2.4 (Turbopack)
+#15 0.755 - Experiments (use with caution):
+#15 0.755   ⨯ turbopackServerFastRefresh
+#15 0.755 
+#15 0.780   Creating an optimized production build ...
+#15 11.28 ✓ Compiled successfully in 10.2s
+#15 11.29   Running TypeScript ...
+#15 11.54 
+#15 11.55   We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+#15 11.55   The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+#15 11.55 
+#15 11.55   	- include was updated to add '.next/dev/types/**/*.ts'
+#15 11.55 
+failed to execute bake: exit status 0xc000013a
+failed to execute bake: exit status 0xc000013a
