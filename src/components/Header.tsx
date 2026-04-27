@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { BrandWordmark } from '@/components/BrandWordmark'
+import { MobileMenu } from '@/components/MobileMenu'
 import { normalizePhone } from '@/lib/format'
 import type { SiteSettings } from '@/lib/types'
 
@@ -35,6 +36,7 @@ export function Header({ settings }: { settings: SiteSettings }) {
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>
             Позвонить
           </a>
+          <MobileMenu phone={normalizePhone(phone)} />
         </div>
       </div>
     </header>

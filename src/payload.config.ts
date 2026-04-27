@@ -45,8 +45,8 @@ export default buildConfig({
       scriptPath: path.resolve(dirname, 'seed.ts'),
     },
   ],
-  cors: [serverURL, 'http://localhost', 'http://localhost:3000'],
-  csrf: [serverURL, 'http://localhost', 'http://localhost:3000'],
+  cors: [serverURL, 'https://foxapple.ru', 'https://www.foxapple.ru', 'http://foxapple.ru', 'http://localhost', 'http://localhost:3000'],
+  csrf: [serverURL, 'https://foxapple.ru', 'https://www.foxapple.ru', 'http://foxapple.ru', 'http://localhost', 'http://localhost:3000'],
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',

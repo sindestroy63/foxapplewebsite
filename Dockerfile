@@ -28,7 +28,8 @@ RUN apt-get update \
 
 COPY --from=builder /app ./
 RUN chmod +x /app/docker/entrypoint.sh \
-  && mkdir -p /app/media
+  && mkdir -p /app/media \
+  && chmod -R 777 /app/media
 
 EXPOSE 3000
 CMD ["/app/docker/entrypoint.sh"]
