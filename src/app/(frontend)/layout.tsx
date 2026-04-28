@@ -21,6 +21,14 @@ export const metadata: Metadata = {
   },
   description:
     'Каталог техники Apple в Самаре: iPhone, iPad, MacBook, AirPods, Apple Watch, аксессуары, Trade-In и рассрочка.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icon-16.png', type: 'image/png', sizes: '16x16' },
+    ],
+    apple: '/apple-icon.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'ru_RU',

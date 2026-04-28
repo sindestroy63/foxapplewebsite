@@ -35,6 +35,10 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: ' | FOX APPLE CMS',
+      icons: [
+        { url: '/favicon.ico', type: 'image/x-icon' },
+        { url: '/icon-32.png', type: 'image/png', sizes: '32x32' },
+      ],
     },
   },
   collections: [Users, Media, Categories, Products, Leads, Pages],

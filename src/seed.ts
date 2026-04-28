@@ -1,8 +1,11 @@
+import fs from 'fs'
+import path from 'path'
 import type { Payload, SanitizedConfig } from 'payload'
 import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './lib/constants'
 import { slugify } from './payload/utils/slugify'
+import { MODEL_IMAGES } from './seed-images'
 import { ALL_PRODUCTS, type ProductSeed as ProductSeedNew } from './seed-products'
 
 type RichText = {
@@ -56,6 +59,62 @@ function buildFromNew(seed: ProductSeedNew): ProductSeedNew & { shortDescription
 }
 
 const products = ALL_PRODUCTS.map(buildFromNew)
+
+const TMP_DIR = path.resolve(process.cwd(), '.seed-tmp')
+const mediaCache = new Map<string, number>()
+
+async function downloadImage(url: string, filename: string): Promise<string | null> {
+  try {
+    if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true })
+    const filePath = path.join(TMP_DIR, filename)
+    if (fs.existsSync(filePath)) return filePath
+
+    const res = await fetch(url, { redirect: 'follow' })
+    if (!res.ok) return null
+
+    const buffer = Buffer.from(await res.arrayBuffer())
+    fs.writeFileSync(filePath, buffer)
+    return filePath
+  } catch {
+    return null
+  }
+}
+
+async function getOrCreateMedia(payload: Payload, model: string): Promise<number | null> {
+  if (mediaCache.has(model)) return mediaCache.get(model)!
+
+  const imageUrl = MODEL_IMAGES[model]
+  if (!imageUrl) return null
+
+  const existing = await payload.find({
+    collection: 'media',
+    limit: 1,
+    where: { alt: { equals: model } },
+  })
+
+  if (existing.docs[0]) {
+    mediaCache.set(model, existing.docs[0].id as number)
+    return existing.docs[0].id as number
+  }
+
+  const ext = imageUrl.includes('fmt=png') ? 'png' : 'jpg'
+  const safeName = model.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const filePath = await downloadImage(imageUrl, `${safeName}.${ext}`)
+  if (!filePath) return null
+
+  try {
+    const doc = await payload.create({
+      collection: 'media',
+      data: { alt: model },
+      filePath,
+    })
+    mediaCache.set(model, doc.id as number)
+    return doc.id as number
+  } catch (e) {
+    payload.logger.warn(`Failed to upload image for ${model}: ${e}`)
+    return null
+  }
+}
 
 async function upsertBySlug<T extends Record<string, unknown>>(
   payload: Payload,
@@ -144,6 +203,13 @@ async function upsertProduct(
     description: richText([product.shortDescription]),
     seoTitle: product.name,
     seoDescription: `${product.name} в FOX APPLE, Самара. Актуальная цена и наличие.`,
+  }
+
+  if (process.env.SEED_IMAGES === 'true') {
+    const mediaId = await getOrCreateMedia(payload, product.model)
+    if (mediaId) {
+      data.images = [mediaId]
+    }
   }
 
   if (byIdentity) {
@@ -244,6 +310,10 @@ export const script = async (config: SanitizedConfig) => {
       collection: 'users',
       data: admin,
     })
+  }
+
+  if (fs.existsSync(TMP_DIR)) {
+    fs.rmSync(TMP_DIR, { recursive: true, force: true })
   }
 
   payload.logger.info('FOX APPLE seed completed (users reset)')

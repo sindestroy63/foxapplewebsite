@@ -1795,6 +1795,14 @@ a.contact-item:hover {
 .mobile-call-btn {
   margin-top: 24px;
   text-align: center;
+  background: var(--ink) !important;
+  color: #fff !important;
+  border-radius: var(--radius) !important;
+  padding: 14px 20px !important;
+  font-size: 15px !important;
+  font-weight: 600;
+  display: block;
+  border: none;
 }
 
 @keyframes fadeIn {
