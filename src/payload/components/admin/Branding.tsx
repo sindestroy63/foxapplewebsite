@@ -25,23 +25,19 @@ export function LoginLogo() {
 
 export function NavIcon() {
   return (
-    <div
+    <span
       aria-label="FOX APPLE"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
         fontFamily: "'Inter', system-ui, sans-serif",
         fontWeight: 900,
-        fontSize: 13,
-        lineHeight: 1.05,
-        letterSpacing: '-0.04em',
+        fontSize: 14,
+        lineHeight: 1,
+        letterSpacing: '-0.03em',
         color: 'currentColor',
-        padding: '4px 0',
+        whiteSpace: 'nowrap',
       }}
     >
-      <span>FOX</span>
-      <span>APPLE.</span>
-    </div>
+      FOX APPLE.
+    </span>
   )
 }

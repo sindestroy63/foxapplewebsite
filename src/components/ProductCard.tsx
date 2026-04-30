@@ -4,7 +4,6 @@ import {
   cardPrice,
   formatPrice,
   normalizePhone,
-  productDisplayTitle,
   statusLabel,
   statusTone,
   telegramLinkProps,
@@ -22,10 +21,25 @@ function productHref(product: Product): string {
   return categorySlug ? `/catalog/${categorySlug}/${product.slug}` : '/catalog'
 }
 
+function getDisplayPrice(product: Product): number {
+  if (product.variants && product.variants.length > 0) {
+    return Math.min(...product.variants.filter((v) => v.isAvailable !== false).map((v) => v.price).filter(Boolean), product.price)
+  }
+  return product.price
+}
+
+function hasMultiplePrices(product: Product): boolean {
+  if (!product.variants || product.variants.length <= 1) return false
+  const prices = product.variants.filter((v) => v.isAvailable !== false).map((v) => v.price)
+  return new Set(prices).size > 1
+}
+
 export function ProductCard({ product, settings }: { product: Product; settings: SiteSettings }) {
   const image = getProductImage(product)
   const phone = settings.phone || '+7 (917) 954-64-64'
   const tone = statusTone(product.status)
+  const price = getDisplayPrice(product)
+  const showFrom = hasMultiplePrices(product)
 
   return (
     <article className="product-card">
@@ -40,22 +54,23 @@ export function ProductCard({ product, settings }: { product: Product; settings:
 
       <div className="product-card-body">
         <Link href={productHref(product)} className="product-title">
-          {productDisplayTitle(product)}
+          {product.model || product.name}
         </Link>
         <div className="product-meta">
           {product.memory ? <span>{product.memory}</span> : null}
           {product.color ? <span title={product.color}>{product.color}</span> : null}
           {product.simType ? <span>{product.simType}</span> : null}
+          {product.size ? <span>{product.size}</span> : null}
         </div>
         <div className="product-row">
           <div className="price-block">
             <div className="price-line">
-              <strong className="price-cash">{formatPrice(product.price)}</strong>
+              <strong className="price-cash">{showFrom ? 'от ' : ''}{formatPrice(price)}</strong>
               <span className="price-label">наличными</span>
             </div>
-            {cardPrice(product.price) !== null && (
+            {cardPrice(price) !== null && (
               <div className="price-line price-line--card">
-                <span className="price-card">{formatPrice(cardPrice(product.price))}</span>
+                <span className="price-card">{showFrom ? 'от ' : ''}{formatPrice(cardPrice(price))}</span>
                 <span className="price-label">по карте</span>
               </div>
             )}

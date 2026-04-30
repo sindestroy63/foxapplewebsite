@@ -1,24 +1,16 @@
 import Link from 'next/link'
 
-import type { CatalogFacets, Category } from '@/lib/types'
+import type { Category } from '@/lib/types'
 
 export function CatalogControls({
   activeSlug,
   categories,
-  color,
-  facets,
-  memory,
   query,
-  sim,
   sort,
 }: {
   activeSlug?: string
   categories: Category[]
-  color?: string
-  facets: CatalogFacets
-  memory?: string
   query?: string
-  sim?: string
   sort?: string
 }) {
   const action = activeSlug ? `/catalog/${activeSlug}` : '/catalog'
@@ -53,45 +45,6 @@ export function CatalogControls({
             <option value="price_desc">Сначала дороже</option>
           </select>
         </label>
-        {facets.memories.length > 0 && (
-          <label>
-            <span>Память</span>
-            <select name="memory" defaultValue={memory || ''}>
-              <option value="">Любая</option>
-              {facets.memories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        {facets.colors.length > 0 && (
-          <label>
-            <span>Цвет</span>
-            <select name="color" defaultValue={color || ''}>
-              <option value="">Любой</option>
-              {facets.colors.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        {facets.simTypes.length > 0 && (
-          <label>
-            <span>SIM / eSIM</span>
-            <select name="sim" defaultValue={sim || ''}>
-              <option value="">Любой</option>
-              {facets.simTypes.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <button className="button" type="submit">
           Найти
         </button>

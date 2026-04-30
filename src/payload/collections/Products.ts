@@ -22,9 +22,8 @@ export const Products: CollectionConfig = {
   hooks: {
     beforeValidate: [
       ({ data }) => {
-        if (data?.name) {
-          const parts = [data.name, data.memory, data.simType].filter(Boolean)
-          data.slug = slugify(parts.join(' '))
+        if (data?.name && !data.slug) {
+          data.slug = slugify(data.name)
         }
         return data
       },
@@ -53,8 +52,7 @@ export const Products: CollectionConfig = {
       unique: true,
       index: true,
       admin: {
-        description: 'Формируется автоматически из названия, памяти и SIM.',
-        readOnly: true,
+        description: 'Формируется автоматически из названия.',
       },
     },
     {
@@ -76,6 +74,9 @@ export const Products: CollectionConfig = {
       name: 'simType',
       type: 'text',
       label: 'SIM/eSIM',
+      admin: {
+        description: 'Для iPhone используйте варианты товара. Здесь — общее описание подключения (Wi-Fi, LTE и т.д.)',
+      },
     },
     {
       name: 'price',
@@ -161,8 +162,62 @@ export const Products: CollectionConfig = {
       relationTo: 'media',
       hasMany: true,
       admin: {
-        description: 'Рекомендуемый размер: 1400×1050 px. Формат: JPG, PNG или WebP. Первое фото — основное.',
+        description: 'Рекомендуемый размер: 1000×1000 px (квадрат). Формат: JPG, PNG или WebP. Первое фото — основное.',
       },
+    },
+    {
+      name: 'size',
+      type: 'text',
+      label: 'Размер (мм)',
+      admin: {
+        description: 'Для Apple Watch: 40mm, 42mm и т.д.',
+      },
+    },
+    {
+      name: 'variants',
+      type: 'array',
+      label: 'Варианты товара',
+      admin: {
+        description: 'Конфигурации товара (цвет, память, размер и т.д.). Если не заданы — используются основные поля.',
+      },
+      fields: [
+        { type: 'row', fields: [
+          { name: 'color', type: 'text', label: 'Цвет' },
+          { name: 'colorHex', type: 'text', label: 'HEX цвета', admin: { description: '#RRGGBB' } },
+          { name: 'colorSecondaryHex', type: 'text', label: 'HEX вторичный', admin: { description: 'Для двухцветных' } },
+        ] },
+        { type: 'row', fields: [
+          { name: 'memory', type: 'text', label: 'Память / SSD' },
+          { name: 'simType', type: 'select', label: 'Тип SIM', options: [
+            { label: 'SIM + eSIM', value: 'SIM_ESIM' },
+            { label: 'eSIM', value: 'ESIM' },
+            { label: 'SIM + SIM', value: 'SIM_SIM' },
+          ] },
+          { name: 'size', type: 'text', label: 'Размер (мм)' },
+        ] },
+        { type: 'row', fields: [
+          { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)' },
+          { name: 'ram', type: 'text', label: 'Оперативная память' },
+          { name: 'screenSize', type: 'text', label: 'Диагональ' },
+        ] },
+        { type: 'row', fields: [
+          { name: 'connectivity', type: 'text', label: 'Подключение (Wi-Fi, Cellular…)' },
+        ] },
+        { type: 'row', fields: [
+          { name: 'price', type: 'number', label: 'Цена наличные', required: true, min: 0 },
+          { name: 'oldPrice', type: 'number', label: 'Старая цена', min: 0 },
+        ] },
+        { name: 'status', type: 'select', label: 'Статус', defaultValue: 'in_stock', options: [
+          { label: 'В наличии', value: 'in_stock' },
+          { label: 'Под заказ', value: 'preorder' },
+          { label: 'Нет в наличии', value: 'out_of_stock' },
+        ] },
+        { name: 'isAvailable', type: 'checkbox', label: 'Доступен', defaultValue: true },
+        { name: 'images', type: 'upload', label: 'Фото варианта', relationTo: 'media', hasMany: true,
+          filterOptions: { mimeType: { like: 'image/' } },
+          admin: { description: '1000×1000 px, JPG/PNG/WebP. Пусто → общие фото товара.' },
+        },
+      ],
     },
     {
       name: 'seoTitle',

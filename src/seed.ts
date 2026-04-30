@@ -46,14 +46,12 @@ const pageText: Record<string, string[]> = {
 }
 
 function buildFromNew(seed: ProductSeedNew): ProductSeedNew & { shortDescription: string; slug: string } {
-  const slug = seed.slug || slugify([seed.name, seed.memory, seed.simType].filter(Boolean).join(' '))
-  const memoryText = seed.memory ? ` ${seed.memory}` : ''
-  const simText = seed.simType ? `, ${seed.simType}` : ''
+  const slug = slugify(seed.name)
   return {
     ...seed,
     shortDescription:
       seed.shortDescription ||
-      `${seed.name}${memoryText}${simText}. Актуальная поставка FOX APPLE, наличие и итоговую комплектацию уточнит сотрудник магазина. Имеет недостаток в виде невозможности предустановки RuStore.`,
+      `${seed.name}. Актуальная поставка FOX APPLE, наличие и итоговую комплектацию уточнит сотрудник магазина.`,
     slug,
   }
 }
@@ -159,11 +157,7 @@ async function upsertProduct(
     collection: 'products',
     depth: 0,
     limit: 1,
-    where: {
-      slug: {
-        equals: product.slug,
-      },
-    },
+    where: { slug: { equals: product.slug } },
   })
 
   const byIdentity =
@@ -177,8 +171,6 @@ async function upsertProduct(
           and: [
             { category: { equals: categoryId } },
             { model: { equals: product.model } },
-            ...(product.memory ? [{ memory: { equals: product.memory } }] : []),
-            ...(product.simType ? [{ simType: { equals: product.simType } }] : []),
           ],
         },
       })
@@ -192,9 +184,9 @@ async function upsertProduct(
     memory: product.memory,
     color: product.color,
     simType: product.simType,
+    size: product.size,
     price: product.price,
-    oldPrice: product.oldPrice,
-    status: product.status || 'in_stock',
+    status: 'in_stock',
     isAvailable: true,
     isFeatured: product.isFeatured,
     isNew: product.isNew,
@@ -203,6 +195,25 @@ async function upsertProduct(
     description: richText([product.shortDescription]),
     seoTitle: product.name,
     seoDescription: `${product.name} в FOX APPLE, Самара. Актуальная цена и наличие.`,
+  }
+
+  if (product.variants && product.variants.length > 0) {
+    data.variants = product.variants.map((v) => ({
+      color: v.color,
+      colorHex: v.colorHex,
+      colorSecondaryHex: v.colorSecondaryHex,
+      memory: v.memory,
+      simType: v.simType,
+      size: v.size,
+      chip: v.chip,
+      ram: v.ram,
+      screenSize: v.screenSize,
+      connectivity: v.connectivity,
+      price: v.price,
+      oldPrice: v.oldPrice,
+      status: v.status || 'in_stock',
+      isAvailable: true,
+    }))
   }
 
   if (process.env.SEED_IMAGES === 'true') {

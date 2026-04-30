@@ -25,17 +25,27 @@ export type ProductStatus = 'in_stock' | 'preorder' | 'out_of_stock'
 export type CatalogSort = 'price_asc' | 'price_desc'
 
 export type CatalogFilters = {
-  color?: string
-  memory?: string
   query?: string
-  sim?: string
   sort?: CatalogSort
 }
 
-export type CatalogFacets = {
-  colors: string[]
-  memories: string[]
-  simTypes: string[]
+export type ProductVariant = {
+  id?: string
+  color?: string
+  colorHex?: string
+  colorSecondaryHex?: string
+  memory?: string
+  simType?: string
+  size?: string
+  chip?: string
+  ram?: string
+  screenSize?: string
+  connectivity?: string
+  price: number
+  oldPrice?: number
+  status?: ProductStatus
+  isAvailable?: boolean
+  images?: Array<Media | string | number>
 }
 
 export type Product = {
@@ -47,6 +57,7 @@ export type Product = {
   memory?: string
   color?: string
   simType?: string
+  size?: string
   price: number
   oldPrice?: number
   currency?: string
@@ -58,6 +69,7 @@ export type Product = {
   shortDescription?: string
   description?: unknown
   images?: Array<Media | string | number>
+  variants?: ProductVariant[]
   seoTitle?: string
   seoDescription?: string
 }

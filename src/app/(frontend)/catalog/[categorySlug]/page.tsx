@@ -4,9 +4,7 @@ import { notFound } from 'next/navigation'
 import { CatalogControls } from '@/components/CatalogControls'
 import { ProductGrid } from '@/components/ProductGrid'
 import {
-  buildCatalogFacets,
   getCategories,
-  getProducts,
   getProductsByCategorySlug,
   getSiteSettings,
   readCatalogParams,
@@ -54,9 +52,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     notFound()
   }
 
-  const facetProducts = await getProducts({ categoryId: data.category.id })
-  const facets = buildCatalogFacets(facetProducts)
-
   return (
     <section className="page-section">
       <div className="container page-head">
@@ -68,11 +63,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <CatalogControls
           activeSlug={categorySlug}
           categories={categories}
-          color={filters.color}
-          facets={facets}
-          memory={filters.memory}
           query={filters.query}
-          sim={filters.sim}
           sort={filters.sort}
         />
         <ProductGrid products={data.products} settings={settings} />

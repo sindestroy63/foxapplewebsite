@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { CatalogControls } from '@/components/CatalogControls'
 import { ProductGrid } from '@/components/ProductGrid'
-import { buildCatalogFacets, getCategories, getProducts, getSiteSettings, readCatalogParams } from '@/lib/cms'
+import { getCategories, getProducts, getSiteSettings, readCatalogParams } from '@/lib/cms'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,13 +23,11 @@ export default async function CatalogPage({
   const params = await searchParams
   const filters = readCatalogParams(params)
 
-  const [settings, categories, facetProducts, products] = await Promise.all([
+  const [settings, categories, products] = await Promise.all([
     getSiteSettings(),
     getCategories(),
-    getProducts(),
     getProducts({ filters }),
   ])
-  const facets = buildCatalogFacets(facetProducts)
 
   return (
     <section className="page-section">
@@ -41,11 +39,7 @@ export default async function CatalogPage({
       <div className="container">
         <CatalogControls
           categories={categories}
-          color={filters.color}
-          facets={facets}
-          memory={filters.memory}
           query={filters.query}
-          sim={filters.sim}
           sort={filters.sort}
         />
         <ProductGrid products={products} settings={settings} />

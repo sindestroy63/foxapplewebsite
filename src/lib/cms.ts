@@ -2,7 +2,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './constants'
-import type { CatalogFacets, CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
+import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -44,72 +44,21 @@ function one(value?: string | string[]): string | undefined {
 export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
   const query = one(searchParams.q)?.trim() || ''
   const rawSort = one(searchParams.sort)
-  const color = one(searchParams.color)?.trim() || undefined
-  const memory = one(searchParams.memory)?.trim() || undefined
-  const sim = one(searchParams.sim)?.trim() || undefined
   return {
-    color,
-    memory,
     query,
-    sim,
     sort: rawSort === 'price_desc' || rawSort === 'price_asc' ? rawSort : undefined,
   }
 }
 
-function normalizeFacetValue(value?: string | null): string | undefined {
-  return value?.trim() || undefined
-}
-
-function collectColorTokens(products: Product[]): string[] {
-  const values = new Set<string>()
-
-  for (const product of products) {
-    const color = normalizeFacetValue(product.color)
-
-    if (!color) {
-      continue
-    }
-
-    for (const token of color.split(',').map((item) => item.trim()).filter(Boolean)) {
-      values.add(token)
-    }
+function getMinPrice(product: Product): number {
+  if (product.variants && product.variants.length > 0) {
+    const prices = product.variants
+      .filter((v) => v.isAvailable !== false)
+      .map((v) => v.price)
+      .filter(Boolean)
+    return prices.length > 0 ? Math.min(...prices) : product.price
   }
-
-  return [...values].sort((a, b) => a.localeCompare(b, 'ru'))
-}
-
-function parseMemorySize(value: string): number {
-  const num = parseFloat(value) || 0
-  const lower = value.toLowerCase()
-  if (lower.includes('tb') || lower.includes('тб')) return num * 1024
-  if (lower.includes('gb') || lower.includes('гб')) return num
-  if (lower.includes('mm') || lower.includes('мм')) return num * 0.001
-  if (lower.includes('м') && !lower.includes('мм')) return num * 0.0001
-  return num
-}
-
-export function buildCatalogFacets(products: Product[]): CatalogFacets {
-  const memories = new Set<string>()
-  const simTypes = new Set<string>()
-
-  for (const product of products) {
-    const memory = normalizeFacetValue(product.memory)
-    const simType = normalizeFacetValue(product.simType)
-
-    if (memory) {
-      memories.add(memory)
-    }
-
-    if (simType) {
-      simTypes.add(simType)
-    }
-  }
-
-  return {
-    colors: collectColorTokens(products),
-    memories: [...memories].sort((a, b) => parseMemorySize(a) - parseMemorySize(b)),
-    simTypes: [...simTypes].sort((a, b) => a.localeCompare(b, 'ru')),
-  }
+  return product.price
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -198,37 +147,27 @@ export async function getProducts(args?: {
       })
     }
 
-    if (args?.filters?.memory) {
-      conditions.push({ memory: { equals: args.filters.memory } })
-    }
-
-    if (args?.filters?.sim) {
-      conditions.push({ simType: { equals: args.filters.sim } })
-    }
-
-    if (args?.filters?.color) {
-      conditions.push({ color: { like: args.filters.color } })
-    }
-
-    let sort = 'sortOrder'
-    if (args?.filters?.sort === 'price_asc') {
-      sort = 'price'
-    }
-    if (args?.filters?.sort === 'price_desc') {
-      sort = '-price'
-    }
+    const wantSort = args?.filters?.sort
 
     const result = await payload.find({
       collection: 'products',
       depth: 2,
       limit: args?.limit || 100,
-      sort,
+      sort: 'sortOrder',
       where: {
         and: conditions,
       },
     })
 
-    return result.docs as Product[]
+    let products = result.docs as Product[]
+
+    if (wantSort === 'price_asc') {
+      products = products.slice().sort((a, b) => getMinPrice(a) - getMinPrice(b))
+    } else if (wantSort === 'price_desc') {
+      products = products.slice().sort((a, b) => getMinPrice(b) - getMinPrice(a))
+    }
+
+    return products
   } catch (error) {
     console.error('Failed to load products', error)
     return []
