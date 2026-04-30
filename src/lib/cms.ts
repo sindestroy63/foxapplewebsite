@@ -2,6 +2,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './constants'
+import { normalizeProduct, normalizeProducts } from './normalize'
 import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -159,7 +160,7 @@ export async function getProducts(args?: {
       },
     })
 
-    let products = result.docs as Product[]
+    let products = normalizeProducts(result.docs)
 
     if (wantSort === 'price_asc') {
       products = products.slice().sort((a, b) => getMinPrice(a) - getMinPrice(b))
@@ -211,7 +212,7 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
         ],
       },
     })
-    return (result.docs[0] as Product | undefined) || null
+    return result.docs[0] ? normalizeProduct(result.docs[0]) : null
   } catch (error) {
     console.error(`Failed to load product ${productSlug}`, error)
     return null

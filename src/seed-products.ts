@@ -77,7 +77,6 @@ const SKYBLUE      = c('sky-blue', 'Sky Blue', 'Небесно-голубой', 
 // Apple Watch
 const ROSE_GOLD    = c('rose-gold', 'Rose Gold', 'Розовое золото', '#e8b4b8')
 const JET_BLACK    = c('jet-black', 'Jet Black', 'Глянцевый чёрный', '#0a0a0a')
-const SLATE        = c('slate', 'Slate', 'Грифельный', '#6e6e73')
 
 // AirPods Max (USB-C)
 const ORANGE       = c('orange', 'Orange', 'Оранжевый', '#f5845c')
@@ -237,7 +236,7 @@ const macbooks: ModelDef[] = [
 // ─── Apple Watch (official specs) ───
 // SE 2: Midnight, Starlight, Silver — 40mm, 44mm
 // Series 10 (aluminium): Jet Black, Rose Gold, Silver — 42mm, 46mm
-// Series 11 will likely mirror S10 plus Slate — 42mm, 46mm
+// Series 11 (aluminium): Jet Black, Rose Gold, Silver, Space Gray — 42mm, 46mm
 const watches: ModelDef[] = [
   {
     categorySlug: 'apple-watch', model: 'Apple Watch SE (2-го поколения)',
@@ -253,7 +252,7 @@ const watches: ModelDef[] = [
   },
   {
     categorySlug: 'apple-watch', model: 'Apple Watch Series 11', isNew: true,
-    colors: [JET_BLACK, ROSE_GOLD, SILVER, SLATE],
+    colors: [JET_BLACK, ROSE_GOLD, SILVER, SPACE_GRAY],
     memories: ['42mm', '46mm'], basePrice: 28000, priceStep: 3000,
     memoriesAreSize: true,
   },

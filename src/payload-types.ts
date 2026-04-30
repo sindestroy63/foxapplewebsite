@@ -73,6 +73,10 @@ export interface Config {
     products: Product;
     leads: Lead;
     pages: Page;
+    colors: Color;
+    'storage-options': StorageOption;
+    'sim-options': SimOption;
+    'device-models': DeviceModel;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +90,10 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    colors: ColorsSelect<false> | ColorsSelect<true>;
+    'storage-options': StorageOptionsSelect<false> | StorageOptionsSelect<true>;
+    'sim-options': SimOptionsSelect<false> | SimOptionsSelect<true>;
+    'device-models': DeviceModelsSelect<false> | DeviceModelsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -97,9 +105,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'site-settings': SiteSetting;
+    'site-appearance': SiteAppearance;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'site-appearance': SiteAppearanceSelect<false> | SiteAppearanceSelect<true>;
   };
   locale: null;
   widgets: {
@@ -136,6 +146,10 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   name?: string | null;
+  /**
+   * Суперадмин — полный доступ. Админ — управление каталогом и создание менеджеров. Менеджер — только редактирование товаров.
+   */
+  role: 'superadmin' | 'admin' | 'manager';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -161,7 +175,7 @@ export interface User {
  */
 export interface Media {
   id: number;
-  alt: string;
+  alt?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -210,6 +224,10 @@ export interface Category {
   slug: string;
   sortOrder?: number | null;
   isActive?: boolean | null;
+  /**
+   * Рекомендуемый размер: 900×700 px. Формат: JPG, PNG или WebP. Отображается на карточке категории.
+   */
+  coverImage?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -221,6 +239,9 @@ export interface Product {
   id: number;
   category: number | Category;
   name: string;
+  /**
+   * Формируется автоматически из названия.
+   */
   slug: string;
   model?: string | null;
   memory?: string | null;
@@ -231,7 +252,6 @@ export interface Product {
    */
   price: number;
   oldPrice?: number | null;
-  currency?: string | null;
   status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
   isAvailable?: boolean | null;
   isFeatured?: boolean | null;
@@ -253,9 +273,161 @@ export interface Product {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Рекомендуемый размер: 1000×1000 px (квадрат). Формат: JPG, PNG или WebP. Первое фото — основное.
+   */
   images?: (number | Media)[] | null;
+  /**
+   * Для Apple Watch: 40mm, 42mm и т.д.
+   */
+  size?: string | null;
+  /**
+   * Выберите модель для автозаполнения и генерации вариантов.
+   */
+  deviceModel?: (number | null) | DeviceModel;
+  /**
+   * Конфигурации товара (цвет, память, размер и т.д.). Если не заданы — используются основные поля.
+   */
+  variants?:
+    | {
+        /**
+         * Выберите из справочника цветов
+         */
+        color?: (number | null) | Color;
+        /**
+         * Выберите из справочника (128GB, 256GB, 42mm…)
+         */
+        storage?: (number | null) | StorageOption;
+        /**
+         * Выберите из справочника SIM-вариантов
+         */
+        sim?: (number | null) | SimOption;
+        chip?: string | null;
+        ram?: string | null;
+        screenSize?: string | null;
+        connectivity?: string | null;
+        price: number;
+        oldPrice?: number | null;
+        status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
+        isAvailable?: boolean | null;
+        /**
+         * 1000×1000 px, JPG/PNG/WebP. Пусто → общие фото товара.
+         */
+        images?: (number | Media)[] | null;
+        id?: string | null;
+      }[]
+    | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "device-models".
+ */
+export interface DeviceModel {
+  id: number;
+  /**
+   * iPhone 16 Pro, MacBook Air 13″ M4, Apple Watch Series 11 и т.д.
+   */
+  name: string;
+  category: number | Category;
+  /**
+   * Официальные цвета этой модели
+   */
+  availableColors?: (number | Color)[] | null;
+  /**
+   * 128GB, 256GB… или 42mm, 46mm для Watch
+   */
+  availableStorage?: (number | StorageOption)[] | null;
+  /**
+   * Оставьте пустым, если SIM не применим
+   */
+  availableSim?: (number | SimOption)[] | null;
+  /**
+   * A16, M4, M4 Pro…
+   */
+  chip?: string | null;
+  ram?: string | null;
+  screenSize?: string | null;
+  /**
+   * Wi-Fi, Cellular…
+   */
+  connectivity?: string | null;
+  /**
+   * Цена младшей конфигурации
+   */
+  basePrice?: number | null;
+  /**
+   * Разница между конфигурациями памяти
+   */
+  priceStep?: number | null;
+  /**
+   * Если включено, поле memory записывается как size (для Apple Watch)
+   */
+  storageIsSize?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "colors".
+ */
+export interface Color {
+  id: number;
+  /**
+   * black, ultramarine, space-gray и т.д.
+   */
+  value: string;
+  englishLabel: string;
+  russianLabel: string;
+  /**
+   * #RRGGBB
+   */
+  primaryHex: string;
+  /**
+   * Для двухцветных (опционально)
+   */
+  secondaryHex?: string | null;
+  /**
+   * Для каких категорий применим этот цвет
+   */
+  deviceTypes?: ('iphone' | 'ipad' | 'macbook' | 'apple-watch' | 'airpods' | 'playstation' | 'accessories')[] | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "storage-options".
+ */
+export interface StorageOption {
+  id: number;
+  /**
+   * 128GB, 256GB, 512GB, 1TB, 2TB, 40mm, 42mm и т.д.
+   */
+  value: string;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sim-options".
+ */
+export interface SimOption {
+  id: number;
+  /**
+   * SIM_ESIM, ESIM
+   */
+  value: string;
+  /**
+   * SIM + eSIM, eSIM
+   */
+  label: string;
+  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -273,8 +445,12 @@ export interface Lead {
   comment?: string | null;
   consent?: boolean | null;
   consentAt?: string | null;
-  source?: ('call' | 'telegram' | 'product_form' | 'contact_form') | null;
-  status?: ('new' | 'in_progress' | 'done' | 'cancelled') | null;
+  source?: ('call' | 'telegram' | 'product_form' | 'contact_form' | 'repair_form') | null;
+  status?: ('new' | 'in_progress' | 'done' | 'failed' | 'cancelled') | null;
+  /**
+   * Внутренние заметки по заявке. Клиент их не видит.
+   */
+  adminNotes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -353,6 +529,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'colors';
+        value: number | Color;
+      } | null)
+    | ({
+        relationTo: 'storage-options';
+        value: number | StorageOption;
+      } | null)
+    | ({
+        relationTo: 'sim-options';
+        value: number | SimOption;
+      } | null)
+    | ({
+        relationTo: 'device-models';
+        value: number | DeviceModel;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -402,6 +594,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -480,6 +673,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   slug?: T;
   sortOrder?: T;
   isActive?: T;
+  coverImage?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -497,7 +691,6 @@ export interface ProductsSelect<T extends boolean = true> {
   simType?: T;
   price?: T;
   oldPrice?: T;
-  currency?: T;
   status?: T;
   isAvailable?: T;
   isFeatured?: T;
@@ -506,6 +699,25 @@ export interface ProductsSelect<T extends boolean = true> {
   shortDescription?: T;
   description?: T;
   images?: T;
+  size?: T;
+  deviceModel?: T;
+  variants?:
+    | T
+    | {
+        color?: T;
+        storage?: T;
+        sim?: T;
+        chip?: T;
+        ram?: T;
+        screenSize?: T;
+        connectivity?: T;
+        price?: T;
+        oldPrice?: T;
+        status?: T;
+        isAvailable?: T;
+        images?: T;
+        id?: T;
+      };
   seoTitle?: T;
   seoDescription?: T;
   updatedAt?: T;
@@ -526,6 +738,7 @@ export interface LeadsSelect<T extends boolean = true> {
   consentAt?: T;
   source?: T;
   status?: T;
+  adminNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -539,6 +752,63 @@ export interface PagesSelect<T extends boolean = true> {
   content?: T;
   seoTitle?: T;
   seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "colors_select".
+ */
+export interface ColorsSelect<T extends boolean = true> {
+  value?: T;
+  englishLabel?: T;
+  russianLabel?: T;
+  primaryHex?: T;
+  secondaryHex?: T;
+  deviceTypes?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "storage-options_select".
+ */
+export interface StorageOptionsSelect<T extends boolean = true> {
+  value?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sim-options_select".
+ */
+export interface SimOptionsSelect<T extends boolean = true> {
+  value?: T;
+  label?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "device-models_select".
+ */
+export interface DeviceModelsSelect<T extends boolean = true> {
+  name?: T;
+  category?: T;
+  availableColors?: T;
+  availableStorage?: T;
+  availableSim?: T;
+  chip?: T;
+  ram?: T;
+  screenSize?: T;
+  connectivity?: T;
+  basePrice?: T;
+  priceStep?: T;
+  storageIsSize?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -604,9 +874,28 @@ export interface SiteSetting {
   homepageMediaTitle?: string | null;
   homepageMediaText?: string | null;
   /**
-   * Поддерживаются фото, видео и GIF. Первый элемент показывается крупно, остальные идут в сетку.
+   * Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент — крупно, остальные в сетку.
    */
   homepageMedia?: (number | Media)[] | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-appearance".
+ */
+export interface SiteAppearance {
+  id: number;
+  /**
+   * Рекомендуемый размер: 1920×1080 px (Full HD). Формат: MP4 (видео) или JPG/PNG/WebP (фото). Отображается на фоне главного экрана.
+   */
+  heroVideo?: (number | null) | Media;
+  mediaBlockTitle?: string | null;
+  mediaBlockText?: string | null;
+  /**
+   * Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент показывается крупно, остальные — в сетку.
+   */
+  mediaBlockItems?: (number | Media)[] | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -631,6 +920,19 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   homepageMediaTitle?: T;
   homepageMediaText?: T;
   homepageMedia?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-appearance_select".
+ */
+export interface SiteAppearanceSelect<T extends boolean = true> {
+  heroVideo?: T;
+  mediaBlockTitle?: T;
+  mediaBlockText?: T;
+  mediaBlockItems?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

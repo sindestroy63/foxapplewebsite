@@ -1,8 +1,16 @@
 # FOX APPLE
 
-Production-ready проект сайта магазина техники Apple: Next.js, TypeScript, Payload CMS, PostgreSQL, Docker Compose и Nginx.
+Production-ready сайт магазина техники Apple: **Next.js 16**, **TypeScript**, **Payload CMS 3**, **PostgreSQL**, **Docker Compose**, **Nginx**.
 
-Сайт не содержит корзину и онлайн-оплату. Основные действия клиента: позвонить, написать в Telegram, уточнить наличие и забронировать товар.
+Сайт работает без корзины и онлайн-оплаты. Клиент звонит, пишет в Telegram, уточняет наличие и бронирует товар.
+
+## Стек
+
+- **Next.js 16.2** (Turbopack) + React 19
+- **Payload CMS 3.84** (PostgreSQL adapter)
+- **PostgreSQL 16** (Alpine)
+- **Nginx** (reverse-proxy, SSL, IDN)
+- **Docker Compose** (app + postgres + nginx)
 
 ## Локальный запуск
 
@@ -17,53 +25,94 @@ cp .env.example .env
 3. Запустите стек:
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
 4. Откройте сайт:
 
-```text
-http://localhost
-```
+| URL | Описание |
+|-----|----------|
+| `http://localhost` | Публичный сайт |
+| `http://localhost/admin` | Админка Payload CMS |
 
-Админка Payload:
+При первом входе Payload предложит создать администратора. Seed-данные (категории, страницы, товары с вариантами) применяются автоматически, если `PAYLOAD_SEED_ON_START=true`.
 
-```text
-http://localhost/admin
-```
-
-При первом входе Payload предложит создать первого администратора. Seed-данные категорий, страниц и демо-товаров применяются автоматически, если `PAYLOAD_SEED_ON_START=true`.
-
-## Структура
+## Структура проекта
 
 ```text
-src/app/(frontend)        публичный сайт
-src/app/(payload)         стандартные маршруты Payload CMS
-src/payload/collections   коллекции CMS
-src/payload/globals       глобальные настройки сайта
-src/seed.ts               seed-данные категорий, страниц и товаров
-nginx/conf.d              конфигурация Nginx
-docker-compose.yml        app + postgres + nginx
+src/
+  app/(frontend)/             публичный сайт (страницы, каталог, товары)
+  app/(payload)/              стандартные маршруты Payload CMS
+  components/                 React-компоненты (ProductCard, ProductDetailClient, LeadForm и др.)
+  lib/                        утилиты, типы, форматирование, CMS-запросы
+  payload/collections/        коллекции CMS (Products, Categories, Leads и др.)
+  payload/globals/            глобальные настройки (SiteSettings, SiteAppearance)
+  migrations/                 SQL-миграции для PostgreSQL
+  seed.ts                     seed-логика (категории, страницы, товары)
+  seed-products.ts            каталог товаров с официальными спецификациями Apple
+nginx/conf.d/                 конфигурация Nginx (HTTP / SSL)
+docker-compose.yml            app + postgres + nginx
 ```
 
-## Основные CMS-модели
+## Каталог товаров
 
-- `Categories`: категории каталога.
-- `Products`: товары, цены, наличие, фото, SEO.
-- `Leads`: заявки с карточек товара и страницы контактов.
-- `Pages`: редактируемые страницы.
-- `SiteSettings`: контакты, домены, hero-тексты и базовые настройки.
-- `Media`: загрузка изображений.
-- `Users`: сотрудники админки.
+Товары хранятся в коллекции `Products` с вложенным массивом `variants`. Каждый вариант содержит:
+
+- **Цвет** — структурированный объект: `englishLabel`, `russianLabel`, `value`, `primaryHex`, `secondaryHex?`
+- **Память / SSD** — 128GB, 256GB, 512GB, 1TB, 2TB
+- **SIM** — `SIM + eSIM` или `eSIM`
+- **Размер** — для Apple Watch (42mm, 46mm и т.д.)
+- **Чип / RAM / Диагональ / Подключение** — для Mac и iPad
+- **Цена** — наличные, старая цена
+- **Статус** — в наличии, под заказ, нет в наличии
+
+Все цвета соответствуют официальным спецификациям Apple и отображаются с цветным кружком + билингвальной подписью (English / Русский).
+
+### Категории
+
+| Категория | Slug |
+|-----------|------|
+| iPhone | `iphone` |
+| iPad | `ipad` |
+| MacBook | `macbook` |
+| AirPods | `airpods` |
+| Apple Watch | `apple-watch` |
+| PlayStation | `playstation` |
+| Аксессуары | `accessories` |
+| Б/У техника | `used` |
+
+### Карточка каталога
+
+В карточке каталога: изображение, название, цена «от» (наличные / по карте), статус наличия, кнопки связи. Конфигурации (цвет, память, SIM) видны только на странице товара.
+
+Для новых товаров показывается юридический disclaimer про RuStore. Для категории «Б/У техника» он скрыт.
+
+## CMS-модели
+
+### Коллекции
+
+- **Categories** — категории каталога (название, slug, обложка, сортировка)
+- **Products** — товары с вариантами, ценами, фото и SEO
+- **Leads** — заявки с карточек товара и страницы контактов
+- **Pages** — редактируемые текстовые страницы (Rich Text)
+- **Media** — загрузка изображений (thumbnail / card / detail)
+- **Users** — сотрудники админки (admin / manager)
+
+### Глобалы
+
+- **SiteSettings** — контакты, домены, hero-тексты, Telegram, WhatsApp
+- **SiteAppearance** — hero-видео, медиа-блок на главной
 
 ## Полезные команды
 
 ```bash
-docker compose logs -f app
-docker compose exec app npm run payload -- migrate
-docker compose exec app npm run seed
-docker compose exec app npm run typecheck
-docker compose down
+docker compose up -d --build          # сборка и запуск
+docker compose down -v                # остановка и очистка данных
+docker compose logs -f app            # логи приложения
+docker compose exec app npm run payload -- migrate   # миграции
+docker compose exec app npm run seed                 # seed-данные
+npm run typecheck                     # проверка типов
+npm run build                         # production-сборка
 ```
 
 ## Деплой на Ubuntu 22.04
@@ -203,12 +252,20 @@ curl -I http://xn--j1achfjp0e.xn--p1ai
 
 Публичные URL:
 
-- `/`
-- `/catalog`
-- `/catalog/[categorySlug]`
-- `/catalog/[categorySlug]/[productSlug]`
-- `/installment`
-- `/trade-in`
-- `/warranty`
-- `/contacts`
-- `/admin`
+| Путь | Описание |
+|------|----------|
+| `/` | Главная страница |
+| `/catalog` | Каталог товаров |
+| `/catalog/[categorySlug]` | Категория каталога |
+| `/catalog/[categorySlug]/[productSlug]` | Карточка товара |
+| `/contacts` | Контакты |
+| `/installment` | Рассрочка |
+| `/trade-in` | Trade-In |
+| `/warranty` | Гарантия |
+| `/repair` | Ремонт |
+| `/offer` | Публичная оферта |
+| `/privacy` | Политика конфиденциальности |
+| `/privacy-policy` | Обработка персональных данных |
+| `/personal-data-consent` | Согласие на обработку ПД |
+| `/purchase-return` | Возврат товара |
+| `/admin` | Админка Payload CMS |

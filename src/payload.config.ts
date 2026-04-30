@@ -7,10 +7,14 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { Categories } from './payload/collections/Categories'
+import { Colors } from './payload/collections/Colors'
+import { DeviceModels } from './payload/collections/DeviceModels'
 import { Leads } from './payload/collections/Leads'
 import { Media } from './payload/collections/Media'
 import { Pages } from './payload/collections/Pages'
 import { Products } from './payload/collections/Products'
+import { SimOptions } from './payload/collections/SimOptions'
+import { StorageOptions } from './payload/collections/StorageOptions'
 import { Users } from './payload/collections/Users'
 import { SiteAppearance } from './payload/globals/SiteAppearance'
 import { SiteSettings } from './payload/globals/SiteSettings'
@@ -42,7 +46,7 @@ export default buildConfig({
       ],
     },
   },
-  collections: [Users, Media, Categories, Products, Leads, Pages],
+  collections: [Users, Media, Categories, Products, Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels],
   globals: [SiteSettings, SiteAppearance],
   bin: [
     {

@@ -21,9 +21,16 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      ({ data, operation }) => {
         if (data?.name && !data.slug) {
           data.slug = slugify(data.name)
+        }
+        if (data?.slug && (operation === 'create' || operation === 'update')) {
+          const s = data.slug as string
+          const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy)/
+          if (variantParts.test(s)) {
+            throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
+          }
         }
         return data
       },
@@ -64,19 +71,19 @@ export const Products: CollectionConfig = {
       name: 'memory',
       type: 'text',
       label: 'Память',
+      admin: { hidden: true },
     },
     {
       name: 'color',
       type: 'text',
       label: 'Цвет',
+      admin: { hidden: true },
     },
     {
       name: 'simType',
       type: 'text',
       label: 'SIM/eSIM',
-      admin: {
-        description: 'Для iPhone используйте варианты товара. Здесь — общее описание подключения (Wi-Fi, LTE и т.д.)',
-      },
+      admin: { hidden: true },
     },
     {
       name: 'price',
@@ -174,6 +181,25 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      name: 'deviceModel',
+      type: 'relationship',
+      relationTo: 'device-models',
+      label: 'Модель устройства',
+      admin: {
+        description: 'Выберите модель для автозаполнения и генерации вариантов.',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'variantGenerator',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '/payload/components/admin/VariantGenerator',
+        },
+      },
+    },
+    {
       name: 'variants',
       type: 'array',
       label: 'Варианты товара',
@@ -181,30 +207,13 @@ export const Products: CollectionConfig = {
         description: 'Конфигурации товара (цвет, память, размер и т.д.). Если не заданы — используются основные поля.',
       },
       fields: [
-        {
-          name: 'color',
-          type: 'group',
-          label: 'Цвет',
-          admin: { description: 'Оставьте пустым, если цвет не применим.' },
-          fields: [
-            { type: 'row', fields: [
-              { name: 'value', type: 'text', label: 'Ключ (slug)', admin: { description: 'ultramarine, black и т.д.' } },
-              { name: 'englishLabel', type: 'text', label: 'English' },
-              { name: 'russianLabel', type: 'text', label: 'Русский' },
-            ] },
-            { type: 'row', fields: [
-              { name: 'primaryHex', type: 'text', label: 'HEX основной', admin: { description: '#RRGGBB' } },
-              { name: 'secondaryHex', type: 'text', label: 'HEX вторичный', admin: { description: 'Для двухцветных (опционально)' } },
-            ] },
-          ],
-        },
         { type: 'row', fields: [
-          { name: 'memory', type: 'text', label: 'Память / SSD' },
-          { name: 'simType', type: 'select', label: 'Тип SIM', options: [
-            { label: 'SIM + eSIM', value: 'SIM_ESIM' },
-            { label: 'eSIM', value: 'ESIM' },
-          ] },
-          { name: 'size', type: 'text', label: 'Размер (мм)' },
+          { name: 'color', type: 'relationship', relationTo: 'colors', label: 'Цвет',
+            admin: { description: 'Выберите из справочника цветов' } },
+          { name: 'storage', type: 'relationship', relationTo: 'storage-options', label: 'Память / Размер',
+            admin: { description: 'Выберите из справочника (128GB, 256GB, 42mm…)' } },
+          { name: 'sim', type: 'relationship', relationTo: 'sim-options', label: 'Тип SIM',
+            admin: { description: 'Выберите из справочника SIM-вариантов' } },
         ] },
         { type: 'row', fields: [
           { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)' },

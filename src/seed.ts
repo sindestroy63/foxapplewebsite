@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './lib/constants'
 import { slugify } from './payload/utils/slugify'
+import { seedDictionaries, type DictIds } from './seed-dictionaries'
 import { MODEL_IMAGES } from './seed-images'
 import { ALL_PRODUCTS, type ProductSeed as ProductSeedNew } from './seed-products'
 
@@ -152,6 +153,7 @@ async function upsertProduct(
   categoryId: number,
   product: ProductSeedNew & { shortDescription: string; slug: string },
   sortOrder: number,
+  dictIds?: DictIds,
 ) {
   const bySlug = await payload.find({
     collection: 'products',
@@ -198,26 +200,29 @@ async function upsertProduct(
   }
 
   if (product.variants && product.variants.length > 0) {
-    data.variants = product.variants.map((v) => ({
-      color: v.color ? {
-        value: v.color.value,
-        englishLabel: v.color.englishLabel,
-        russianLabel: v.color.russianLabel,
-        primaryHex: v.color.primaryHex,
-        secondaryHex: v.color.secondaryHex,
-      } : undefined,
-      memory: v.memory,
-      simType: v.simType,
-      size: v.size,
-      chip: v.chip,
-      ram: v.ram,
-      screenSize: v.screenSize,
-      connectivity: v.connectivity,
-      price: v.price,
-      oldPrice: v.oldPrice,
-      status: v.status || 'in_stock',
-      isAvailable: true,
-    }))
+    data.variants = product.variants.map((v) => {
+      const row: Record<string, unknown> = {
+        chip: v.chip,
+        ram: v.ram,
+        screenSize: v.screenSize,
+        connectivity: v.connectivity,
+        price: v.price,
+        oldPrice: v.oldPrice,
+        status: v.status || 'in_stock',
+        isAvailable: true,
+      }
+      if (dictIds && v.color) {
+        row.color = dictIds.colorIds.get(v.color.value) || undefined
+      }
+      if (dictIds && (v.memory || v.size)) {
+        const storageVal = v.memory || v.size
+        if (storageVal) row.storage = dictIds.storageIds.get(storageVal) || undefined
+      }
+      if (dictIds && v.simType) {
+        row.sim = dictIds.simIds.get(v.simType) || undefined
+      }
+      return row
+    })
   }
 
   if (process.env.SEED_IMAGES === 'true') {
@@ -267,13 +272,28 @@ export const script = async (config: SanitizedConfig) => {
     categoriesBySlug.set(category.slug, doc.id as number)
   }
 
+  const dictIds = await seedDictionaries(payload, categoriesBySlug)
+
   for (const [index, product] of products.entries()) {
     const categoryId = categoriesBySlug.get(product.categorySlug)
     if (!categoryId) {
       continue
     }
 
-    await upsertProduct(payload, categoryId, product, index + 1)
+    await upsertProduct(payload, categoryId, product, index + 1, dictIds)
+  }
+
+  const canonicalSlugs = new Set(products.map((p) => p.slug))
+  const allProducts = await payload.find({ collection: 'products', depth: 0, limit: 10000 })
+  let removed = 0
+  for (const doc of allProducts.docs) {
+    if (!canonicalSlugs.has(doc.slug)) {
+      await payload.delete({ collection: 'products', id: doc.id })
+      removed++
+    }
+  }
+  if (removed > 0) {
+    payload.logger.info(`Cleaned up ${removed} orphan product(s) not in canonical seed list`)
   }
 
   const pages = [
@@ -300,13 +320,13 @@ export const script = async (config: SanitizedConfig) => {
       email: 'IntellexGroup@foxapple.ru',
       password: 'Fx!Adm1n_2026$Grp',
       name: 'IntellexGroup',
-      role: 'superadmin',
+      role: 'superadmin' as const,
     },
     {
       email: 'Danil@foxapple.ru',
       password: 'Fx!Dnl_2026$Mgr',
       name: 'Danil',
-      role: 'admin',
+      role: 'admin' as const,
     },
   ]
 

@@ -13,6 +13,8 @@ import * as migration_20260430_170000_sim_type_enum from './20260430_170000_sim_
 import * as migration_20260430_180000_variant_extra_fields from './20260430_180000_variant_extra_fields';
 import * as migration_20260430_190000_variant_color_group from './20260430_190000_variant_color_group';
 import * as migration_20260430_200000_drop_sim_sim from './20260430_200000_drop_sim_sim';
+import * as migration_20260430_210000_dictionaries from './20260430_210000_dictionaries';
+import * as migration_20260430_220000_variant_relationships from './20260430_220000_variant_relationships';
 
 export const migrations = [
   {
@@ -89,5 +91,15 @@ export const migrations = [
     up: migration_20260430_200000_drop_sim_sim.up,
     down: migration_20260430_200000_drop_sim_sim.down,
     name: '20260430_200000_drop_sim_sim'
+  },
+  {
+    up: migration_20260430_210000_dictionaries.up,
+    down: migration_20260430_210000_dictionaries.down,
+    name: '20260430_210000_dictionaries'
+  },
+  {
+    up: migration_20260430_220000_variant_relationships.up,
+    down: migration_20260430_220000_variant_relationships.down,
+    name: '20260430_220000_variant_relationships'
   },
 ];
