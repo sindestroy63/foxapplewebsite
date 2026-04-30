@@ -7,6 +7,7 @@ import * as migration_20260427_171000_drop_currency from './20260427_171000_drop
 import * as migration_20260427_172800_update_phone from './20260427_172800_update_phone';
 import * as migration_20260427_200000_add_manager_role from './20260427_200000_add_manager_role';
 import * as migration_20260427_201000_leads_admin_notes from './20260427_201000_leads_admin_notes';
+import * as migration_20260430_110000_site_appearance from './20260430_110000_site_appearance';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20260427_201000_leads_admin_notes.up,
     down: migration_20260427_201000_leads_admin_notes.down,
     name: '20260427_201000_leads_admin_notes'
+  },
+  {
+    up: migration_20260430_110000_site_appearance.up,
+    down: migration_20260430_110000_site_appearance.down,
+    name: '20260430_110000_site_appearance'
   },
 ];

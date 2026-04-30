@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { admins, anyone } from '../access'
+import { admins, anyone, authenticated } from '../access'
 import { slugify } from '../utils/slugify'
 
 export const Categories: CollectionConfig = {
@@ -11,12 +11,12 @@ export const Categories: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'sortOrder', 'isActive'],
+    defaultColumns: ['name', 'slug', 'coverImage', 'sortOrder', 'isActive'],
   },
   access: {
     read: anyone,
     create: admins,
-    update: admins,
+    update: authenticated,
     delete: admins,
   },
   hooks: {
@@ -55,6 +55,18 @@ export const Categories: CollectionConfig = {
       type: 'checkbox',
       label: 'Активна',
       defaultValue: true,
+    },
+    {
+      name: 'coverImage',
+      type: 'upload',
+      label: 'Обложка категории',
+      relationTo: 'media',
+      filterOptions: {
+        mimeType: { like: 'image/' },
+      },
+      admin: {
+        description: 'Рекомендуемый размер: 900×700 px. Формат: JPG, PNG или WebP. Отображается на карточке категории.',
+      },
     },
   ],
 }

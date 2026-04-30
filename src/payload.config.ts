@@ -12,6 +12,7 @@ import { Media } from './payload/collections/Media'
 import { Pages } from './payload/collections/Pages'
 import { Products } from './payload/collections/Products'
 import { Users } from './payload/collections/Users'
+import { SiteAppearance } from './payload/globals/SiteAppearance'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { migrations } from './migrations'
 
@@ -42,7 +43,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, Categories, Products, Leads, Pages],
-  globals: [SiteSettings],
+  globals: [SiteSettings, SiteAppearance],
   bin: [
     {
       key: 'seed',

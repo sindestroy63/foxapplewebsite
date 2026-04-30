@@ -160,6 +160,9 @@ export const Products: CollectionConfig = {
       },
       relationTo: 'media',
       hasMany: true,
+      admin: {
+        description: 'Рекомендуемый размер: 1400×1050 px. Формат: JPG, PNG или WebP. Первое фото — основное.',
+      },
     },
     {
       name: 'seoTitle',

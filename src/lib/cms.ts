@@ -2,7 +2,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './constants'
-import type { CatalogFacets, CatalogFilters, Category, PageDoc, Product, SiteSettings } from './types'
+import type { CatalogFacets, CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -130,7 +130,7 @@ export async function getCategories(): Promise<Category[]> {
     const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'categories',
-      depth: 0,
+      depth: 1,
       limit: 100,
       sort: 'sortOrder',
       where: {
@@ -276,6 +276,16 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
   } catch (error) {
     console.error(`Failed to load product ${productSlug}`, error)
     return null
+  }
+}
+
+export async function getSiteAppearance(): Promise<SiteAppearance> {
+  try {
+    const payload = await getPayloadClient()
+    const data = await payload.findGlobal({ slug: 'site-appearance' as any })
+    return data as SiteAppearance
+  } catch {
+    return {}
   }
 }
 

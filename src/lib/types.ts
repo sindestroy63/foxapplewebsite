@@ -4,6 +4,7 @@ export type Category = {
   slug: string
   sortOrder?: number
   isActive?: boolean
+  coverImage?: Media | string | number
 }
 
 export type Media = {
@@ -78,6 +79,13 @@ export type SiteSettings = {
   homepageMediaTitle?: string
   homepageMediaText?: string
   homepageMedia?: Array<Media | string | number>
+}
+
+export type SiteAppearance = {
+  heroVideo?: Media | string | number
+  mediaBlockTitle?: string
+  mediaBlockText?: string
+  mediaBlockItems?: Array<Media | string | number>
 }
 
 export type PageDoc = {

@@ -3,7 +3,7 @@ import { ScrollReveal } from '@/components/ScrollReveal'
 import Link from 'next/link'
 
 import { ProductGrid } from '@/components/ProductGrid'
-import { getCategories, getProducts, getSiteSettings } from '@/lib/cms'
+import { getCategories, getProducts, getSiteAppearance, getSiteSettings } from '@/lib/cms'
 import {
   mapEmbedUrl,
   normalizePhone,
@@ -24,18 +24,22 @@ const benefits = [
 ]
 
 export default async function HomePage() {
-  const [settings, categories, products] = await Promise.all([
+  const [settings, categories, products, appearance] = await Promise.all([
     getSiteSettings(),
     getCategories(),
     getProducts({ featuredOnly: true, limit: 6 }),
+    getSiteAppearance(),
   ])
 
   const phone = settings.phone || '+7 (917) 954-64-64'
-  const homepageMedia = (settings.homepageMedia || []).filter(
+
+  const heroMedia = (appearance.heroVideo && typeof appearance.heroVideo === 'object' && 'id' in appearance.heroVideo)
+    ? appearance.heroVideo as Media
+    : null
+  const homepageMedia = (appearance.mediaBlockItems || settings.homepageMedia || []).filter(
     (item): item is Media => Boolean(item) && typeof item === 'object' && 'id' in item,
   )
-  const heroMedia = homepageMedia[0]
-  const heroMediaUrl = getMediaUrl(heroMedia, 'detail')
+  const heroMediaUrl = heroMedia ? getMediaUrl(heroMedia, 'detail') : getMediaUrl(homepageMedia[0], 'detail')
 
   return (
     <>
@@ -82,12 +86,24 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="container category-grid">
-          {categories.map((category) => (
-            <Link className="category-card" data-slug={category.slug} href={`/catalog/${category.slug}`} key={category.id}>
-              <span>{category.name}</span>
-              <small>Смотреть</small>
-            </Link>
-          ))}
+          {categories.map((category) => {
+            const cover = category.coverImage && typeof category.coverImage === 'object' && 'id' in category.coverImage
+              ? category.coverImage as Media
+              : null
+            const coverUrl = cover ? getMediaUrl(cover, 'card') : null
+            return (
+              <Link
+                className="category-card"
+                data-slug={category.slug}
+                href={`/catalog/${category.slug}`}
+                key={category.id}
+                style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
+              >
+                <span>{category.name}</span>
+                <small>Смотреть</small>
+              </Link>
+            )
+          })}
         </div>
       </section>
       </ScrollReveal>
@@ -134,8 +150,8 @@ export default async function HomePage() {
       {/* ── МЕДИА ── */}
       <HomepageMediaShowcase
         items={homepageMedia}
-        text={settings.homepageMediaText}
-        title={settings.homepageMediaTitle}
+        text={appearance.mediaBlockText || settings.homepageMediaText}
+        title={appearance.mediaBlockTitle || settings.homepageMediaTitle}
       />
 
       {/* ── РАССРОЧКА + КОНТАКТЫ ── */}
