@@ -27,7 +27,7 @@ export const Products: CollectionConfig = {
         }
         if (data?.slug && (operation === 'create' || operation === 'update')) {
           const s = data.slug as string
-          const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|zelyonyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|zelyonyy|shalfey)/
+          const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)/
           if (variantParts.test(s)) {
             throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
           }

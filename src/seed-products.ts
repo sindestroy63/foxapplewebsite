@@ -78,10 +78,19 @@ const SKYBLUE      = c('sky-blue', 'Sky Blue', 'Небесно-голубой', 
 const ROSE_GOLD    = c('rose-gold', 'Rose Gold', 'Розовое золото', '#e8b4b8')
 const JET_BLACK    = c('jet-black', 'Jet Black', 'Глянцевый чёрный', '#0a0a0a')
 
-// iPhone 17 colors
-const GREEN        = c('green', 'Green', 'Зелёный', '#4caf50')
+// iPhone 17 / 17e colors
+const MIST_BLUE    = c('mist-blue', 'Mist Blue', 'Дымчато-голубой', '#a3c4d9')
 const SAGE         = c('sage', 'Sage', 'Шалфей', '#9caf88')
-const GREEN_TI     = c('green-titanium', 'Green Titanium', 'Зелёный титан', '#6b8e6b')
+const LAVENDER     = c('lavender', 'Lavender', 'Лавандовый', '#c9b8d9')
+const SOFT_PINK    = c('soft-pink', 'Soft Pink', 'Нежно-розовый', '#f5c6c6')
+
+// iPhone 17 Pro / Pro Max colors
+const COSMIC_ORANGE = c('cosmic-orange', 'Cosmic Orange', 'Космический оранжевый', '#e06030')
+const DEEP_BLUE    = c('deep-blue', 'Deep Blue', 'Глубокий синий', '#1a3a5c')
+
+// iPhone Air colors
+const LIGHT_GOLD   = c('light-gold', 'Light Gold', 'Светлое золото', '#e8d5b7')
+const CLOUD_WHITE  = c('cloud-white', 'Cloud White', 'Облачно-белый', '#f0ede8')
 
 // AirPods Max (USB-C)
 const ORANGE       = c('orange', 'Orange', 'Оранжевый', '#f5845c')
@@ -169,65 +178,111 @@ const iphone16: ModelDef[] = [
   },
 ]
 
-// ─── iPhone 17 (official: Black, White, Green, Sage, Blue / 128GB, 256GB, 512GB) ───
+// ─── iPhone 17 (official: Black, White, Mist Blue, Sage, Lavender / 256GB, 512GB) ───
 const iphone17: ModelDef[] = [
   {
     categorySlug: 'iphone', model: 'iPhone 17',
-    colors: [BLACK, WHITE, GREEN, SAGE, BLUE],
-    memories: ['128GB', '256GB', '512GB'], basePrice: 62000, priceStep: 10000,
+    colors: [BLACK, WHITE, MIST_BLUE, SAGE, LAVENDER],
+    memories: ['256GB', '512GB'], basePrice: 62000, priceStep: 10000,
     simTypes: IPHONE_SIM_TYPES, isNew: true, isFeatured: true,
   },
   {
-    categorySlug: 'iphone', model: 'iPhone 17 Air',
-    colors: [BLACK, STARLIGHT],
-    memories: ['256GB', '512GB'], basePrice: 95000, priceStep: 15000,
+    categorySlug: 'iphone', model: 'iPhone Air',
+    colors: [SKYBLUE, LIGHT_GOLD, CLOUD_WHITE, SPACE_BLACK],
+    memories: ['256GB', '512GB', '1TB'], basePrice: 76000, priceStep: 14000,
     simTypes: ['ESIM'], isNew: true, isFeatured: true,
   },
   {
+    categorySlug: 'iphone', model: 'iPhone 17e',
+    colors: [SOFT_PINK, BLACK, WHITE],
+    memories: ['256GB', '512GB'], basePrice: 50000, priceStep: 8000,
+    simTypes: IPHONE_SIM_TYPES, isNew: true,
+  },
+  {
     categorySlug: 'iphone', model: 'iPhone 17 Pro',
-    colors: [BLACK_TI, WHITE_TI, NATURAL_TI, GREEN_TI],
-    memories: ['256GB', '512GB', '1TB'], basePrice: 95000, priceStep: 15000,
+    colors: [SILVER, COSMIC_ORANGE, DEEP_BLUE],
+    memories: ['256GB', '512GB', '1TB'], basePrice: 98500, priceStep: 15000,
     simTypes: IPHONE_SIM_TYPES, isNew: true, isFeatured: true,
   },
   {
     categorySlug: 'iphone', model: 'iPhone 17 Pro Max',
-    colors: [BLACK_TI, WHITE_TI, NATURAL_TI, GREEN_TI],
-    memories: ['256GB', '512GB', '1TB'], basePrice: 115000, priceStep: 17000,
+    colors: [SILVER, COSMIC_ORANGE, DEEP_BLUE],
+    memories: ['256GB', '512GB', '1TB', '2TB'], basePrice: 115000, priceStep: 17000,
     simTypes: IPHONE_SIM_TYPES, isNew: true, isFeatured: true,
   },
 ]
 
-// ─── iPad (A16) — official: Blue, Pink, Yellow, Silver / 128GB, 256GB ───
+// ─── iPad ───
 const ipads: ModelDef[] = [
+  // iPad 11″ 2025 A16 — Silver, Blue, Pink, Yellow — 128/256GB — Wi-Fi
   {
-    categorySlug: 'ipad', model: 'iPad (A16)',
-    colors: [BLUE, PINK, YELLOW, SILVER],
+    categorySlug: 'ipad', model: 'iPad',
+    colors: [SILVER, BLUE, PINK, YELLOW],
     memories: ['128GB', '256GB'], basePrice: 31000, priceStep: 9500,
-    connectivity: 'Wi-Fi', chip: 'A16',
+    connectivity: 'Wi-Fi', chip: 'A16', screenSize: '11″',
   },
+  // iPad Air 11″ M3 2025 — Gray, Starlight, Purple, Blue — 128/256GB — Wi-Fi
   {
-    categorySlug: 'ipad', model: 'iPad Air 11″ M3',
+    categorySlug: 'ipad', model: 'iPad Air M3',
     colors: [SPACE_GRAY, STARLIGHT, PURPLE, BLUE],
-    memories: ['128GB', '256GB', '512GB', '1TB'], basePrice: 47500, priceStep: 6500,
-    connectivity: 'Wi-Fi', chip: 'M3', screenSize: '11″', isFeatured: true,
+    memories: ['128GB', '256GB'], basePrice: 47500, priceStep: 9500,
+    connectivity: 'Wi-Fi', chip: 'M3', screenSize: '11″',
   },
+  // iPad Air 13″ M3 2025 — Gray, Blue, Starlight, Purple — 128GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Air 13″ M3',
-    colors: [SPACE_GRAY, STARLIGHT, PURPLE, BLUE],
-    memories: ['128GB', '256GB', '512GB', '1TB'], basePrice: 60500, priceStep: 9500,
+    colors: [SPACE_GRAY, BLUE, STARLIGHT, PURPLE],
+    memories: ['128GB'], basePrice: 60500,
     connectivity: 'Wi-Fi', chip: 'M3', screenSize: '13″',
   },
+  // iPad Air 11″ M4 2026 — Gray, Purple, Starlight, Blue — 128/256GB — Wi-Fi
   {
-    categorySlug: 'ipad', model: 'iPad Pro 11″ M4',
+    categorySlug: 'ipad', model: 'iPad Air M4',
+    colors: [SPACE_GRAY, PURPLE, STARLIGHT, BLUE],
+    memories: ['128GB', '256GB'], basePrice: 49500, priceStep: 13500,
+    connectivity: 'Wi-Fi', chip: 'M4', screenSize: '11″', isNew: true, isFeatured: true,
+  },
+  // iPad Air 13″ M4 2026 — Gray, Purple, Starlight, Blue — 128GB — Wi-Fi
+  {
+    categorySlug: 'ipad', model: 'iPad Air 13″ M4',
+    colors: [SPACE_GRAY, PURPLE, STARLIGHT, BLUE],
+    memories: ['128GB'], basePrice: 71000,
+    connectivity: 'Wi-Fi', chip: 'M4', screenSize: '13″', isNew: true,
+  },
+  // iPad Pro 11″ M4 2024 — Black, Silver — 256GB — Wi-Fi
+  {
+    categorySlug: 'ipad', model: 'iPad Pro M4',
     colors: [SPACE_BLACK, SILVER],
-    memories: ['256GB', '512GB', '1TB', '2TB'], basePrice: 75000, priceStep: 15000,
+    memories: ['256GB'], basePrice: 75000,
     connectivity: 'Wi-Fi', chip: 'M4', screenSize: '11″',
   },
+  // iPad Pro 13″ M4 2024 — Black, Silver — 256GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Pro 13″ M4',
     colors: [SPACE_BLACK, SILVER],
-    memories: ['256GB', '512GB', '1TB', '2TB'], basePrice: 90000, priceStep: 18000,
+    memories: ['256GB'], basePrice: 90000,
     connectivity: 'Wi-Fi', chip: 'M4', screenSize: '13″',
+  },
+  // iPad Pro 11″ M5 2025 — Black, Silver — 256/512GB — Wi-Fi, Wi-Fi + eSIM
+  {
+    categorySlug: 'ipad', model: 'iPad Pro M5',
+    colors: [SPACE_BLACK, SILVER],
+    memories: ['256GB', '512GB'], basePrice: 80000, priceStep: 15000,
+    connectivity: 'Wi-Fi', chip: 'M5', screenSize: '11″', isNew: true, isFeatured: true,
+  },
+  // iPad Pro 13″ M5 2025 — Black, Silver — 256/512GB — Wi-Fi, Wi-Fi + eSIM
+  {
+    categorySlug: 'ipad', model: 'iPad Pro 13″ M5',
+    colors: [SPACE_BLACK, SILVER],
+    memories: ['256GB', '512GB'], basePrice: 100000, priceStep: 15000,
+    connectivity: 'Wi-Fi', chip: 'M5', screenSize: '13″', isNew: true,
+  },
+  // iPad mini (2024) A17 Pro — Space Gray, Blue, Purple, Starlight — 128/256/512GB — Wi-Fi
+  {
+    categorySlug: 'ipad', model: 'iPad mini',
+    colors: [SPACE_GRAY, BLUE, PURPLE, STARLIGHT],
+    memories: ['128GB', '256GB', '512GB'], basePrice: 39000, priceStep: 8000,
+    connectivity: 'Wi-Fi', chip: 'A17 Pro', screenSize: '8.3″',
   },
 ]
 
