@@ -181,17 +181,28 @@ export const Products: CollectionConfig = {
         description: 'Конфигурации товара (цвет, память, размер и т.д.). Если не заданы — используются основные поля.',
       },
       fields: [
-        { type: 'row', fields: [
-          { name: 'color', type: 'text', label: 'Цвет' },
-          { name: 'colorHex', type: 'text', label: 'HEX цвета', admin: { description: '#RRGGBB' } },
-          { name: 'colorSecondaryHex', type: 'text', label: 'HEX вторичный', admin: { description: 'Для двухцветных' } },
-        ] },
+        {
+          name: 'color',
+          type: 'group',
+          label: 'Цвет',
+          admin: { description: 'Оставьте пустым, если цвет не применим.' },
+          fields: [
+            { type: 'row', fields: [
+              { name: 'value', type: 'text', label: 'Ключ (slug)', admin: { description: 'ultramarine, black и т.д.' } },
+              { name: 'englishLabel', type: 'text', label: 'English' },
+              { name: 'russianLabel', type: 'text', label: 'Русский' },
+            ] },
+            { type: 'row', fields: [
+              { name: 'primaryHex', type: 'text', label: 'HEX основной', admin: { description: '#RRGGBB' } },
+              { name: 'secondaryHex', type: 'text', label: 'HEX вторичный', admin: { description: 'Для двухцветных (опционально)' } },
+            ] },
+          ],
+        },
         { type: 'row', fields: [
           { name: 'memory', type: 'text', label: 'Память / SSD' },
           { name: 'simType', type: 'select', label: 'Тип SIM', options: [
             { label: 'SIM + eSIM', value: 'SIM_ESIM' },
             { label: 'eSIM', value: 'ESIM' },
-            { label: 'SIM + SIM', value: 'SIM_SIM' },
           ] },
           { name: 'size', type: 'text', label: 'Размер (мм)' },
         ] },

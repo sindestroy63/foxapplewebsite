@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation'
 
 import { LeadForm } from '@/components/LeadForm'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
-import { RichText } from '@/components/RichText'
 import { getProductBySlugs, getSiteSettings } from '@/lib/cms'
 
 export const dynamic = 'force-dynamic'
@@ -56,9 +55,10 @@ export default async function ProductPage({ params }: Props) {
       </div>
 
       <div className="container product-detail-bottom">
-        {product.description ? <RichText content={product.description} /> : null}
-
         <p className="offer-note detail-offer-note">Информация на сайте не является публичной офертой.</p>
+        {categorySlug !== 'used' && (
+          <p className="offer-note detail-offer-note">Товар имеет недостаток в виде невозможности предустановки RuStore.</p>
+        )}
 
         <LeadForm
           description="Оставьте номер телефона или Telegram. Мы уточним наличие, цену и свяжемся с вами."

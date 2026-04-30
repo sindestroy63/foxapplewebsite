@@ -34,12 +34,19 @@ function hasMultiplePrices(product: Product): boolean {
   return new Set(prices).size > 1
 }
 
+function getCategorySlug(product: Product): string | null {
+  const cat = product.category
+  if (cat && typeof cat === 'object' && 'slug' in cat) return (cat as Category).slug
+  return null
+}
+
 export function ProductCard({ product, settings }: { product: Product; settings: SiteSettings }) {
   const image = getProductImage(product)
   const phone = settings.phone || '+7 (917) 954-64-64'
   const tone = statusTone(product.status)
   const price = getDisplayPrice(product)
   const showFrom = hasMultiplePrices(product)
+  const isUsed = getCategorySlug(product) === 'used'
 
   return (
     <article className="product-card">
@@ -56,12 +63,6 @@ export function ProductCard({ product, settings }: { product: Product; settings:
         <Link href={productHref(product)} className="product-title">
           {product.model || product.name}
         </Link>
-        <div className="product-meta">
-          {product.memory ? <span>{product.memory}</span> : null}
-          {product.color ? <span title={product.color}>{product.color}</span> : null}
-          {product.simType ? <span>{product.simType}</span> : null}
-          {product.size ? <span>{product.size}</span> : null}
-        </div>
         <div className="product-row">
           <div className="price-block">
             <div className="price-line">
@@ -82,6 +83,9 @@ export function ProductCard({ product, settings }: { product: Product; settings:
           <a {...telegramLinkProps(settings.telegramUsername)}>Telegram</a>
         </div>
         <small className="offer-note">Информация на сайте не является публичной офертой.</small>
+        {!isUsed && (
+          <small className="offer-note">Товар имеет недостаток в виде невозможности предустановки RuStore.</small>
+        )}
       </div>
     </article>
   )

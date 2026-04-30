@@ -29,11 +29,17 @@ export type CatalogFilters = {
   sort?: CatalogSort
 }
 
+export type VariantColor = {
+  value?: string
+  englishLabel?: string
+  russianLabel?: string
+  primaryHex?: string
+  secondaryHex?: string
+}
+
 export type ProductVariant = {
   id?: string
-  color?: string
-  colorHex?: string
-  colorSecondaryHex?: string
+  color?: VariantColor
   memory?: string
   simType?: string
   size?: string

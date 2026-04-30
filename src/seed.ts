@@ -199,9 +199,13 @@ async function upsertProduct(
 
   if (product.variants && product.variants.length > 0) {
     data.variants = product.variants.map((v) => ({
-      color: v.color,
-      colorHex: v.colorHex,
-      colorSecondaryHex: v.colorSecondaryHex,
+      color: v.color ? {
+        value: v.color.value,
+        englishLabel: v.color.englishLabel,
+        russianLabel: v.color.russianLabel,
+        primaryHex: v.color.primaryHex,
+        secondaryHex: v.color.secondaryHex,
+      } : undefined,
       memory: v.memory,
       simType: v.simType,
       size: v.size,

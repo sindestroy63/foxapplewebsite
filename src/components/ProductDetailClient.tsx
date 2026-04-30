@@ -8,12 +8,6 @@ import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
 const SIM_LABELS: Record<string, string> = {
   SIM_ESIM: 'SIM + eSIM',
   ESIM: 'eSIM',
-  SIM_SIM: 'SIM + SIM',
-}
-
-function label(key: string, value: string): string {
-  if (key === 'simType' && SIM_LABELS[value]) return SIM_LABELS[value]
-  return value
 }
 
 type Props = {
@@ -26,7 +20,9 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
   return (items || []).filter((m): m is Media => Boolean(m) && typeof m === 'object' && 'id' in m)
 }
 
-function uniqueValues(variants: ProductVariant[], key: keyof ProductVariant): string[] {
+type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'memory' | 'connectivity' | 'size'
+
+function uniqueStrings(variants: ProductVariant[], key: StringKey): string[] {
   const set = new Set<string>()
   for (const v of variants) {
     const val = v[key]
@@ -35,13 +31,33 @@ function uniqueValues(variants: ProductVariant[], key: keyof ProductVariant): st
   return [...set]
 }
 
-function findHex(variants: ProductVariant[], colorVal: string): { hex?: string; hex2?: string } {
-  const v = variants.find((v) => v.color === colorVal)
-  return { hex: v?.colorHex, hex2: v?.colorSecondaryHex }
+type UniqueColor = { value: string; en: string; ru: string; hex: string; hex2?: string }
+
+function uniqueColors(variants: ProductVariant[]): UniqueColor[] {
+  const seen = new Map<string, UniqueColor>()
+  for (const v of variants) {
+    const c = v.color
+    if (!c?.value) continue
+    if (!seen.has(c.value)) {
+      seen.set(c.value, {
+        value: c.value,
+        en: c.englishLabel || c.value,
+        ru: c.russianLabel || '',
+        hex: c.primaryHex || '',
+        hex2: c.secondaryHex,
+      })
+    }
+  }
+  return [...seen.values()]
 }
 
-function findVariant(variants: ProductVariant[], sel: Record<string, string | null>): ProductVariant | null {
+function findVariant(
+  variants: ProductVariant[],
+  sel: Record<string, string | null>,
+  colorVal: string | null,
+): ProductVariant | null {
   return variants.find((v) => {
+    if (colorVal && v.color?.value !== colorVal) return false
     for (const [key, val] of Object.entries(sel)) {
       if (!val) continue
       const vVal = v[key as keyof ProductVariant]
@@ -51,7 +67,7 @@ function findVariant(variants: ProductVariant[], sel: Record<string, string | nu
   }) || null
 }
 
-const OPTION_ORDER: { key: keyof ProductVariant; title: string }[] = [
+const STRING_AXES: { key: StringKey; title: string }[] = [
   { key: 'simType', title: 'Подключение' },
   { key: 'screenSize', title: 'Диагональ' },
   { key: 'chip', title: 'Чип' },
@@ -59,8 +75,12 @@ const OPTION_ORDER: { key: keyof ProductVariant; title: string }[] = [
   { key: 'memory', title: 'Накопитель' },
   { key: 'connectivity', title: 'Подключение' },
   { key: 'size', title: 'Размер' },
-  { key: 'color', title: 'Цвет' },
 ]
+
+function displayLabel(key: StringKey, value: string): string {
+  if (key === 'simType' && SIM_LABELS[value]) return SIM_LABELS[value]
+  return value
+}
 
 function ColorDot({ hex, hex2 }: { hex?: string; hex2?: string }) {
   if (!hex) return null
@@ -74,27 +94,34 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
   const variants = product.variants || []
   const hasVariants = variants.length > 0
 
-  const optionKeys = useMemo(() => {
+  const colors = useMemo(() => uniqueColors(variants), [variants])
+  const hasColors = colors.length > 0
+
+  const stringAxes = useMemo(() => {
     if (!hasVariants) return []
-    return OPTION_ORDER.filter(({ key }) => {
-      const vals = uniqueValues(variants, key)
+    return STRING_AXES.filter(({ key }) => {
+      const vals = uniqueStrings(variants, key)
       if (vals.length === 0) return false
       if (key === 'connectivity' && vals.length <= 1) return false
       return true
     })
   }, [hasVariants, variants])
 
+  const [selectedColor, setSelectedColor] = useState<string | null>(() => {
+    return hasColors ? colors[0].value : null
+  })
+
   const [selection, setSelection] = useState<Record<string, string | null>>(() => {
     if (!hasVariants) return {}
     const init: Record<string, string | null> = {}
-    for (const { key } of OPTION_ORDER) {
-      const vals = uniqueValues(variants, key)
+    for (const { key } of STRING_AXES) {
+      const vals = uniqueStrings(variants, key)
       if (vals.length > 0) init[key] = vals[0]
     }
     return init
   })
 
-  const activeVariant = hasVariants ? findVariant(variants, selection) : null
+  const activeVariant = hasVariants ? findVariant(variants, selection, selectedColor) : null
   const displayPrice = activeVariant?.price ?? product.price
   const displayOldPrice = activeVariant?.oldPrice ?? product.oldPrice
   const displayStatus = activeVariant?.status ?? product.status
@@ -103,10 +130,6 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
   const variantImages = resolveMedia(activeVariant?.images)
   const productImages = resolveMedia(product.images)
   const displayImages = variantImages.length > 0 ? variantImages : productImages
-
-  const handleSelect = (key: string, value: string) => {
-    setSelection((prev) => ({ ...prev, [key]: value }))
-  }
 
   const normalizedPhone = phone?.replace(/[^\d+]/g, '') || ''
   const tgLink = telegramUsername ? `https://t.me/${telegramUsername.replace('@', '')}` : '#'
@@ -121,31 +144,28 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
         <p className="detail-eyebrow">Карточка товара</p>
         <h1 className="detail-title">{product.model || product.name}</h1>
 
-        {hasVariants && optionKeys.length > 0 && (
+        {hasVariants && (stringAxes.length > 0 || hasColors) && (
           <div className="variant-selector">
-            {optionKeys.map(({ key, title }) => {
-              const values = uniqueValues(variants, key)
+            {stringAxes.map(({ key, title }) => {
+              const values = uniqueStrings(variants, key)
               if (values.length === 0) return null
-              const isColor = key === 'color'
               return (
                 <div className="variant-group" key={key}>
                   <span className="variant-label">{title}</span>
-                  <div className={`variant-options${isColor ? ' variant-options--color' : ''}`}>
+                  <div className="variant-options">
                     {values.map((val) => {
                       const isActive = selection[key] === val
                       const testSel = { ...selection, [key]: val }
-                      const match = findVariant(variants, testSel)
+                      const match = findVariant(variants, testSel, selectedColor)
                       const isDisabled = !match || match.isAvailable === false
-                      const { hex, hex2 } = isColor ? findHex(variants, val) : {}
                       return (
                         <button
                           key={val}
                           type="button"
-                          className={`variant-btn${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}${isColor ? ' variant-btn--color' : ''}`}
-                          onClick={() => handleSelect(key, val)}
+                          className={`variant-btn${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}`}
+                          onClick={() => setSelection((prev) => ({ ...prev, [key]: val }))}
                         >
-                          {isColor && <ColorDot hex={hex} hex2={hex2} />}
-                          {label(key, val)}
+                          {displayLabel(key, val)}
                         </button>
                       )
                     })}
@@ -153,10 +173,38 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
                 </div>
               )
             })}
+
+            {hasColors && (
+              <div className="variant-group">
+                <span className="variant-label">Цвет</span>
+                <div className="variant-options variant-options--color">
+                  {colors.map((clr) => {
+                    const isActive = selectedColor === clr.value
+                    const testSel = { ...selection }
+                    const match = findVariant(variants, testSel, clr.value)
+                    const isDisabled = !match || match.isAvailable === false
+                    return (
+                      <button
+                        key={clr.value}
+                        type="button"
+                        className={`variant-btn variant-btn--color${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}`}
+                        onClick={() => setSelectedColor(clr.value)}
+                      >
+                        <ColorDot hex={clr.hex} hex2={clr.hex2} />
+                        <span className="color-label">
+                          <span className="color-en">{clr.en}</span>
+                          {clr.ru && <span className="color-ru">{clr.ru}</span>}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {!hasVariants && product.color && (
+        {!hasVariants && (product.color || product.memory) && (
           <dl className="spec-list-inline">
             {product.memory && <><dt>Память</dt><dd>{product.memory}</dd></>}
             {product.color && <><dt>Цвет</dt><dd>{product.color}</dd></>}

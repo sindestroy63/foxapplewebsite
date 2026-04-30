@@ -11,6 +11,8 @@ import * as migration_20260430_110000_site_appearance from './20260430_110000_si
 import * as migration_20260430_160000_product_variants from './20260430_160000_product_variants';
 import * as migration_20260430_170000_sim_type_enum from './20260430_170000_sim_type_enum';
 import * as migration_20260430_180000_variant_extra_fields from './20260430_180000_variant_extra_fields';
+import * as migration_20260430_190000_variant_color_group from './20260430_190000_variant_color_group';
+import * as migration_20260430_200000_drop_sim_sim from './20260430_200000_drop_sim_sim';
 
 export const migrations = [
   {
@@ -77,5 +79,15 @@ export const migrations = [
     up: migration_20260430_180000_variant_extra_fields.up,
     down: migration_20260430_180000_variant_extra_fields.down,
     name: '20260430_180000_variant_extra_fields'
+  },
+  {
+    up: migration_20260430_190000_variant_color_group.up,
+    down: migration_20260430_190000_variant_color_group.down,
+    name: '20260430_190000_variant_color_group'
+  },
+  {
+    up: migration_20260430_200000_drop_sim_sim.up,
+    down: migration_20260430_200000_drop_sim_sim.down,
+    name: '20260430_200000_drop_sim_sim'
   },
 ];
