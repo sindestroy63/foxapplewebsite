@@ -28,11 +28,6 @@ function getDisplayPrice(product: Product): number {
   return product.price
 }
 
-function hasMultiplePrices(product: Product): boolean {
-  if (!product.variants || product.variants.length <= 1) return false
-  const prices = product.variants.filter((v) => v.isAvailable !== false).map((v) => v.price)
-  return new Set(prices).size > 1
-}
 
 function getCategorySlug(product: Product): string | null {
   const cat = product.category
@@ -45,7 +40,6 @@ export function ProductCard({ product, settings }: { product: Product; settings:
   const phone = settings.phone || '+7 (917) 954-64-64'
   const tone = statusTone(product.status)
   const price = getDisplayPrice(product)
-  const showFrom = hasMultiplePrices(product)
   const isUsed = getCategorySlug(product) === 'used'
 
   return (
@@ -66,12 +60,12 @@ export function ProductCard({ product, settings }: { product: Product; settings:
         <div className="product-row">
           <div className="price-block">
             <div className="price-line">
-              <strong className="price-cash">{showFrom ? 'от ' : ''}{formatPrice(price)}</strong>
+              <strong className="price-cash">{formatPrice(price)}</strong>
               <span className="price-label">наличными</span>
             </div>
             {cardPrice(price) !== null && (
               <div className="price-line price-line--card">
-                <span className="price-card">{showFrom ? 'от ' : ''}{formatPrice(cardPrice(price))}</span>
+                <span className="price-card">{formatPrice(cardPrice(price))}</span>
                 <span className="price-label">по карте</span>
               </div>
             )}
@@ -80,7 +74,7 @@ export function ProductCard({ product, settings }: { product: Product; settings:
         </div>
         <div className="card-actions">
           <a href={`tel:${normalizePhone(phone)}`}>Позвонить</a>
-          <a {...telegramLinkProps(settings.telegramUsername)}>Telegram</a>
+          <a {...telegramLinkProps(settings.telegramUsername)}>Написать</a>
         </div>
         <small className="offer-note">Информация на сайте не является публичной офертой.</small>
         {!isUsed && (

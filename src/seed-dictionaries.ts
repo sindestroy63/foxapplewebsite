@@ -22,6 +22,9 @@ const COLORS = [
   { value: 'rose-gold', englishLabel: 'Rose Gold', russianLabel: 'Розовое золото', primaryHex: '#e8b4b8', deviceTypes: ['apple-watch'], sortOrder: 19 },
   { value: 'jet-black', englishLabel: 'Jet Black', russianLabel: 'Глянцевый чёрный', primaryHex: '#0a0a0a', deviceTypes: ['apple-watch'], sortOrder: 20 },
   { value: 'orange', englishLabel: 'Orange', russianLabel: 'Оранжевый', primaryHex: '#f5845c', deviceTypes: ['airpods'], sortOrder: 21 },
+  { value: 'green', englishLabel: 'Green', russianLabel: 'Зелёный', primaryHex: '#4caf50', deviceTypes: ['iphone'], sortOrder: 22 },
+  { value: 'sage', englishLabel: 'Sage', russianLabel: 'Шалфей', primaryHex: '#9caf88', deviceTypes: ['iphone'], sortOrder: 23 },
+  { value: 'green-titanium', englishLabel: 'Green Titanium', russianLabel: 'Зелёный титан', primaryHex: '#6b8e6b', deviceTypes: ['iphone'], sortOrder: 24 },
 ]
 
 const STORAGES = [
@@ -44,6 +47,10 @@ const DMS: DM[] = [
   { name: 'iPhone 16 Plus', cat: 'iphone', colors: ['black','white','pink','teal','ultramarine'], stor: ['128GB','256GB','512GB'], sim: ['SIM_ESIM','ESIM'], bp: 66000, ps: 5500, isSize: false, so: 2 },
   { name: 'iPhone 16 Pro', cat: 'iphone', colors: ['black-titanium','white-titanium','natural-titanium','desert-titanium'], stor: ['128GB','256GB','512GB','1TB'], sim: ['SIM_ESIM','ESIM'], bp: 82000, ps: 14000, isSize: false, so: 3 },
   { name: 'iPhone 16 Pro Max', cat: 'iphone', colors: ['black-titanium','white-titanium','natural-titanium','desert-titanium'], stor: ['256GB','512GB','1TB'], sim: ['SIM_ESIM','ESIM'], bp: 96000, ps: 16000, isSize: false, so: 4 },
+  { name: 'iPhone 17', cat: 'iphone', colors: ['black','white','green','sage','blue'], stor: ['128GB','256GB','512GB'], sim: ['SIM_ESIM','ESIM'], bp: 62000, ps: 10000, isSize: false, so: 19 },
+  { name: 'iPhone 17 Air', cat: 'iphone', colors: ['black','starlight'], stor: ['256GB','512GB'], sim: ['ESIM'], bp: 95000, ps: 15000, isSize: false, so: 20 },
+  { name: 'iPhone 17 Pro', cat: 'iphone', colors: ['black-titanium','white-titanium','natural-titanium','green-titanium'], stor: ['256GB','512GB','1TB'], sim: ['SIM_ESIM','ESIM'], bp: 95000, ps: 15000, isSize: false, so: 21 },
+  { name: 'iPhone 17 Pro Max', cat: 'iphone', colors: ['black-titanium','white-titanium','natural-titanium','green-titanium'], stor: ['256GB','512GB','1TB'], sim: ['SIM_ESIM','ESIM'], bp: 115000, ps: 17000, isSize: false, so: 22 },
   { name: 'iPad (A16)', cat: 'ipad', colors: ['blue','pink','yellow','silver'], stor: ['128GB','256GB'], sim: [], conn: 'Wi-Fi', chip: 'A16', bp: 31000, ps: 9500, isSize: false, so: 5 },
   { name: 'iPad Air 11″ M3', cat: 'ipad', colors: ['space-gray','starlight','purple','blue'], stor: ['128GB','256GB','512GB','1TB'], sim: [], conn: 'Wi-Fi', chip: 'M3', scr: '11″', bp: 47500, ps: 6500, isSize: false, so: 6 },
   { name: 'iPad Air 13″ M3', cat: 'ipad', colors: ['space-gray','starlight','purple','blue'], stor: ['128GB','256GB','512GB','1TB'], sim: [], conn: 'Wi-Fi', chip: 'M3', scr: '13″', bp: 60500, ps: 9500, isSize: false, so: 7 },

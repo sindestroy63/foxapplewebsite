@@ -239,7 +239,7 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
             <a className="button" href={`tel:${normalizedPhone}`}>Позвонить</a>
           )}
           {telegramUsername && (
-            <a className="button secondary" href={tgLink} target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
+            <a className="button secondary" href={tgLink} target="_blank" rel="noopener noreferrer">Написать</a>
           )}
         </div>
 

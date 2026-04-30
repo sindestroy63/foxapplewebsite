@@ -78,6 +78,11 @@ const SKYBLUE      = c('sky-blue', 'Sky Blue', 'Небесно-голубой', 
 const ROSE_GOLD    = c('rose-gold', 'Rose Gold', 'Розовое золото', '#e8b4b8')
 const JET_BLACK    = c('jet-black', 'Jet Black', 'Глянцевый чёрный', '#0a0a0a')
 
+// iPhone 17 colors
+const GREEN        = c('green', 'Green', 'Зелёный', '#4caf50')
+const SAGE         = c('sage', 'Sage', 'Шалфей', '#9caf88')
+const GREEN_TI     = c('green-titanium', 'Green Titanium', 'Зелёный титан', '#6b8e6b')
+
 // AirPods Max (USB-C)
 const ORANGE       = c('orange', 'Orange', 'Оранжевый', '#f5845c')
 
@@ -161,6 +166,34 @@ const iphone16: ModelDef[] = [
     colors: [BLACK_TI, WHITE_TI, NATURAL_TI, DESERT_TI],
     memories: ['256GB', '512GB', '1TB'], basePrice: 96000, priceStep: 16000,
     simTypes: IPHONE_SIM_TYPES,
+  },
+]
+
+// ─── iPhone 17 (official: Black, White, Green, Sage, Blue / 128GB, 256GB, 512GB) ───
+const iphone17: ModelDef[] = [
+  {
+    categorySlug: 'iphone', model: 'iPhone 17',
+    colors: [BLACK, WHITE, GREEN, SAGE, BLUE],
+    memories: ['128GB', '256GB', '512GB'], basePrice: 62000, priceStep: 10000,
+    simTypes: IPHONE_SIM_TYPES, isNew: true, isFeatured: true,
+  },
+  {
+    categorySlug: 'iphone', model: 'iPhone 17 Air',
+    colors: [BLACK, STARLIGHT],
+    memories: ['256GB', '512GB'], basePrice: 95000, priceStep: 15000,
+    simTypes: ['ESIM'], isNew: true, isFeatured: true,
+  },
+  {
+    categorySlug: 'iphone', model: 'iPhone 17 Pro',
+    colors: [BLACK_TI, WHITE_TI, NATURAL_TI, GREEN_TI],
+    memories: ['256GB', '512GB', '1TB'], basePrice: 95000, priceStep: 15000,
+    simTypes: IPHONE_SIM_TYPES, isNew: true, isFeatured: true,
+  },
+  {
+    categorySlug: 'iphone', model: 'iPhone 17 Pro Max',
+    colors: [BLACK_TI, WHITE_TI, NATURAL_TI, GREEN_TI],
+    memories: ['256GB', '512GB', '1TB'], basePrice: 115000, priceStep: 17000,
+    simTypes: IPHONE_SIM_TYPES, isNew: true, isFeatured: true,
   },
 ]
 
@@ -307,7 +340,7 @@ const accessories: ProductSeed[] = [
 
 // ─── Combine all ───
 const allVariants: ModelDef[] = [
-  ...iphone16, ...ipads, ...macbooks, ...watches,
+  ...iphone16, ...iphone17, ...ipads, ...macbooks, ...watches,
 ]
 
 export const ALL_PRODUCTS: ProductSeed[] = [

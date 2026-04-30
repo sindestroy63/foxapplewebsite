@@ -222,7 +222,7 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
 export async function getSiteAppearance(): Promise<SiteAppearance> {
   try {
     const payload = await getPayloadClient()
-    const data = await payload.findGlobal({ slug: 'site-appearance' as any })
+    const data = await payload.findGlobal({ slug: 'site-appearance' as any, depth: 2 })
     return data as SiteAppearance
   } catch {
     return {}

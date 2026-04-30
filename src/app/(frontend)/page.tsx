@@ -3,6 +3,7 @@ import { ScrollReveal } from '@/components/ScrollReveal'
 import Link from 'next/link'
 
 import { ProductGrid } from '@/components/ProductGrid'
+import { normalizeProducts } from '@/lib/normalize'
 import { getCategories, getProducts, getSiteAppearance, getSiteSettings } from '@/lib/cms'
 import {
   mapEmbedUrl,
@@ -19,17 +20,23 @@ const benefits = [
   { label: 'Гарантия 12 месяцев', desc: 'Полная гарантийная поддержка после покупки' },
   { label: 'Trade-In', desc: 'Обменяйте старое устройство на новое с доплатой' },
   { label: 'Рассрочка', desc: 'Забирайте технику сегодня — платите частями' },
-  { label: 'Оплата картой', desc: 'Принимаем карты, переводы и наличные' },
+  { label: 'Оплата картой', desc: 'Принимаем карты и наличные' },
   { label: 'Доставка по Самаре', desc: 'Самовывоз из магазина или доставка курьером' },
 ]
 
 export default async function HomePage() {
-  const [settings, categories, products, appearance] = await Promise.all([
+  const [settings, categories, featuredProducts, appearance] = await Promise.all([
     getSiteSettings(),
     getCategories(),
     getProducts({ featuredOnly: true, limit: 6 }),
     getSiteAppearance(),
   ])
+
+  const cmsOffers = (appearance.bestOffers || [])
+    .filter((p): p is import('@/lib/types').Product =>
+      typeof p === 'object' && 'id' in p && (p as any).isAvailable !== false && ((p as any).price > 0 || ((p as any).variants && (p as any).variants.length > 0)),
+    )
+  const bestOffers = cmsOffers.length > 0 ? normalizeProducts(cmsOffers) : featuredProducts
 
   const phone = settings.phone || '+7 (917) 954-64-64'
 
@@ -114,14 +121,14 @@ export default async function HomePage() {
         <div className="container section-head">
           <div>
             <p className="eyebrow">Популярное</p>
-            <h2>Часто спрашивают</h2>
+            <h2>Лучшие предложения</h2>
           </div>
           <Link className="ghost-link" href="/catalog">
             Весь каталог →
           </Link>
         </div>
         <div className="container">
-          <ProductGrid products={products} settings={settings} />
+          <ProductGrid products={bestOffers} settings={settings} />
         </div>
       </section>
       </ScrollReveal>

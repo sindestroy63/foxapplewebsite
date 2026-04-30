@@ -9,7 +9,7 @@ export function MobileStickyBar({ settings }: { settings: SiteSettings }) {
   return (
     <nav className="mobile-sticky" aria-label="Быстрые действия">
       <a href={`tel:${normalizePhone(phone)}`}>Позвонить</a>
-      <a {...telegramLinkProps(settings.telegramUsername)}>Telegram</a>
+      <a {...telegramLinkProps(settings.telegramUsername)}>Написать</a>
       <Link href="/catalog">Каталог</Link>
     </nav>
   )

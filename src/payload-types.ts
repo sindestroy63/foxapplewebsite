@@ -896,6 +896,10 @@ export interface SiteAppearance {
    * Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент показывается крупно, остальные — в сетку.
    */
   mediaBlockItems?: (number | Media)[] | null;
+  /**
+   * Выберите до 6 товаров. Если не задано — используются товары с флагом «Популярный».
+   */
+  bestOffers?: (number | Product)[] | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -933,6 +937,7 @@ export interface SiteAppearanceSelect<T extends boolean = true> {
   mediaBlockTitle?: T;
   mediaBlockText?: T;
   mediaBlockItems?: T;
+  bestOffers?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

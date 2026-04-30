@@ -53,6 +53,22 @@ export const SiteAppearance: GlobalConfig = {
             },
           ],
         },
+        {
+          label: 'Лучшие предложения',
+          fields: [
+            {
+              name: 'bestOffers',
+              type: 'relationship',
+              label: 'Товары для блока «Лучшие предложения»',
+              relationTo: 'products',
+              hasMany: true,
+              maxRows: 6,
+              admin: {
+                description: 'Выберите до 6 товаров. Если не задано — используются товары с флагом «Популярный».',
+              },
+            },
+          ],
+        },
       ],
     },
   ],

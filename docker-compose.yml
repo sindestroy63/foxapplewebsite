@@ -28,7 +28,7 @@ services:
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:-local-development-secret-change-me}
       PORT: 3000
       RUN_MIGRATIONS_ON_START: ${RUN_MIGRATIONS_ON_START:-true}
-      PAYLOAD_SEED_ON_START: ${PAYLOAD_SEED_ON_START:-true}
+      PAYLOAD_SEED_ON_START: ${PAYLOAD_SEED_ON_START:-false}
     depends_on:
       postgres:
         condition: service_healthy

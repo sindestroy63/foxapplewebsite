@@ -97,7 +97,7 @@ export default async function ContactsPage() {
                 Позвонить
               </a>
               <a className="button secondary" {...telegramLinkProps(settings.telegramUsername)}>
-                Написать в Telegram
+                Написать
               </a>
             </div>
             <LeadForm

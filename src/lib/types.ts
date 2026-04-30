@@ -104,6 +104,7 @@ export type SiteAppearance = {
   mediaBlockTitle?: string
   mediaBlockText?: string
   mediaBlockItems?: Array<Media | string | number>
+  bestOffers?: Array<Product | string | number>
 }
 
 export type PageDoc = {

@@ -15,6 +15,7 @@ import * as migration_20260430_190000_variant_color_group from './20260430_19000
 import * as migration_20260430_200000_drop_sim_sim from './20260430_200000_drop_sim_sim';
 import * as migration_20260430_210000_dictionaries from './20260430_210000_dictionaries';
 import * as migration_20260430_220000_variant_relationships from './20260430_220000_variant_relationships';
+import * as migration_20260430_230000_best_offers from './20260430_230000_best_offers';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20260430_220000_variant_relationships.up,
     down: migration_20260430_220000_variant_relationships.down,
     name: '20260430_220000_variant_relationships'
+  },
+  {
+    up: migration_20260430_230000_best_offers.up,
+    down: migration_20260430_230000_best_offers.down,
+    name: '20260430_230000_best_offers'
   },
 ];
