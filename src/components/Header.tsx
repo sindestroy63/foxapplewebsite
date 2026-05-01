@@ -3,18 +3,17 @@ import Link from 'next/link'
 import { BrandWordmark } from '@/components/BrandWordmark'
 import { MobileMenu } from '@/components/MobileMenu'
 import { normalizePhone } from '@/lib/format'
+import type { NavCategory } from '@/lib/cms'
 import type { SiteSettings } from '@/lib/types'
 
-const navItems = [
-  { href: '/catalog', label: 'Каталог' },
-  { href: '/installment', label: 'Рассрочка' },
+const secondaryNav = [
   { href: '/trade-in', label: 'Trade-In' },
   { href: '/warranty', label: 'Гарантия и возврат' },
   { href: '/repair', label: 'Ремонт' },
   { href: '/contacts', label: 'Контакты' },
 ]
 
-export function Header({ settings }: { settings: SiteSettings }) {
+export function Header({ settings, navData }: { settings: SiteSettings; navData?: NavCategory[] }) {
   const phone = settings.phone || '+7 (917) 954-64-64'
 
   return (
@@ -25,11 +24,41 @@ export function Header({ settings }: { settings: SiteSettings }) {
         </Link>
 
         <nav className="desktop-nav" aria-label="Основная навигация">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              {item.label}
-            </Link>
-          ))}
+          {navData && navData.length > 0 ? (
+            <>
+              {navData.map((cat) => (
+                <div key={cat.slug} className="nav-dropdown">
+                  <Link href={`/catalog/${cat.slug}`} className="nav-dropdown-trigger">
+                    {cat.name}
+                    {cat.products.length > 0 && <span className="nav-arrow">&#9662;</span>}
+                  </Link>
+                  {cat.products.length > 0 && (
+                    <div className="nav-dropdown-menu">
+                      {cat.products.map((p) => (
+                        <Link key={p.slug} href={`/catalog/${cat.slug}/${p.slug}`}>
+                          {p.model}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {secondaryNav.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  {item.label}
+                </Link>
+              ))}
+            </>
+          ) : (
+            <>
+              <Link href="/catalog">Каталог</Link>
+              {secondaryNav.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  {item.label}
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="header-actions">

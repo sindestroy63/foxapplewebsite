@@ -1,20 +1,17 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { CatalogControls } from '@/components/CatalogControls'
-import { ProductGrid } from '@/components/ProductGrid'
+import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
+import { LeadForm } from '@/components/LeadForm'
 import {
-  getCategories,
   getProductsByCategorySlug,
   getSiteSettings,
-  readCatalogParams,
 } from '@/lib/cms'
 
 export const dynamic = 'force-dynamic'
 
 type Props = {
   params: Promise<{ categorySlug: string }>
-  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -22,9 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await getProductsByCategorySlug(categorySlug)
 
   if (!category) {
-    return {
-      title: 'Категория не найдена',
-    }
+    return { title: 'Категория не найдена' }
   }
 
   return {
@@ -37,36 +32,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CategoryPage({ params, searchParams }: Props) {
+export default async function CategoryPage({ params }: Props) {
   const { categorySlug } = await params
-  const queryParams = await searchParams
-  const filters = readCatalogParams(queryParams)
 
-  const [settings, categories, data] = await Promise.all([
+  const [settings, data] = await Promise.all([
     getSiteSettings(),
-    getCategories(),
-    getProductsByCategorySlug(categorySlug, filters),
+    getProductsByCategorySlug(categorySlug),
   ])
 
   if (!data.category) {
     notFound()
   }
 
+  const phone = settings.phone || '+7 (917) 954-64-64'
+
   return (
     <section className="page-section">
-      <div className="container page-head">
-        <p className="eyebrow">Каталог</p>
-        <h1>{data.category.name}</h1>
-        <p>Наличие меняется в течение дня. Самый быстрый способ забронировать товар — Telegram.</p>
-      </div>
       <div className="container">
-        <CatalogControls
-          activeSlug={categorySlug}
-          categories={categories}
-          query={filters.query}
-          sort={filters.sort}
+        <CategoryCatalogClient
+          categoryName={data.category.name}
+          categorySlug={categorySlug}
+          products={data.products}
+          phone={phone}
+          telegramUsername={settings.telegramUsername}
         />
-        <ProductGrid products={data.products} settings={settings} />
+
+        <div className="catalog-bottom">
+          <p className="offer-note detail-offer-note">Информация на сайте не является публичной офертой.</p>
+          {categorySlug !== 'used' && (
+            <p className="offer-note detail-offer-note">Товар имеет недостаток в виде невозможности предустановки RuStore.</p>
+          )}
+
+          <LeadForm
+            description="Оставьте номер телефона или Telegram. Мы уточним наличие, цену и свяжемся с вами."
+            source="product_form"
+            title="Оставить заявку по товару"
+          />
+        </div>
       </div>
     </section>
   )

@@ -7,7 +7,7 @@ import { CookieBanner } from '@/components/CookieBanner'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { Particles } from '@/components/Particles'
 import { SITE_URL } from '@/lib/constants'
-import { getSiteSettings } from '@/lib/cms'
+import { getSiteSettings, getNavData } from '@/lib/cms'
 
 import './globals.css'
 
@@ -41,14 +41,14 @@ export const metadata: Metadata = {
 }
 
 export default async function FrontendLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getSiteSettings()
+  const [settings, navData] = await Promise.all([getSiteSettings(), getNavData()])
 
   return (
     <html lang="ru">
       <body className="frontend-body">
         <Particles />
         <div className="site-shell">
-          <Header settings={settings} />
+          <Header settings={settings} navData={navData} />
           <main className="site-main">{children}</main>
           <Footer settings={settings} />
         </div>

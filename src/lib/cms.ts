@@ -219,6 +219,37 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
   }
 }
 
+export type NavCategory = {
+  slug: string
+  name: string
+  products: { model: string; slug: string }[]
+}
+
+export async function getNavData(): Promise<NavCategory[]> {
+  try {
+    const payload = await getPayloadClient()
+    const [catResult, prodResult] = await Promise.all([
+      payload.find({ collection: 'categories', depth: 0, limit: 100, sort: 'sortOrder', where: { isActive: { equals: true } } }),
+      payload.find({ collection: 'products', depth: 0, limit: 200, sort: 'sortOrder', where: { isAvailable: { equals: true } } }),
+    ])
+    const categories = catResult.docs as any[]
+    const products = prodResult.docs as any[]
+    return categories.map(cat => ({
+      slug: cat.slug,
+      name: cat.name,
+      products: products
+        .filter(p => {
+          const cid = typeof p.category === 'object' ? p.category?.id : p.category
+          return cid == cat.id
+        })
+        .map(p => ({ model: p.model || p.name, slug: p.slug })),
+    }))
+  } catch (error) {
+    console.error('Failed to load nav data', error)
+    return []
+  }
+}
+
 export async function getSiteAppearance(): Promise<SiteAppearance> {
   try {
     const payload = await getPayloadClient()
