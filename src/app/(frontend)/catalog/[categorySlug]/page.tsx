@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic'
 
 type Props = {
   params: Promise<{ categorySlug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -32,8 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorySlug } = await params
+  const query = await searchParams
+  const modelSlug = typeof query.model === 'string' ? query.model : undefined
 
   const [settings, data] = await Promise.all([
     getSiteSettings(),
@@ -55,6 +58,7 @@ export default async function CategoryPage({ params }: Props) {
           products={data.products}
           phone={phone}
           telegramUsername={settings.telegramUsername}
+          initialModelSlug={modelSlug}
         />
 
         <div className="catalog-bottom">
