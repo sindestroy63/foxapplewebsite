@@ -88,18 +88,12 @@ export const Products: CollectionConfig = {
     {
       name: 'price',
       type: 'number',
-      label: 'Цена за наличные',
+      label: 'Цена со скидкой',
       required: true,
       min: 0,
       admin: {
-        description: 'Цена по карте рассчитывается автоматически (+16%)',
+        description: 'Старая цена рассчитывается автоматически (+16%)',
       },
-    },
-    {
-      name: 'oldPrice',
-      type: 'number',
-      label: 'Старая цена',
-      min: 0,
     },
     {
       name: 'status',
@@ -250,8 +244,7 @@ export const Products: CollectionConfig = {
           { name: 'connectivity', type: 'text', label: 'Подключение (Wi-Fi, Cellular…)' },
         ] },
         { type: 'row', fields: [
-          { name: 'price', type: 'number', label: 'Цена наличные', required: true, min: 0 },
-          { name: 'oldPrice', type: 'number', label: 'Старая цена', min: 0 },
+          { name: 'price', type: 'number', label: 'Цена со скидкой', required: true, min: 0 },
         ] },
         { name: 'status', type: 'select', label: 'Статус', defaultValue: 'in_stock', options: [
           { label: 'В наличии', value: 'in_stock' },

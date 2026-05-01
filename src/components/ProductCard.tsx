@@ -61,12 +61,12 @@ export function ProductCard({ product, settings }: { product: Product; settings:
           <div className="price-block">
             <div className="price-line">
               <strong className="price-cash">{formatPrice(price)}</strong>
-              <span className="price-label">наличными</span>
+              <span className="price-label">со скидкой</span>
             </div>
             {cardPrice(price) !== null && (
               <div className="price-line price-line--card">
                 <span className="price-card">{formatPrice(cardPrice(price))}</span>
-                <span className="price-label">по карте</span>
+                <span className="price-label">старая цена</span>
               </div>
             )}
           </div>

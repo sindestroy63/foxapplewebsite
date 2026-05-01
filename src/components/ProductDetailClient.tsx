@@ -123,7 +123,7 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
 
   const activeVariant = hasVariants ? findVariant(variants, selection, selectedColor) : null
   const displayPrice = activeVariant?.price ?? product.price
-  const displayOldPrice = activeVariant?.oldPrice ?? product.oldPrice
+  const displayOldPrice = cardPrice(displayPrice)
   const displayStatus = activeVariant?.status ?? product.status
   const tone = statusTone(displayStatus)
 
@@ -229,18 +229,16 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
         <div className="detail-pricing">
           <div className="detail-price-row">
             <span className="detail-price">{formatPrice(displayPrice)}</span>
-            <span className="detail-price-label">наличными</span>
+            <span className="detail-price-label">со скидкой</span>
           </div>
-          {cardPrice(displayPrice) !== null && (
+          {displayOldPrice !== null && (
             <div className="detail-price-row detail-price-row--card">
-              <span className="detail-price-card">{formatPrice(cardPrice(displayPrice))}</span>
-              <span className="detail-price-label">по карте</span>
+              <span className="detail-price-card">{formatPrice(displayOldPrice)}</span>
+              <span className="detail-price-label">старая цена</span>
             </div>
           )}
-          <p className="detail-price-note">При оплате картой стоимость увеличивается на 16%.</p>
         </div>
 
-        {displayOldPrice ? <div className="detail-old-price">{formatPrice(displayOldPrice)}</div> : null}
         <span className={`detail-status status ${tone}`}>{statusLabel(displayStatus)}</span>
 
         <hr className="detail-divider" />
