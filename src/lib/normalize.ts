@@ -1,4 +1,4 @@
-import type { Product, ProductVariant, VariantColor } from './types'
+import type { Product, ProductVariant, VariantColor, ColorImageGroup } from './types'
 
 function nc(r: any): VariantColor | undefined {
   if (!r || typeof r !== 'object') return undefined
@@ -13,5 +13,15 @@ function nv(v: Record<string, any>): ProductVariant {
   return { id: v.id, color: nc(v.color), memory, simType, size, chip: v.chip, ram: v.ram, screenSize: v.screenSize, connectivity: v.connectivity, price: v.price, oldPrice: v.oldPrice, status: v.status, isAvailable: v.isAvailable, images: v.images }
 }
 
-export function normalizeProduct(raw: any): Product { return { ...raw, variants: raw.variants?.map(nv) ?? [] } }
+function nci(ci: Record<string, any>): ColorImageGroup {
+  return { color: nc(ci.color) ?? ci.color, images: ci.images }
+}
+
+export function normalizeProduct(raw: any): Product {
+  return {
+    ...raw,
+    variants: raw.variants?.map(nv) ?? [],
+    colorImages: raw.colorImages?.map(nci) ?? [],
+  }
+}
 export function normalizeProducts(docs: any[]): Product[] { return docs.map(normalizeProduct) }

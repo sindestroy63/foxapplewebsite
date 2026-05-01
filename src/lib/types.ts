@@ -54,6 +54,11 @@ export type ProductVariant = {
   images?: Array<Media | string | number>
 }
 
+export type ColorImageGroup = {
+  color?: VariantColor | string | number
+  images?: Array<Media | string | number>
+}
+
 export type Product = {
   id: string | number
   category?: Category | string | number
@@ -75,6 +80,7 @@ export type Product = {
   shortDescription?: string
   description?: unknown
   images?: Array<Media | string | number>
+  colorImages?: ColorImageGroup[]
   variants?: ProductVariant[]
   seoTitle?: string
   seoDescription?: string

@@ -173,6 +173,32 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      name: 'colorImages',
+      type: 'array',
+      label: 'Фотографии по цветам',
+      admin: {
+        description: 'Загрузите фото для каждого цвета. При выборе цвета на сайте показываются соответствующие фото. Если не заданы — общие фото товара.',
+      },
+      fields: [
+        {
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
+          label: 'Цвет',
+          required: true,
+        },
+        {
+          name: 'images',
+          type: 'upload',
+          relationTo: 'media',
+          hasMany: true,
+          label: 'Фотографии',
+          required: true,
+          filterOptions: { mimeType: { like: 'image/' } },
+        },
+      ],
+    },
+    {
       name: 'size',
       type: 'text',
       label: 'Размер (мм)',

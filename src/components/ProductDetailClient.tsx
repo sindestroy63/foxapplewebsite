@@ -127,9 +127,20 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
   const displayStatus = activeVariant?.status ?? product.status
   const tone = statusTone(displayStatus)
 
+  const colorGroupImages = useMemo(() => {
+    if (!selectedColor || !product.colorImages?.length) return []
+    const group = product.colorImages.find((ci) => {
+      const c = ci.color
+      if (!c) return false
+      if (typeof c === 'object' && 'value' in c) return c.value === selectedColor
+      return false
+    })
+    return group ? resolveMedia(group.images) : []
+  }, [selectedColor, product.colorImages])
+
   const variantImages = resolveMedia(activeVariant?.images)
   const productImages = resolveMedia(product.images)
-  const displayImages = variantImages.length > 0 ? variantImages : productImages
+  const displayImages = colorGroupImages.length > 0 ? colorGroupImages : variantImages.length > 0 ? variantImages : productImages
 
   const normalizedPhone = phone?.replace(/[^\d+]/g, '') || ''
   const tgLink = telegramUsername ? `https://t.me/${telegramUsername.replace('@', '')}` : '#'
