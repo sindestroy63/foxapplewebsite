@@ -50,6 +50,9 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         <span className="footer-seller">
           {SELLER.typeAndName} · ИНН {SELLER.inn} · ОГРНИП {SELLER.ogrnip}
         </span>
+        <a href="https://intellexgroup.ru" target="_blank" rel="noreferrer" className="footer-dev">
+          Разработка intellexgroup.ru
+        </a>
       </div>
     </footer>
   )

@@ -6,8 +6,8 @@ export const StorageOptions: CollectionConfig = {
   slug: 'storage-options',
   labels: { singular: 'Вариант памяти', plural: 'Варианты памяти' },
   admin: {
-    useAsTitle: 'label',
-    defaultColumns: ['label', 'value'],
+    useAsTitle: 'value',
+    defaultColumns: ['value', 'sortOrder'],
     group: 'Справочники',
   },
   access: {
@@ -22,15 +22,8 @@ export const StorageOptions: CollectionConfig = {
       type: 'text',
       required: true,
       unique: true,
-      label: 'Значение (ключ)',
+      label: 'Значение',
       admin: { description: '128GB, 256GB, 512GB, 1TB, 2TB' },
-    },
-    {
-      name: 'label',
-      type: 'text',
-      required: true,
-      label: 'Отображение',
-      admin: { description: '128 ГБ, 256 ГБ, 512 ГБ, 1 ТБ, 2 ТБ' },
     },
     {
       name: 'sortOrder',
