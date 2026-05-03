@@ -1,9 +1,27 @@
 import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
+  // Create enum for SIM types
+  await db.execute(sql`
+    CREATE TYPE "public"."enum_products_sim_type" AS ENUM('SIM_ESIM', 'ESIM', 'SIM_SIM');
+  `)
+
   // Create enum for variant SIM types
   await db.execute(sql`
     CREATE TYPE "public"."enum_products_variants_sim_type" AS ENUM('SIM_ESIM', 'ESIM', 'SIM_SIM');
+  `)
+
+  // Convert top-level simType column from varchar to enum
+  await db.execute(sql`
+    ALTER TABLE "products" ALTER COLUMN "sim_type" DROP DEFAULT;
+  `)
+  await db.execute(sql`
+    UPDATE "products" SET "sim_type" = NULL WHERE "sim_type" IS NOT NULL
+      AND "sim_type" NOT IN ('SIM_ESIM', 'ESIM', 'SIM_SIM');
+  `)
+  await db.execute(sql`
+    ALTER TABLE "products" ALTER COLUMN "sim_type" TYPE "enum_products_sim_type"
+      USING "sim_type"::"enum_products_sim_type";
   `)
 
   // Convert variant simType column from varchar to enum
@@ -23,6 +41,13 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
       USING "sim_type"::text;
   `)
   await db.execute(sql`
+    ALTER TABLE "products" ALTER COLUMN "sim_type" TYPE varchar
+      USING "sim_type"::text;
+  `)
+  await db.execute(sql`
     DROP TYPE IF EXISTS "public"."enum_products_variants_sim_type";
+  `)
+  await db.execute(sql`
+    DROP TYPE IF EXISTS "public"."enum_products_sim_type";
   `)
 }

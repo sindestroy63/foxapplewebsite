@@ -375,10 +375,21 @@ const airpods: ProductSeed[] = [
 
 // ─── PlayStation ───
 const playstation: ProductSeed[] = [
-  { categorySlug: 'playstation', model: 'PlayStation 5 Pro', name: 'PlayStation 5 Pro', color: 'White', memory: '2TB', price: 78000, isFeatured: true,
-    shortDescription: 'Флагманская консоль PlayStation с SSD 2 ТБ.' },
-  { categorySlug: 'playstation', model: 'PlayStation 5 Slim Disc', name: 'PlayStation 5 Slim с дисководом', color: 'White', price: 49000 },
-  { categorySlug: 'playstation', model: 'PlayStation 5 Slim Digital', name: 'PlayStation 5 Slim Цифровая', color: 'White', price: 45500 },
+  { categorySlug: 'playstation', model: 'PlayStation 5 Pro', name: 'PlayStation 5 Pro', color: 'White', price: 78000, isFeatured: true,
+    shortDescription: 'Флагманская консоль PlayStation с SSD.',
+    variants: [
+      { color: WHITE, memory: '1TB', price: 72000 },
+      { color: WHITE, memory: '2TB', price: 78000 },
+    ] },
+  { categorySlug: 'playstation', model: 'PlayStation 5 Slim Disc', name: 'PlayStation 5 Slim с дисководом', color: 'White', price: 49000,
+    variants: [
+      { color: WHITE, memory: '1TB', price: 49000 },
+      { color: WHITE, memory: '2TB', price: 55000 },
+    ] },
+  { categorySlug: 'playstation', model: 'PlayStation 5 Slim Digital', name: 'PlayStation 5 Slim Цифровая', color: 'White', price: 45500,
+    variants: [
+      { color: WHITE, memory: '1TB', price: 45500 },
+    ] },
 ]
 
 // ─── Accessories ───

@@ -70,8 +70,8 @@ export default async function HomePage() {
           <h1>{settings.heroTitle}</h1>
           <p className="hero-subtitle">{settings.heroSubtitle}</p>
           <div className="hero-actions">
-            <Link className="button hero-primary" href="/catalog">
-              Каталог
+            <Link className="button hero-primary" href="/catalog/iphone">
+              Подобрать технику
             </Link>
             <Link className="button hero-secondary" href="/contacts">
               Связаться
@@ -89,7 +89,7 @@ export default async function HomePage() {
             <h2>Каталог техники</h2>
           </div>
           <Link className="ghost-link" href="/catalog">
-            Смотреть все →
+            Все категории →
           </Link>
         </div>
         <div className="container category-grid">
@@ -124,7 +124,7 @@ export default async function HomePage() {
             <h2>Лучшие предложения</h2>
           </div>
           <Link className="ghost-link" href="/catalog">
-            Весь каталог →
+            Все категории →
           </Link>
         </div>
         <div className="container">

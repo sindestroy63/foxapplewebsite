@@ -248,10 +248,9 @@ export interface Product {
   color?: string | null;
   simType?: string | null;
   /**
-   * Цена по карте рассчитывается автоматически (+16%)
+   * Старая цена рассчитывается автоматически (+16%)
    */
   price: number;
-  oldPrice?: number | null;
   status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
   isAvailable?: boolean | null;
   isFeatured?: boolean | null;
@@ -277,6 +276,16 @@ export interface Product {
    * Рекомендуемый размер: 1000×1000 px (квадрат). Формат: JPG, PNG или WebP. Первое фото — основное.
    */
   images?: (number | Media)[] | null;
+  /**
+   * Загрузите фото для каждого цвета. При выборе цвета на сайте показываются соответствующие фото. Если не заданы — общие фото товара.
+   */
+  colorImages?:
+    | {
+        color: number | Color;
+        images: (number | Media)[];
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Для Apple Watch: 40mm, 42mm и т.д.
    */
@@ -307,7 +316,6 @@ export interface Product {
         screenSize?: string | null;
         connectivity?: string | null;
         price: number;
-        oldPrice?: number | null;
         status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
         isAvailable?: boolean | null;
         /**
@@ -319,6 +327,34 @@ export interface Product {
     | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "colors".
+ */
+export interface Color {
+  id: number;
+  /**
+   * black, ultramarine, space-gray и т.д.
+   */
+  value: string;
+  englishLabel: string;
+  russianLabel: string;
+  /**
+   * #RRGGBB
+   */
+  primaryHex: string;
+  /**
+   * Для двухцветных (опционально)
+   */
+  secondaryHex?: string | null;
+  /**
+   * Для каких категорий применим этот цвет
+   */
+  deviceTypes?: ('iphone' | 'ipad' | 'macbook' | 'apple-watch' | 'airpods' | 'playstation' | 'accessories')[] | null;
+  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -373,42 +409,18 @@ export interface DeviceModel {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "colors".
- */
-export interface Color {
-  id: number;
-  /**
-   * black, ultramarine, space-gray и т.д.
-   */
-  value: string;
-  englishLabel: string;
-  russianLabel: string;
-  /**
-   * #RRGGBB
-   */
-  primaryHex: string;
-  /**
-   * Для двухцветных (опционально)
-   */
-  secondaryHex?: string | null;
-  /**
-   * Для каких категорий применим этот цвет
-   */
-  deviceTypes?: ('iphone' | 'ipad' | 'macbook' | 'apple-watch' | 'airpods' | 'playstation' | 'accessories')[] | null;
-  sortOrder?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "storage-options".
  */
 export interface StorageOption {
   id: number;
   /**
-   * 128GB, 256GB, 512GB, 1TB, 2TB, 40mm, 42mm и т.д.
+   * 128GB, 256GB, 512GB, 1TB, 2TB
    */
   value: string;
+  /**
+   * 128 ГБ, 256 ГБ, 512 ГБ, 1 ТБ, 2 ТБ
+   */
+  label: string;
   sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -690,7 +702,6 @@ export interface ProductsSelect<T extends boolean = true> {
   color?: T;
   simType?: T;
   price?: T;
-  oldPrice?: T;
   status?: T;
   isAvailable?: T;
   isFeatured?: T;
@@ -699,6 +710,13 @@ export interface ProductsSelect<T extends boolean = true> {
   shortDescription?: T;
   description?: T;
   images?: T;
+  colorImages?:
+    | T
+    | {
+        color?: T;
+        images?: T;
+        id?: T;
+      };
   size?: T;
   deviceModel?: T;
   variants?:
@@ -712,7 +730,6 @@ export interface ProductsSelect<T extends boolean = true> {
         screenSize?: T;
         connectivity?: T;
         price?: T;
-        oldPrice?: T;
         status?: T;
         isAvailable?: T;
         images?: T;
@@ -776,6 +793,7 @@ export interface ColorsSelect<T extends boolean = true> {
  */
 export interface StorageOptionsSelect<T extends boolean = true> {
   value?: T;
+  label?: T;
   sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;

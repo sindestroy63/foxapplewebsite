@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { LeadForm } from '@/components/LeadForm'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
+import { RichText } from '@/components/RichText'
 import { getProductBySlugs, getSiteSettings } from '@/lib/cms'
 
 export const dynamic = 'force-dynamic'

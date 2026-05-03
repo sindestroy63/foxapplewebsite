@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import type { Product, ProductVariant } from '@/lib/types'
+import { sortProductsByPriority } from '@/lib/sort'
 import { ProductDetailClient } from './ProductDetailClient'
 
 const CATEGORY_SUBTITLES: Record<string, string> = {
@@ -85,7 +86,7 @@ type Props = {
 }
 
 export function CategoryCatalogClient({ categoryName, categorySlug, products, phone, telegramUsername, initialModelSlug }: Props) {
-  const merged = useMemo(() => mergeByScreenSize(products), [products])
+  const merged = useMemo(() => mergeByScreenSize(sortProductsByPriority(products)), [products])
 
   const [selectedIndex, setSelectedIndex] = useState(() => {
     if (initialModelSlug) {

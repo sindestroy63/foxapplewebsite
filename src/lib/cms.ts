@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './constants'
 import { normalizeProduct, normalizeProducts } from './normalize'
+import { sortProductsByPriority } from '@/lib/sort'
 import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -225,6 +226,8 @@ export type NavCategory = {
   products: { model: string; slug: string }[]
 }
 
+export { sortProductsByPriority }
+
 export async function getNavData(): Promise<NavCategory[]> {
   try {
     const payload = await getPayloadClient()
@@ -237,12 +240,14 @@ export async function getNavData(): Promise<NavCategory[]> {
     return categories.map(cat => ({
       slug: cat.slug,
       name: cat.name,
-      products: products
-        .filter(p => {
-          const cid = typeof p.category === 'object' ? p.category?.id : p.category
-          return cid == cat.id
-        })
-        .map(p => ({ model: p.model || p.name, slug: p.slug })),
+      products: sortProductsByPriority(
+        products
+          .filter(p => {
+            const cid = typeof p.category === 'object' ? p.category?.id : p.category
+            return cid == cat.id
+          })
+          .map(p => ({ model: p.model || p.name, slug: p.slug, name: p.name })),
+      ),
     }))
   } catch (error) {
     console.error('Failed to load nav data', error)

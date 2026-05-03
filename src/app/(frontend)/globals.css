@@ -2168,7 +2168,9 @@ a.contact-item:hover {
   font-size: clamp(32px, 5vw, 48px);
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin: 0 0 8px;
+  margin: 0 auto 8px;
+  text-align: center;
+  width: 100%;
 }
 
 .catalog-category-subtitle {
@@ -2284,6 +2286,84 @@ a.contact-item:hover {
 
 .nav-dropdown-menu a:hover {
   background: var(--bg);
+}
+
+/* ── Catalog Categories Page ── */
+.catalog-categories-page {
+  text-align: center;
+}
+
+.catalog-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.catalog-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition), box-shadow var(--transition);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.catalog-cat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.catalog-cat-card-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.catalog-cat-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.catalog-cat-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.catalog-cat-card-arrow {
+  margin-top: 8px;
+  font-size: 18px;
+  color: var(--muted);
+  transition: transform var(--transition);
+}
+
+.catalog-cat-card:hover .catalog-cat-card-arrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 720px) {
+  .catalog-cat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .catalog-cat-card {
+    padding: 16px 12px;
+  }
+
+  .catalog-cat-card-name {
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 720px) {
