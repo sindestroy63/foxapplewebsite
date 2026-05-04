@@ -107,6 +107,7 @@ export type SiteSettings = {
 
 export type SiteAppearance = {
   heroVideo?: Media | string | number
+  heroSlides?: Array<Media | string | number>
   mediaBlockTitle?: string
   mediaBlockText?: string
   mediaBlockItems?: Array<Media | string | number>

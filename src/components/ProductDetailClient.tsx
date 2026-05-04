@@ -28,7 +28,14 @@ function uniqueStrings(variants: ProductVariant[], key: StringKey): string[] {
     const val = v[key]
     if (typeof val === 'string' && val.trim()) set.add(val.trim())
   }
-  return [...set]
+  const arr = [...set]
+  arr.sort((a, b) => {
+    const na = parseFloat(a)
+    const nb = parseFloat(b)
+    if (!isNaN(na) && !isNaN(nb)) return na - nb
+    return a.localeCompare(b)
+  })
+  return arr
 }
 
 type UniqueColor = { value: string; en: string; ru: string; hex: string; hex2?: string }

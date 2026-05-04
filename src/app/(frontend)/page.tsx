@@ -1,3 +1,4 @@
+import { HeroSlideshow } from '@/components/HeroSlideshow'
 import { HomepageMediaShowcase } from '@/components/HomepageMediaShowcase'
 import { ScrollReveal } from '@/components/ScrollReveal'
 import Link from 'next/link'
@@ -40,30 +41,33 @@ export default async function HomePage() {
 
   const phone = settings.phone || '+7 (917) 954-64-64'
 
-  const heroMedia = (appearance.heroVideo && typeof appearance.heroVideo === 'object' && 'id' in appearance.heroVideo)
+  const heroSlidesRaw = (appearance.heroSlides || []).filter(
+    (item): item is Media => Boolean(item) && typeof item === 'object' && 'id' in item,
+  )
+  const heroVideoFallback = (appearance.heroVideo && typeof appearance.heroVideo === 'object' && 'id' in appearance.heroVideo)
     ? appearance.heroVideo as Media
     : null
   const homepageMedia = (appearance.mediaBlockItems || settings.homepageMedia || []).filter(
     (item): item is Media => Boolean(item) && typeof item === 'object' && 'id' in item,
   )
-  const heroMediaUrl = heroMedia ? getMediaUrl(heroMedia, 'detail') : getMediaUrl(homepageMedia[0], 'detail')
+
+  const heroSlides = heroSlidesRaw.length > 0
+    ? heroSlidesRaw.map((m) => ({
+        url: getMediaUrl(m, 'detail') || '',
+        isVideo: isVideoMedia(m),
+        alt: m.alt || 'FOX APPLE',
+      })).filter((s) => s.url)
+    : heroVideoFallback
+      ? [{ url: getMediaUrl(heroVideoFallback, 'detail') || '', isVideo: isVideoMedia(heroVideoFallback), alt: heroVideoFallback.alt || 'FOX APPLE' }].filter((s) => s.url)
+      : homepageMedia[0]
+        ? [{ url: getMediaUrl(homepageMedia[0], 'detail') || '', isVideo: isVideoMedia(homepageMedia[0]), alt: homepageMedia[0].alt || 'FOX APPLE' }].filter((s) => s.url)
+        : []
 
   return (
     <>
       {/* ── HERO ── */}
       <section className="hero">
-        {heroMediaUrl ? (
-          isVideoMedia(heroMedia) ? (
-            <video autoPlay className="hero-bg-video" loop muted playsInline preload="auto" src={heroMediaUrl} />
-          ) : (
-            <img
-              alt={heroMedia?.alt || 'FOX APPLE'}
-              className="hero-bg-video"
-              loading="eager"
-              src={heroMediaUrl}
-            />
-          )
-        ) : null}
+        <HeroSlideshow slides={heroSlides} />
         <div className="hero-bg-overlay" />
         <div className="container hero-content">
           <p className="eyebrow">Самара · техника Apple · бронь онлайн</p>

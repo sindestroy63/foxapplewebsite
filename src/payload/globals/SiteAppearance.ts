@@ -17,12 +17,22 @@ export const SiteAppearance: GlobalConfig = {
           label: 'Главный экран (Hero)',
           fields: [
             {
+              name: 'heroSlides',
+              type: 'relationship',
+              label: 'Слайды для Hero (фото / видео)',
+              relationTo: 'media',
+              hasMany: true,
+              admin: {
+                description: 'Добавьте несколько фото или видео. Они будут автоматически сменяться каждые 7 секунд. Рекомендуемый размер: 1920×1080 px. Формат: MP4, JPG, PNG, WebP.',
+              },
+            },
+            {
               name: 'heroVideo',
               type: 'upload',
-              label: 'Видео / изображение для Hero',
+              label: 'Видео / изображение (устаревшее, используйте слайды выше)',
               relationTo: 'media',
               admin: {
-                description: 'Рекомендуемый размер: 1920×1080 px (Full HD). Формат: MP4 (видео) или JPG/PNG/WebP (фото). Отображается на фоне главного экрана.',
+                description: 'Используется как fallback, если слайды не заданы.',
               },
             },
           ],
