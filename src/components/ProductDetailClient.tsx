@@ -22,6 +22,17 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
 
 type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'memory' | 'connectivity' | 'size'
 
+function toSortableNumber(s: string): number | null {
+  const m = s.match(/^([\d.]+)\s*(TB|ТБ|GB|ГБ|MB|МБ)?$/i)
+  if (!m) return null
+  const num = parseFloat(m[1])
+  if (isNaN(num)) return null
+  const unit = (m[2] || '').toUpperCase()
+  if (unit === 'TB' || unit === 'ТБ') return num * 1024
+  if (unit === 'MB' || unit === 'МБ') return num / 1024
+  return num
+}
+
 function uniqueStrings(variants: ProductVariant[], key: StringKey): string[] {
   const set = new Set<string>()
   for (const v of variants) {
@@ -30,8 +41,8 @@ function uniqueStrings(variants: ProductVariant[], key: StringKey): string[] {
   }
   const arr = [...set]
   arr.sort((a, b) => {
-    const na = parseFloat(a)
-    const nb = parseFloat(b)
+    const na = toSortableNumber(a) ?? parseFloat(a)
+    const nb = toSortableNumber(b) ?? parseFloat(b)
     if (!isNaN(na) && !isNaN(nb)) return na - nb
     return a.localeCompare(b)
   })
