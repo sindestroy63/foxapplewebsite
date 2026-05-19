@@ -47,6 +47,7 @@ export type ProductVariant = {
   ram?: string
   screenSize?: string
   connectivity?: string
+  generation?: string
   price: number
   oldPrice?: number
   status?: ProductStatus

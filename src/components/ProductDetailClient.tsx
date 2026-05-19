@@ -20,7 +20,7 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
   return (items || []).filter((m): m is Media => Boolean(m) && typeof m === 'object' && 'id' in m)
 }
 
-type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'memory' | 'connectivity' | 'size'
+type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'memory' | 'connectivity' | 'size' | 'generation'
 
 function toSortableNumber(s: string): number | null {
   const m = s.match(/^([\d.]+)\s*(TB|ТБ|GB|ГБ|MB|МБ)?$/i)
@@ -93,6 +93,7 @@ const STRING_AXES: { key: StringKey; title: string }[] = [
   { key: 'memory', title: 'Накопитель' },
   { key: 'connectivity', title: 'Подключение' },
   { key: 'size', title: 'Размер' },
+  { key: 'generation', title: 'Поколение' },
 ]
 
 function displayLabel(key: StringKey, value: string): string {

@@ -315,6 +315,7 @@ export interface Product {
         ram?: string | null;
         screenSize?: string | null;
         connectivity?: string | null;
+        generation?: string | null;
         price: number;
         status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
         isAvailable?: boolean | null;
@@ -417,10 +418,6 @@ export interface StorageOption {
    * 128GB, 256GB, 512GB, 1TB, 2TB
    */
   value: string;
-  /**
-   * 128 ГБ, 256 ГБ, 512 ГБ, 1 ТБ, 2 ТБ
-   */
-  label: string;
   sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -729,6 +726,7 @@ export interface ProductsSelect<T extends boolean = true> {
         ram?: T;
         screenSize?: T;
         connectivity?: T;
+        generation?: T;
         price?: T;
         status?: T;
         isAvailable?: T;
@@ -793,7 +791,6 @@ export interface ColorsSelect<T extends boolean = true> {
  */
 export interface StorageOptionsSelect<T extends boolean = true> {
   value?: T;
-  label?: T;
   sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -905,7 +902,11 @@ export interface SiteSetting {
 export interface SiteAppearance {
   id: number;
   /**
-   * Рекомендуемый размер: 1920×1080 px (Full HD). Формат: MP4 (видео) или JPG/PNG/WebP (фото). Отображается на фоне главного экрана.
+   * Добавьте несколько фото или видео. Они будут автоматически сменяться каждые 7 секунд. Рекомендуемый размер: 1920×1080 px. Формат: MP4, JPG, PNG, WebP.
+   */
+  heroSlides?: (number | Media)[] | null;
+  /**
+   * Используется как fallback, если слайды не заданы.
    */
   heroVideo?: (number | null) | Media;
   mediaBlockTitle?: string | null;
@@ -951,6 +952,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  * via the `definition` "site-appearance_select".
  */
 export interface SiteAppearanceSelect<T extends boolean = true> {
+  heroSlides?: T;
   heroVideo?: T;
   mediaBlockTitle?: T;
   mediaBlockText?: T;

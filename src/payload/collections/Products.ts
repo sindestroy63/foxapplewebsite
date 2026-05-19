@@ -242,6 +242,7 @@ export const Products: CollectionConfig = {
         ] },
         { type: 'row', fields: [
           { name: 'connectivity', type: 'text', label: 'Подключение (Wi-Fi, Cellular…)' },
+          { name: 'generation', type: 'text', label: 'Поколение' },
         ] },
         { type: 'row', fields: [
           { name: 'price', type: 'number', label: 'Цена со скидкой', required: true, min: 0 },
