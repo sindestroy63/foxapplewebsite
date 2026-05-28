@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import type { Media, Product, ProductVariant } from '@/lib/types'
 import { ProductGallery } from './ProductGallery'
 import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
@@ -69,12 +69,6 @@ function uniqueColors(variants: ProductVariant[]): UniqueColor[] {
   return [...seen.values()]
 }
 
-function isColorFullyUnavailable(variants: ProductVariant[], colorValue: string): boolean {
-  const colorVariants = variants.filter((v) => v.color?.value === colorValue)
-  if (colorVariants.length === 0) return true
-  return colorVariants.every((v) => v.isAvailable === false || v.status === 'out_of_stock')
-}
-
 function findVariant(
   variants: ProductVariant[],
   sel: Record<string, string | null>,
@@ -119,11 +113,24 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
   const variants = product.variants || []
   const hasVariants = variants.length > 0
 
+  const [selection, setSelection] = useState<Record<string, string | null>>(() => {
+    if (!hasVariants) return {}
+    const init: Record<string, string | null> = {}
+    for (const { key } of STRING_AXES) {
+      const vals = uniqueStrings(variants, key)
+      if (vals.length > 0) init[key] = vals[0]
+    }
+    return init
+  })
+
   const colors = useMemo(() => {
     const all = uniqueColors(variants)
     if (!product.hideUnavailableColors) return all
-    return all.filter((clr) => !isColorFullyUnavailable(variants, clr.value))
-  }, [variants, product.hideUnavailableColors])
+    return all.filter((clr) => {
+      const match = findVariant(variants, selection, clr.value)
+      return match !== null && match.isAvailable !== false
+    })
+  }, [variants, product.hideUnavailableColors, selection])
   const hasColors = colors.length > 0
 
   const stringAxes = useMemo(() => {
@@ -140,15 +147,12 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
     return hasColors ? colors[0].value : null
   })
 
-  const [selection, setSelection] = useState<Record<string, string | null>>(() => {
-    if (!hasVariants) return {}
-    const init: Record<string, string | null> = {}
-    for (const { key } of STRING_AXES) {
-      const vals = uniqueStrings(variants, key)
-      if (vals.length > 0) init[key] = vals[0]
+  useEffect(() => {
+    if (!product.hideUnavailableColors || !selectedColor) return
+    if (!colors.some((c) => c.value === selectedColor)) {
+      setSelectedColor(colors.length > 0 ? colors[0].value : null)
     }
-    return init
-  })
+  }, [colors])
 
   const activeVariant = hasVariants ? findVariant(variants, selection, selectedColor) : null
   const displayPrice = activeVariant?.price ?? product.price
