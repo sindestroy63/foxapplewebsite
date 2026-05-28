@@ -123,6 +123,15 @@ export const Products: CollectionConfig = {
       index: true,
     },
     {
+      name: 'hideUnavailableColors',
+      type: 'checkbox',
+      label: 'Скрывать цвета не в наличии',
+      defaultValue: false,
+      admin: {
+        description: 'Если включено — цвета, для которых все варианты недоступны, не будут показываться на странице товара.',
+      },
+    },
+    {
       name: 'isFeatured',
       type: 'checkbox',
       label: 'Популярный товар',

@@ -75,6 +75,7 @@ export type Product = {
   currency?: string
   status?: ProductStatus
   isAvailable?: boolean
+  hideUnavailableColors?: boolean
   isFeatured?: boolean
   isNew?: boolean
   sortOrder?: number

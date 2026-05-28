@@ -17,6 +17,7 @@ import * as migration_20260430_210000_dictionaries from './20260430_210000_dicti
 import * as migration_20260430_220000_variant_relationships from './20260430_220000_variant_relationships';
 import * as migration_20260430_230000_best_offers from './20260430_230000_best_offers';
 import * as migration_20260501_120000_color_images from './20260501_120000_color_images';
+import * as migration_20260519_170000_variant_generation from './20260519_170000_variant_generation';
 
 export const migrations = [
   {

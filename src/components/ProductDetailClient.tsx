@@ -69,6 +69,12 @@ function uniqueColors(variants: ProductVariant[]): UniqueColor[] {
   return [...seen.values()]
 }
 
+function isColorFullyUnavailable(variants: ProductVariant[], colorValue: string): boolean {
+  const colorVariants = variants.filter((v) => v.color?.value === colorValue)
+  if (colorVariants.length === 0) return true
+  return colorVariants.every((v) => v.isAvailable === false || v.status === 'out_of_stock')
+}
+
 function findVariant(
   variants: ProductVariant[],
   sel: Record<string, string | null>,
@@ -113,7 +119,11 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
   const variants = product.variants || []
   const hasVariants = variants.length > 0
 
-  const colors = useMemo(() => uniqueColors(variants), [variants])
+  const colors = useMemo(() => {
+    const all = uniqueColors(variants)
+    if (!product.hideUnavailableColors) return all
+    return all.filter((clr) => !isColorFullyUnavailable(variants, clr.value))
+  }, [variants, product.hideUnavailableColors])
   const hasColors = colors.length > 0
 
   const stringAxes = useMemo(() => {
