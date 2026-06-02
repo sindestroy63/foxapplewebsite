@@ -1,20 +1,25 @@
 import type { Media, Product } from './types'
 
 function mediaPath(filename?: string): string | null {
-  return filename ? `/api/media/file/${filename}` : null
+  return filename ? `/api/media/file/${encodeURIComponent(filename)}` : null
 }
 
+/**
+ * Returns URL for media file using our custom route /api/media/file/<filename>
+ * Always uses the filename instead of Payload's default url to avoid 404 on production
+ */
 export function getMediaUrl(media?: Media | string | number | null, preferred = 'card'): string | null {
   if (!media || typeof media !== 'object') {
     return null
   }
 
   if (isVideoMedia(media)) {
-    return media.url || mediaPath(media.filename)
+    return mediaPath(media.filename)
   }
 
   const sized = media.sizes?.[preferred as keyof NonNullable<Media['sizes']>]
-  return sized?.url || media.url || mediaPath(sized?.filename || media.filename)
+  // Always use filename-based path through our custom route
+  return mediaPath(sized?.filename || media.filename)
 }
 
 export function isVideoMedia(media?: Media | string | number | null): boolean {
