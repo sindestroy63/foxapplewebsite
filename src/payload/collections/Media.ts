@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import path from 'path'
 
 import { admins, anyone } from '../access'
 
@@ -15,7 +16,7 @@ export const Media: CollectionConfig = {
     delete: admins,
   },
   upload: {
-    staticDir: 'media',
+    staticDir: path.resolve(process.cwd(), 'media'),
     adminThumbnail: 'thumbnail',
     mimeTypes: ['image/*', 'video/*'],
     imageSizes: [
