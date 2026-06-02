@@ -18,6 +18,8 @@ import * as migration_20260430_220000_variant_relationships from './20260430_220
 import * as migration_20260430_230000_best_offers from './20260430_230000_best_offers';
 import * as migration_20260501_120000_color_images from './20260501_120000_color_images';
 import * as migration_20260519_170000_variant_generation from './20260519_170000_variant_generation';
+import * as migration_20260601_133000_add_hide_unavailable_colors from './20260601_133000_add_hide_unavailable_colors';
+import * as migration_20260602_144500_leads_telegram_utm from './20260602_144500_leads_telegram_utm';
 
 export const migrations = [
   {
@@ -114,5 +116,15 @@ export const migrations = [
     up: migration_20260501_120000_color_images.up,
     down: migration_20260501_120000_color_images.down,
     name: '20260501_120000_color_images'
+  },
+  {
+    up: migration_20260601_133000_add_hide_unavailable_colors.up,
+    down: migration_20260601_133000_add_hide_unavailable_colors.down,
+    name: '20260601_133000_add_hide_unavailable_colors'
+  },
+  {
+    up: migration_20260602_144500_leads_telegram_utm.up,
+    down: migration_20260602_144500_leads_telegram_utm.down,
+    name: '20260602_144500_leads_telegram_utm'
   },
 ];

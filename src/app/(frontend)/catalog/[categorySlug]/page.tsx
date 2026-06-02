@@ -68,6 +68,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           )}
 
           <LeadForm
+            categoryName={data.category.name}
+            categorySlug={categorySlug}
             description="Оставьте номер телефона или Telegram. Мы уточним наличие, цену и свяжемся с вами."
             source="product_form"
             title="Оставить заявку по товару"

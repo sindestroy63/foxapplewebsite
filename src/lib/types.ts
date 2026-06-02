@@ -124,3 +124,33 @@ export type PageDoc = {
   seoTitle?: string
   seoDescription?: string
 }
+
+export type CartItemVariant = {
+  color?: {
+    value: string
+    englishLabel: string
+    russianLabel?: string
+    primaryHex?: string
+  }
+  memory?: string
+  simType?: string
+  size?: string
+  chip?: string
+  screenSize?: string
+}
+
+export type CartItem = {
+  id: string
+  productId: string | number
+  productName: string
+  productSlug: string
+  categorySlug: string
+  variant?: CartItemVariant
+  quantity: number
+  price: number
+  image?: string
+}
+
+export type CartState = {
+  items: CartItem[]
+}

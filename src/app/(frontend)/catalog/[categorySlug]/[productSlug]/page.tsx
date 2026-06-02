@@ -62,8 +62,18 @@ export default async function ProductPage({ params }: Props) {
         )}
 
         <LeadForm
+          categoryName={
+            typeof product.category === 'object' &&
+            product.category !== null &&
+            'name' in product.category
+              ? product.category.name
+              : undefined
+          }
+          categorySlug={categorySlug}
           description="Оставьте номер телефона или Telegram. Мы уточним наличие, цену и свяжемся с вами."
           productId={product.id}
+          productName={product.name}
+          productSlug={productSlug}
           source="product_form"
           title="Оставить заявку по товару"
         />

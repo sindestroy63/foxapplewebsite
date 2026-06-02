@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { BrandWordmark } from '@/components/BrandWordmark'
+import { CartIcon } from '@/components/CartIcon'
 import { MobileMenu } from '@/components/MobileMenu'
 import { normalizePhone } from '@/lib/format'
 import type { NavCategory } from '@/lib/cms'
@@ -59,6 +60,7 @@ export function Header({ settings, navData }: { settings: SiteSettings; navData?
         </nav>
 
         <div className="header-actions">
+          <CartIcon />
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>
             Позвонить
           </a>

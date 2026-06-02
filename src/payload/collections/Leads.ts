@@ -10,7 +10,8 @@ export const Leads: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'phone',
-    defaultColumns: ['createdAt', 'name', 'phone', 'telegram', 'product', 'source', 'status'],
+    defaultColumns: ['createdAt', 'name', 'phone', 'telegram', 'product', 'source', 'status', 'telegramStatus'],
+    hidden: true, // Скрыто из админки - заявки теперь только в Telegram
   },
   access: {
     read: admins,
@@ -79,6 +80,9 @@ export const Leads: CollectionConfig = {
         { label: 'Форма товара', value: 'product_form' },
         { label: 'Форма контактов', value: 'contact_form' },
         { label: 'Форма ремонта', value: 'repair_form' },
+        { label: 'Trade-In', value: 'trade_in_form' },
+        { label: 'Рассрочка', value: 'installment_form' },
+        { label: 'Заказ из корзины', value: 'cart_order' },
       ],
     },
     {
@@ -96,6 +100,28 @@ export const Leads: CollectionConfig = {
         { label: 'Провалено', value: 'failed' },
         { label: 'Отменена', value: 'cancelled' },
       ],
+    },
+    {
+      name: 'telegramStatus',
+      type: 'select',
+      label: 'Статус отправки в Telegram',
+      defaultValue: 'not_sent',
+      admin: {
+        position: 'sidebar',
+      },
+      options: [
+        { label: 'Не отправлено', value: 'not_sent' },
+        { label: 'Отправлено', value: 'telegram_sent' },
+        { label: 'Ошибка отправки', value: 'telegram_failed' },
+      ],
+    },
+    {
+      name: 'utm',
+      type: 'json',
+      label: 'UTM-метки',
+      admin: {
+        description: 'UTM-параметры из URL (utm_source, utm_medium, utm_campaign, utm_term, utm_content)',
+      },
     },
     {
       name: 'adminNotes',

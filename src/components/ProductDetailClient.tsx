@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import type { Media, Product, ProductVariant } from '@/lib/types'
 import { ProductGallery } from './ProductGallery'
+import { AddToCartButton } from './AddToCartButton'
 import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
 
 const SIM_LABELS: Record<string, string> = {
@@ -14,6 +15,7 @@ type Props = {
   product: Product
   phone?: string
   telegramUsername?: string
+  categorySlug?: string
 }
 
 function resolveMedia(items?: Array<Media | string | number>): Media[] {
@@ -109,7 +111,7 @@ function ColorDot({ hex, hex2 }: { hex?: string; hex2?: string }) {
   return <span className="color-dot" style={style} />
 }
 
-export function ProductDetailClient({ product, phone, telegramUsername }: Props) {
+export function ProductDetailClient({ product, phone, telegramUsername, categorySlug }: Props) {
   const variants = product.variants || []
   const hasVariants = variants.length > 0
 
@@ -273,6 +275,35 @@ export function ProductDetailClient({ product, phone, telegramUsername }: Props)
         </div>
 
         <span className={`detail-status status ${tone}`}>{statusLabel(displayStatus)}</span>
+
+        <div className="detail-add-to-cart">
+          <AddToCartButton
+            productId={product.id}
+            productName={product.name}
+            productSlug={product.slug}
+            categorySlug={categorySlug || (typeof product.category === 'object' && product.category ? (product.category as any).slug : '')}
+            price={displayPrice}
+            variant={activeVariant ? {
+              color: activeVariant.color ? {
+                value: activeVariant.color.value || '',
+                englishLabel: activeVariant.color.englishLabel || '',
+                russianLabel: activeVariant.color.russianLabel,
+                primaryHex: activeVariant.color.primaryHex,
+              } : undefined,
+              memory: activeVariant.memory,
+              simType: activeVariant.simType,
+              size: activeVariant.size,
+              chip: activeVariant.chip,
+              screenSize: activeVariant.screenSize,
+            } : (product.memory || product.color || product.simType || product.size ? {
+              memory: product.memory,
+              color: product.color ? { value: product.color, englishLabel: product.color } : undefined,
+              simType: product.simType,
+              size: product.size,
+            } : undefined)}
+            disabled={displayStatus === 'out_of_stock'}
+          />
+        </div>
 
         <hr className="detail-divider" />
 

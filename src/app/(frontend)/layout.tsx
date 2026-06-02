@@ -8,6 +8,7 @@ import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { Particles } from '@/components/Particles'
 import { SITE_URL } from '@/lib/constants'
 import { getSiteSettings, getNavData } from '@/lib/cms'
+import { CartProvider } from '@/contexts/CartContext'
 
 import './globals.css'
 
@@ -46,14 +47,16 @@ export default async function FrontendLayout({ children }: { children: React.Rea
   return (
     <html lang="ru">
       <body className="frontend-body">
-        <Particles />
-        <div className="site-shell">
-          <Header settings={settings} navData={navData} />
-          <main className="site-main">{children}</main>
-          <Footer settings={settings} />
-        </div>
-        <MobileStickyBar settings={settings} />
-        <CookieBanner />
+        <CartProvider>
+          <Particles />
+          <div className="site-shell">
+            <Header settings={settings} navData={navData} />
+            <main className="site-main">{children}</main>
+            <Footer settings={settings} />
+          </div>
+          <MobileStickyBar settings={settings} />
+          <CookieBanner />
+        </CartProvider>
       </body>
     </html>
   )

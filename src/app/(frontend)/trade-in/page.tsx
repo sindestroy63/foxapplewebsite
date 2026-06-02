@@ -36,7 +36,7 @@ export default async function TradeInPage() {
         )}
         <LeadForm
           description="Оставьте заявку, если хотите уточнить оценку устройства или условия обмена."
-          source="contact_form"
+          source="trade_in_form"
           title="Заявка на Trade-In"
         />
       </div>

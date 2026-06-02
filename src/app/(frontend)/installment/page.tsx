@@ -101,7 +101,7 @@ export default function InstallmentPage() {
 
         <LeadForm
           description="Оставьте контакт, и мы подскажем доступные варианты рассрочки под нужную модель."
-          source="contact_form"
+          source="installment_form"
           title="Заявка на рассрочку"
         />
       </div>
