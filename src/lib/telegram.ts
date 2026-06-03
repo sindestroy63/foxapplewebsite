@@ -1,4 +1,3 @@
-import http from 'http'
 import https from 'https'
 
 export type TelegramResult = {
@@ -21,51 +20,69 @@ function getTelegramBaseUrl(): string {
 }
 
 /**
- * Отправляет сообщение в Telegram через Bot API с принудительным IPv4.
- * Поддерживает TELEGRAM_API_BASE для проксирования (http/https).
- * Использует встроенный http(s).request() вместо глобального fetch()
- * для решения проблем с IPv6 в Docker-контейнерах.
+ * Отправляет сообщение в Telegram через Bot API.
+ *
+ * Если задана TELEGRAM_API_BASE — использует fetch() (работает с Docker proxy).
+ * Если не задана — использует https.request() с принудительным IPv4 (для production api.telegram.org).
  */
-export function sendTelegramMessage(
+export async function sendTelegramMessage(
   botToken: string,
   chatId: string,
   text: string,
 ): Promise<TelegramResult> {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: 'HTML',
-    })
+  const body = JSON.stringify({
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+  })
 
-    const baseUrl = getTelegramBaseUrl()
-    const fullUrl = `${baseUrl}${botToken}/sendMessage`
+  const baseUrl = getTelegramBaseUrl()
+  const fullUrl = `${baseUrl}${botToken}/sendMessage`
+
+  console.log(`[Telegram] Using API base: ${baseUrl}`)
+
+  // Если задан TELEGRAM_API_BASE — используем fetch (Docker proxy / кастомный endpoint)
+  if (process.env.TELEGRAM_API_BASE) {
+    try {
+      const res = await fetch(fullUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })
+
+      const responseBody = await res.text()
+      console.log(`[Telegram] Response status: ${res.status}`)
+      console.log(`[Telegram] Response body: ${responseBody.slice(0, 200)}`)
+
+      return {
+        ok: res.ok,
+        status: res.status,
+        body: responseBody,
+      }
+    } catch (error) {
+      console.error(`[Telegram] Fetch error: ${error}`)
+      throw error
+    }
+  }
+
+  // Без TELEGRAM_API_BASE — используем https.request() с принудительным IPv4
+  return new Promise((resolve, reject) => {
     const url = new URL(fullUrl)
 
-    // Выбираем модуль в зависимости от протокола
-    const isHttps = url.protocol === 'https:'
-    const requestModule = isHttps ? https : http
-    const defaultPort = isHttps ? 443 : 80
-
-    console.log(`[Telegram] Using API base: ${baseUrl} (без токена)`)
-    console.log(`[Telegram] Request protocol: ${url.protocol}, host: ${url.hostname}, port: ${url.port || defaultPort}`)
-    console.log(`[Telegram] Request path: ${url.pathname}${url.search}`)
-    console.log(`[Telegram] Body length: ${Buffer.byteLength(body)} bytes`)
-
-    const options: http.RequestOptions = {
+    const options: https.RequestOptions = {
       hostname: url.hostname,
-      port: url.port ? parseInt(url.port, 10) : defaultPort,
+      port: 443,
       path: url.pathname + url.search,
       method: 'POST',
       family: 4,
-      timeout: 15000, // 15 секунд таймаут
+      timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(body),
       },
     }
 
-    const req = requestModule.request(options, (res) => {
+    const req = https.request(options, (res) => {
       const chunks: Buffer[] = []
       res.on('data', (chunk: Buffer) => chunks.push(chunk))
       res.on('end', () => {
