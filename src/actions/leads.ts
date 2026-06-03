@@ -1,5 +1,7 @@
 'use server'
 
+import { sendTelegramMessage } from '@/lib/telegram'
+
 export type LeadActionState = {
   errors?: {
     consent?: string
@@ -11,8 +13,6 @@ export type LeadActionState = {
   message?: string
   success: boolean
 }
-
-const TG_API = 'https://api.telegram.org/bot'
 
 const SOURCE_EMOJI: Record<string, string> = {
   contact_form: '\uD83D\uDCDE',
@@ -238,25 +238,16 @@ export async function submitLeadAction(
   })
 
   try {
-    const res = await fetch(`${TG_API}${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: messageText,
-        parse_mode: 'HTML',
-      }),
-    })
+    const result = await sendTelegramMessage(botToken, chatId, messageText)
 
-    if (res.ok) {
+    if (result.ok) {
       console.log(`[Telegram] [${timestamp}] LeadForm message sent successfully`)
       return {
         message: 'Заявка отправлена! Мы свяжемся с вами в ближайшее время.',
         success: true,
       }
     } else {
-      const errBody = await res.text()
-      console.error(`[Telegram] [${timestamp}] API error:`, res.status, errBody)
+      console.error(`[Telegram] [${timestamp}] API error:`, result.status, result.body)
       return {
         message: 'Не удалось отправить заявку. Попробуйте позже или свяжитесь с нами по телефону.',
         success: false,
