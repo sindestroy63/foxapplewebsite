@@ -1,3 +1,4 @@
+import http from 'http'
 import https from 'https'
 
 export type TelegramResult = {
@@ -7,8 +8,25 @@ export type TelegramResult = {
 }
 
 /**
+ * Определяет базовый URL для Telegram API.
+ * Если задана TELEGRAM_API_BASE — использует её,
+ * иначе использует https://api.telegram.org/bot
+ */
+function getTelegramBaseUrl(): string {
+  const envBase = process.env.TELEGRAM_API_BASE
+  if (envBase) {
+    // Возвращаем как есть, убирая только конечный слеш
+    // Пример: http://host.docker.internal:8089/bot → http://host.docker.internal:8089/bot
+    // Итоговый URL: ${baseUrl}${botToken}/sendMessage
+    return envBase.replace(/\/+$/, '')
+  }
+  return 'https://api.telegram.org/bot'
+}
+
+/**
  * Отправляет сообщение в Telegram через Bot API с принудительным IPv4.
- * Использует встроенный https.request() вместо глобального fetch()
+ * Поддерживает TELEGRAM_API_BASE для проксирования (http/https).
+ * Использует встроенный http(s).request() вместо глобального fetch()
  * для решения проблем с IPv6 в Docker-контейнерах.
  */
 export function sendTelegramMessage(
@@ -23,11 +41,17 @@ export function sendTelegramMessage(
       parse_mode: 'HTML',
     })
 
-    const url = new URL(`https://api.telegram.org/bot${botToken}/sendMessage`)
+    const baseUrl = getTelegramBaseUrl()
+    const fullUrl = `${baseUrl}${botToken}/sendMessage`
+    const url = new URL(fullUrl)
 
-    const options: https.RequestOptions = {
+    // Выбираем модуль в зависимости от протокола
+    const isHttps = url.protocol === 'https:'
+    const requestModule = isHttps ? https : http
+
+    const options: http.RequestOptions = {
       hostname: url.hostname,
-      port: 443,
+      port: url.port ? parseInt(url.port, 10) : (isHttps ? 443 : 80),
       path: url.pathname + url.search,
       method: 'POST',
       family: 4, // принудительный IPv4
@@ -37,7 +61,7 @@ export function sendTelegramMessage(
       },
     }
 
-    const req = https.request(options, (res) => {
+    const req = requestModule.request(options, (res) => {
       const chunks: Buffer[] = []
       res.on('data', (chunk: Buffer) => chunks.push(chunk))
       res.on('end', () => {
