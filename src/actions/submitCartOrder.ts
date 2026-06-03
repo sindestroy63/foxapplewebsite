@@ -136,10 +136,6 @@ function formatTelegramMessage(data: {
     lines.push('\uD83D\uDCDD <b>Комментарий:</b> ' + escapeHtml(data.comment))
   }
 
-  lines.push('')
-  lines.push('\u2139\uFE0F <i>Цена актуальна на момент оформления заявки.</i>')
-  lines.push('<i>Наличие и итоговую стоимость подтверждает менеджер.</i>')
-
   return lines.join('\n')
 }
 
