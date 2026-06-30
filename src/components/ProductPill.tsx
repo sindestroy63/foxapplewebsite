@@ -1,7 +1,7 @@
 type ProductPillProps = {
   label: string
   tooltip: string
-  tone?: 'accent' | 'light'
+  tone?: 'accent' | 'light' | 'warranty'
 }
 
 export function ProductPill({ label, tooltip, tone = 'light' }: ProductPillProps) {

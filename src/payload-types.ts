@@ -248,7 +248,7 @@ export interface Product {
   color?: string | null;
   simType?: string | null;
   /**
-   * Старая цена рассчитывается автоматически (+16%)
+   * Базовая розничная цена рассчитывается автоматически (+20%)
    */
   price: number;
   status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;

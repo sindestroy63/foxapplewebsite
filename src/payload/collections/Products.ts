@@ -92,7 +92,7 @@ export const Products: CollectionConfig = {
       required: true,
       min: 0,
       admin: {
-        description: 'Старая цена рассчитывается автоматически (+16%)',
+        description: 'Базовая розничная цена рассчитывается автоматически (+20%)',
       },
     },
     {

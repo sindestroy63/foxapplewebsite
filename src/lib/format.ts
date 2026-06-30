@@ -11,7 +11,7 @@ export function formatPrice(price?: number | null): string {
 
 export function cardPrice(cashPrice?: number | null): number | null {
   if (typeof cashPrice !== 'number') return null
-  return Math.round(cashPrice * 1.16)
+  return Math.round(cashPrice * 1.2)
 }
 
 export function normalizePhone(phone: string): string {
