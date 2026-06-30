@@ -1,6 +1,7 @@
 import type React from 'react'
 import type { Metadata } from 'next'
 
+import { BottomTicker } from '@/components/BottomTicker'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { CookieBanner } from '@/components/CookieBanner'
@@ -54,6 +55,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
             <main className="site-main">{children}</main>
             <Footer settings={settings} />
           </div>
+          <BottomTicker />
           <MobileStickyBar settings={settings} />
           <CookieBanner />
         </CartProvider>

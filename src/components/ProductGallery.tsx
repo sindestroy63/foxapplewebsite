@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import type { ReactNode } from 'react'
 import type { Media } from '@/lib/types'
 import { getMediaUrl } from '@/lib/media'
 
 type Props = {
   images: Media[]
   alt: string
+  overlay?: ReactNode
 }
 
-export function ProductGallery({ images, alt }: Props) {
+export function ProductGallery({ images, alt, overlay }: Props) {
   const [idx, setIdx] = useState(0)
 
   const prev = useCallback(() => setIdx((i) => (i > 0 ? i - 1 : images.length - 1)), [images.length])
@@ -18,8 +20,11 @@ export function ProductGallery({ images, alt }: Props) {
   if (images.length === 0) {
     return (
       <div className="gallery">
-        <div className="gallery-main">
-          <div className="gallery-placeholder">{alt}</div>
+        <div className="gallery-main-wrap">
+          <div className="gallery-main">
+            <div className="gallery-placeholder">{alt}</div>
+          </div>
+          {overlay}
         </div>
       </div>
     )
@@ -30,7 +35,8 @@ export function ProductGallery({ images, alt }: Props) {
 
   return (
     <div className="gallery">
-      <div className="gallery-main">
+      <div className="gallery-main-wrap">
+        <div className="gallery-main">
         {mainUrl && <img src={mainUrl} alt={current?.alt || alt} draggable={false} />}
         {images.length > 1 && (
           <>
@@ -38,6 +44,8 @@ export function ProductGallery({ images, alt }: Props) {
             <button className="gallery-arrow gallery-arrow--right" onClick={next} aria-label="Следующее фото" type="button">›</button>
           </>
         )}
+        </div>
+        {overlay}
       </div>
       {images.length > 1 && (
         <div className="gallery-thumbs">

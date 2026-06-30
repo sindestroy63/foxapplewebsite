@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import type { Media, Product, ProductVariant } from '@/lib/types'
 import { ProductGallery } from './ProductGallery'
+import { ProductPill } from './ProductPill'
 import { AddToCartButton } from './AddToCartButton'
 import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
 
@@ -183,7 +184,16 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   return (
     <>
       <div className="detail-media">
-        <ProductGallery images={displayImages} alt={product.name} />
+        <ProductGallery
+          images={displayImages}
+          alt={product.name}
+          overlay={
+            <div className="product-card-badges" aria-label="Плашки товара">
+              <ProductPill label="Trade-in" tooltip="Сдай старый и получи скидку на новый!" tone="accent" />
+              <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />
+            </div>
+          }
+        />
       </div>
 
       <div className="detail-info">
@@ -264,12 +274,12 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
         <div className="detail-pricing">
           <div className="detail-price-row">
             <span className="detail-price">{formatPrice(displayPrice)}</span>
-            <span className="detail-price-label">со скидкой</span>
+            <span className="detail-price-label">со скидкой при оплате наличными</span>
           </div>
           {displayOldPrice !== null && (
             <div className="detail-price-row detail-price-row--card">
               <span className="detail-price-card">{formatPrice(displayOldPrice)}</span>
-              <span className="detail-price-label">старая цена</span>
+              <span className="detail-price-label">базовая розничная цена</span>
             </div>
           )}
         </div>
