@@ -57,9 +57,9 @@ export function ProductCard({ product, settings }: { product: Product; settings:
           {product.isNew ? <span className="badge badge-new">Новинка</span> : null}
         </Link>
         <div className="product-card-badges" aria-label="Плашки товара">
-          <ProductPill label="Trade-in" tooltip="Сдай старый и получи скидку на новый!" tone="accent" />
+          <ProductPill label="Trade-in" tooltip="Скидка при обмене старого устройства" tone="accent" />
           <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />
-          <ProductPill label="Гарантия" tooltip="Гарантия 1 год на все новые устройства." tone="warranty" />
+          <ProductPill label="Гарантия" tooltip="1 год гарантии на новые устройства" tone="warranty" />
         </div>
       </div>
 

@@ -2851,28 +2851,34 @@ a.contact-item:hover {
   }
 
   .product-pill {
-    position: static;
+    position: relative;
   }
 
   .product-pill__tooltip {
     position: absolute;
     top: calc(100% + 6px);
-    right: 0;
+    right: auto;
     bottom: auto;
-    left: 0;
+    left: 50%;
     z-index: 18;
-    width: 100%;
+    width: max-content;
     min-width: 0;
-    max-width: min(100%, calc(100vw - 32px));
-    transform: none;
+    max-width: min(176px, calc(100vw - 16px));
+    padding: 7px 9px;
+    transform: translateX(calc(-50% + var(--product-pill-tooltip-shift, 0px)));
+    font-size: 12px;
+    line-height: 1.25;
+    word-break: normal;
     overflow-wrap: break-word;
+    text-wrap: balance;
+    white-space: normal;
   }
 
   .product-card-badges .product-pill:first-child .product-pill__tooltip,
   .product-card-badges .product-pill:last-child .product-pill__tooltip {
-    right: 0;
-    left: 0;
-    transform: none;
+    right: auto;
+    left: 50%;
+    transform: translateX(calc(-50% + var(--product-pill-tooltip-shift, 0px)));
   }
 
   .product-pill:hover .product-pill__tooltip,
