@@ -7,7 +7,7 @@ type ProductPillProps = {
 export function ProductPill({ label, tooltip, tone = 'light' }: ProductPillProps) {
   return (
     <button className={`product-pill product-pill--${tone}`} type="button" aria-label={tooltip} title={tooltip}>
-      {label}
+      <span className="product-pill__label">{label}</span>
     </button>
   )
 }
