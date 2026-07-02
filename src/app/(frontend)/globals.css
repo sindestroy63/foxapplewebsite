@@ -793,7 +793,7 @@ p {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   border: 0;
   border-radius: var(--radius);
   background: var(--paper);
@@ -808,6 +808,7 @@ p {
   display: block;
   min-width: 0;
   aspect-ratio: 1 / 1;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: linear-gradient(145deg, #f8f8fa, #ececee);
   overflow: hidden;
 }
@@ -1025,6 +1026,7 @@ p {
 .card-actions a {
   display: inline-flex;
   min-width: 0;
+  width: 100%;
   max-width: 100%;
   align-items: center;
   justify-content: center;
@@ -1033,8 +1035,9 @@ p {
   font-size: 13px;
   font-weight: 600;
   text-align: center;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
+  white-space: nowrap;
   border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--ink);
@@ -2499,12 +2502,13 @@ a.contact-item:hover {
   gap: 6px;
   width: max-content;
   max-width: calc(100% - 24px);
-  z-index: 4;
+  z-index: 12;
   pointer-events: none;
 }
 
 .product-pill {
   position: relative;
+  z-index: 1;
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
@@ -2531,7 +2535,8 @@ a.contact-item:hover {
 }
 
 .product-pill:focus-visible,
-.product-pill:hover {
+.product-pill:hover,
+.product-pill--expanded {
   transform: translateY(-1px);
   outline: none;
 }
@@ -2551,29 +2556,28 @@ a.contact-item:hover {
   color: #fff;
 }
 
-.product-card-badges:has(:where(.product-pill:hover, .product-pill:focus-visible)) .product-pill:not(:hover):not(:focus-visible) {
+.product-card-badges:has(:where(.product-pill:hover, .product-pill:focus-visible, .product-pill--expanded)) .product-pill:not(:hover):not(:focus-visible):not(.product-pill--expanded) {
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
 }
 
 .product-card-badges .product-pill:hover,
-.product-card-badges .product-pill:focus-visible {
+.product-card-badges .product-pill:focus-visible,
+.product-card-badges .product-pill--expanded {
   background: #ff7a00;
   color: #fff;
 }
 
-.product-pill[title]:focus-visible::after,
-.product-pill[title]:hover::after {
-  content: attr(title);
+.product-pill__tooltip {
   position: absolute;
   left: 50%;
   bottom: calc(100% + 8px);
   transform: translateX(-50%);
-  z-index: 5;
+  z-index: 60;
   box-sizing: border-box;
   width: max-content;
   min-width: min(180px, calc(100vw - 32px));
-  max-width: min(240px, calc(100vw - 32px));
+  max-width: min(260px, calc(100vw - 32px));
   padding: 8px 10px;
   border-radius: 10px;
   background: rgba(29, 29, 31, 0.96);
@@ -2581,33 +2585,52 @@ a.contact-item:hover {
   font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
+  opacity: 0;
   overflow-wrap: anywhere;
+  pointer-events: none;
+  text-align: left;
+  visibility: hidden;
   white-space: normal;
   box-shadow: var(--shadow-lg);
 }
 
-.product-card-badges .product-pill:first-child[title]:focus-visible::after,
-.product-card-badges .product-pill:first-child[title]:hover::after {
+.product-pill:hover .product-pill__tooltip,
+.product-pill:focus-visible .product-pill__tooltip,
+.product-pill--expanded .product-pill__tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.product-card-badges .product-pill:first-child .product-pill__tooltip {
   left: 0;
   transform: none;
 }
 
-.product-card-badges .product-pill:last-child[title]:focus-visible::after,
-.product-card-badges .product-pill:last-child[title]:hover::after {
+.product-card-badges .product-pill:last-child .product-pill__tooltip {
   right: 0;
   left: auto;
   transform: none;
 }
 
-.product-pill[title]:focus-visible::before,
-.product-pill[title]:hover::before {
+.product-pill::before {
   content: '';
   position: absolute;
   left: 50%;
   bottom: calc(100% + 2px);
   transform: translateX(-50%);
+  z-index: 61;
   border: 6px solid transparent;
   border-top-color: rgba(29, 29, 31, 0.96);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.product-pill:hover::before,
+.product-pill:focus-visible::before,
+.product-pill--expanded::before {
+  opacity: 1;
+  visibility: visible;
 }
 
 .bottom-ticker {
@@ -2819,11 +2842,43 @@ a.contact-item:hover {
 }
 
 @media (hover: none), (pointer: coarse), (max-width: 720px) {
-  .product-pill[title]:focus-visible::after,
-  .product-pill[title]:hover::after,
-  .product-pill[title]:focus-visible::before,
-  .product-pill[title]:hover::before {
-    content: none;
+  .product-pill__tooltip {
+    position: fixed;
+    left: var(--product-pill-tooltip-left, 16px);
+    top: var(--product-pill-tooltip-top, 8px);
+    bottom: auto;
+    transform: translateY(-100%);
+    width: min(260px, calc(100vw - 32px));
+    max-width: min(260px, calc(100vw - 32px));
+  }
+
+  .product-card-badges .product-pill:first-child .product-pill__tooltip,
+  .product-card-badges .product-pill:last-child .product-pill__tooltip {
+    right: auto;
+    left: var(--product-pill-tooltip-left, 16px);
+    transform: translateY(-100%);
+  }
+
+  .product-pill:hover .product-pill__tooltip,
+  .product-pill:focus-visible .product-pill__tooltip,
+  .product-pill:hover::before,
+  .product-pill:focus-visible::before {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .product-pill.product-pill--expanded .product-pill__tooltip,
+  .product-pill.product-pill--expanded::before {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .product-pill::before {
+    position: fixed;
+    left: var(--product-pill-tooltip-arrow-left, 50%);
+    top: calc(var(--product-pill-tooltip-top, 8px) - 6px);
+    bottom: auto;
+    transform: translateX(-50%);
   }
 }
 
@@ -2842,13 +2897,16 @@ a.contact-item:hover {
 
   .card-actions {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 8px;
   }
 
-  .card-actions a {
+  .card-actions a,
+  .card-actions button {
+    width: 100%;
     min-height: 34px;
     padding: 0 8px;
     font-size: 12px;
+    white-space: nowrap;
   }
 }
 
