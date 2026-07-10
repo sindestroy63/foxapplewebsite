@@ -9,7 +9,10 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Контакты',
-  description: 'FOX APPLE: Самара, ул. Московское шоссе 55. Телефон, Telegram и график работы магазина.',
+  description: 'ФОХСТОР: Самара, ул. Московское шоссе 55. Телефон, Telegram и график работы магазина.',
+  alternates: {
+    canonical: '/contacts',
+  },
 }
 
 export default async function ContactsPage() {
@@ -21,7 +24,7 @@ export default async function ContactsPage() {
       <div className="container contacts-grid">
         <div className="contacts-left">
           <p className="eyebrow">Контакты</p>
-          <h1>{page?.title || 'Контакты FOX APPLE'}</h1>
+          <h1>{page?.title || 'Контакты ФОХСТОР'}</h1>
           {page?.content ? <RichText content={page.content} /> : null}
 
           <div className="contact-cards">
@@ -86,7 +89,7 @@ export default async function ContactsPage() {
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               src={mapEmbedUrl(settings.address, settings.mapUrl)}
-              title="Карта магазина FOX APPLE"
+              title="Карта магазина ФОХСТОР"
             />
           </div>
           <div className="request-card">

@@ -1,4 +1,4 @@
-# FOX APPLE
+# ФОХСТОР
 
 Production-ready сайт магазина техники Apple: **Next.js 16**, **TypeScript**, **Payload CMS 3**, **PostgreSQL**, **Docker Compose**, **Nginx**.
 
@@ -149,16 +149,18 @@ cp .env.example .env
 nano .env
 ```
 
-Для production:
+Для production (домен ФОХСТОР — фохстор.рф, ASCII/punycode-форма `xn--n1aagcfji.xn--p1ai`):
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://foxapple.ru
-PAYLOAD_PUBLIC_SERVER_URL=https://foxapple.ru
+NEXT_PUBLIC_SITE_URL=https://xn--n1aagcfji.xn--p1ai
+PAYLOAD_PUBLIC_SERVER_URL=https://xn--n1aagcfji.xn--p1ai
 POSTGRES_PASSWORD=<strong-password>
 PAYLOAD_SECRET=<long-random-secret>
 RUN_MIGRATIONS_ON_START=true
 PAYLOAD_SEED_ON_START=true
 ```
+
+ENV-переменные и `Metadata.metadataBase` / canonical / sitemap / robots читают домен централизованно через `SITE_URL` / `absoluteUrl()` в `src/lib/constants.ts` — при смене домена достаточно поменять `NEXT_PUBLIC_SITE_URL` / `PAYLOAD_PUBLIC_SERVER_URL`, без правки кода. Опционально можно указать дополнительные разрешённые CORS/CSRF origin-ы через `PAYLOAD_ALLOWED_ORIGINS` (через запятую).
 
 ### 4. Запуск
 
@@ -183,62 +185,67 @@ docker compose exec app npm run seed
 Откройте:
 
 ```text
-https://foxapple.ru/admin
+https://xn--n1aagcfji.xn--p1ai/admin
 ```
 
 Если коллекция пользователей пустая, Payload покажет форму создания первого администратора.
 
 ### 6. DNS
 
-Создайте A-записи:
+Создайте A-записи на новый домен ФОХСТОР:
 
 ```text
-foxapple.ru        -> IP сервера
-www.foxapple.ru    -> IP сервера
-фоксэпл.рф         -> IP сервера
+фохстор.рф          -> IP сервера
+www.фохстор.рф       -> IP сервера
 ```
 
-IDN-домен для Nginx:
+IDN-домен (ASCII/punycode-форма) для Nginx и всех технических настроек:
 
 ```text
-фоксэпл.рф = xn--j1achfjp0e.xn--p1ai
+фохстор.рф = xn--n1aagcfji.xn--p1ai
 ```
+
+> **Важно:** миграция кода на новый бренд/домен подготовлена (Nginx-шаблоны, ENV, CORS/CSRF), но DNS ещё не переключён и сертификаты для нового домена ещё не выпущены. Активный `nginx/conf.d/foxapple.conf` продолжает обслуживать старый домен `foxapple.ru`, пока эти шаги не выполнены вручную.
 
 ### 7. SSL через Certbot / Let's Encrypt
 
-HTTP-конфиг уже содержит `/.well-known/acme-challenge/`. Выпустите сертификат:
+Шаблоны для нового домена лежат в `nginx/examples/foxstore.conf` (HTTP-бутстрап + редиректы) и `nginx/examples/foxstore.ssl.conf` (полный SSL-конфиг) — они **не активны** и не подключены в `docker-compose.yml`. Каждый файл содержит подробные комментарии по активации. Общий порядок:
 
 ```bash
+# 1. Скопировать HTTP-бутстрап конфиг для ACME-challenge нового домена
+cp nginx/examples/foxstore.conf nginx/conf.d/foxstore.conf
+docker compose restart nginx
+
+# 2. Выпустить сертификат для нового домена
 docker run --rm \
   -v foxapple_certbot_www:/var/www/certbot \
   -v foxapple_letsencrypt:/etc/letsencrypt \
   certbot/certbot certonly --webroot \
   -w /var/www/certbot \
-  -d foxapple.ru \
-  -d www.foxapple.ru \
-  -d xn--j1achfjp0e.xn--p1ai \
-  --email admin@foxapple.ru \
+  -d xn--n1aagcfji.xn--p1ai \
+  -d www.xn--n1aagcfji.xn--p1ai \
+  --email admin@фохстор.рф \
   --agree-tos \
   --no-eff-email
 ```
 
-После выпуска сертификата замените HTTP-конфиг на SSL-пример:
+После выпуска сертификата замените HTTP-бутстрап на полный SSL-конфиг:
 
 ```bash
-cp nginx/examples/foxapple.ssl.conf nginx/conf.d/foxapple.conf
+cp nginx/examples/foxstore.ssl.conf nginx/conf.d/foxstore.conf
 docker compose restart nginx
 ```
 
-### 8. Редирект с `фоксэпл.рф`
+### 8. Редирект со старого домена `foxapple.ru`
 
-В `nginx/conf.d/foxapple.conf` уже настроен редирект:
+`nginx/examples/foxstore.conf` и `nginx/examples/foxstore.ssl.conf` уже содержат 301-редиректы со старого домена (`foxapple.ru`, `www.foxapple.ru`, старый punycode `xn--j1achfjp0e.xn--p1ai`) на новый, с сохранением пути и query-параметров:
 
 ```nginx
-server_name xn--j1achfjp0e.xn--p1ai;
-return 301 https://foxapple.ru$request_uri;
+server_name foxapple.ru www.foxapple.ru;
+return 301 https://xn--n1aagcfji.xn--p1ai$request_uri;
 ```
 
-После включения SSL пример-конфиг редиректит кириллический домен на `https://foxapple.ru`.
+Старый `nginx/conf.d/foxapple.conf` можно вывести из эксплуатации только после того, как новый домен полностью подтверждён рабочим (DNS, сертификат, редиректы протестированы).
 
 ## Проверка после деплоя
 
@@ -246,8 +253,8 @@ return 301 https://foxapple.ru$request_uri;
 docker compose ps
 docker compose logs --tail=200 app
 docker compose logs --tail=200 nginx
+curl -I http://xn--n1aagcfji.xn--p1ai
 curl -I http://foxapple.ru
-curl -I http://xn--j1achfjp0e.xn--p1ai
 ```
 
 Публичные URL:

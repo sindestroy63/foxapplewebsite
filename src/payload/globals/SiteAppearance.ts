@@ -44,7 +44,7 @@ export const SiteAppearance: GlobalConfig = {
               name: 'mediaBlockTitle',
               type: 'text',
               label: 'Заголовок медиа-блока',
-              defaultValue: 'FOX APPLE вживую',
+              defaultValue: 'ФОХСТОР вживую',
             },
             {
               name: 'mediaBlockText',

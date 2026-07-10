@@ -4,7 +4,10 @@ import { SELLER } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Согласие на обработку персональных данных',
-  description: 'Согласие пользователя на обработку персональных данных на сайте FOX APPLE.',
+  description: 'Согласие пользователя на обработку персональных данных на сайте ФОХСТОР.',
+  alternates: {
+    canonical: '/personal-data-consent',
+  },
 }
 
 export default function PersonalDataConsentPage() {
@@ -15,7 +18,7 @@ export default function PersonalDataConsentPage() {
         <h1>Согласие на обработку персональных данных</h1>
         <div className="rich-text">
           <p>
-            Заполняя форму на сайте foxapple.ru / фоксэпл.рф, пользователь дает согласие на
+            Заполняя форму на сайте фохстор.рф, пользователь дает согласие на
             обработку своих персональных данных.
           </p>
           <p>

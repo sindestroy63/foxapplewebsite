@@ -5,7 +5,10 @@ import { LeadForm } from '@/components/LeadForm'
 export const metadata: Metadata = {
   title: 'Рассрочка и кредит на технику',
   description:
-    'Рассрочка и кредит на технику Apple в FOX APPLE. Оформление за 10 минут в магазине в Самаре.',
+    'Рассрочка и кредит на технику Apple в ФОХСТОР. Оформление за 10 минут в магазине в Самаре.',
+  alternates: {
+    canonical: '/installment',
+  },
 }
 
 export default function InstallmentPage() {

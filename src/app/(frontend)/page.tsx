@@ -55,12 +55,12 @@ export default async function HomePage() {
     ? heroSlidesRaw.map((m) => ({
         url: getMediaUrl(m, 'detail') || '',
         isVideo: isVideoMedia(m),
-        alt: m.alt || 'FOX APPLE',
+        alt: m.alt || 'ФОХСТОР',
       })).filter((s) => s.url)
     : heroVideoFallback
-      ? [{ url: getMediaUrl(heroVideoFallback, 'detail') || '', isVideo: isVideoMedia(heroVideoFallback), alt: heroVideoFallback.alt || 'FOX APPLE' }].filter((s) => s.url)
+      ? [{ url: getMediaUrl(heroVideoFallback, 'detail') || '', isVideo: isVideoMedia(heroVideoFallback), alt: heroVideoFallback.alt || 'ФОХСТОР' }].filter((s) => s.url)
       : homepageMedia[0]
-        ? [{ url: getMediaUrl(homepageMedia[0], 'detail') || '', isVideo: isVideoMedia(homepageMedia[0]), alt: homepageMedia[0].alt || 'FOX APPLE' }].filter((s) => s.url)
+        ? [{ url: getMediaUrl(homepageMedia[0], 'detail') || '', isVideo: isVideoMedia(homepageMedia[0]), alt: homepageMedia[0].alt || 'ФОХСТОР' }].filter((s) => s.url)
         : []
 
   return (
@@ -143,7 +143,7 @@ export default async function HomePage() {
         <div className="container section-head">
           <div>
             <p className="eyebrow">Почему мы</p>
-            <h2>Преимущества FOX APPLE</h2>
+            <h2>Преимущества ФОХСТОР</h2>
           </div>
         </div>
         <div className="container benefit-grid">
@@ -192,7 +192,7 @@ export default async function HomePage() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 src={mapEmbedUrl(settings.address, settings.mapUrl)}
-                title="Карта FOX APPLE"
+                title="Карта ФОХСТОР"
               />
             </div>
           </div>

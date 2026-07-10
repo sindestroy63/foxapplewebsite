@@ -4,7 +4,10 @@ import { SELLER } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Публичная оферта',
-  description: 'Публичная оферта магазина FOX APPLE.',
+  description: 'Публичная оферта магазина ФОХСТОР.',
+  alternates: {
+    canonical: '/offer',
+  },
 }
 
 export default function OfferPage() {
@@ -32,7 +35,7 @@ export default function OfferPage() {
             2.1. Продавец обязуется передать Покупателю товар, а Покупатель обязуется оплатить и
             принять товар.
           </p>
-          <p>2.2. Продажа осуществляется через сайт foxapple.ru / фоксэпл.рф.</p>
+          <p>2.2. Продажа осуществляется через сайт фохстор.рф.</p>
 
           <h2>3. Оформление заказа</h2>
           <p>3.1. Заказ оформляется через формы на сайте или иные способы связи.</p>

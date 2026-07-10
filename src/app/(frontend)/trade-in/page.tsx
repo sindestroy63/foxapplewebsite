@@ -8,7 +8,10 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Trade-In',
-  description: 'Trade-In в FOX APPLE: оценка вашего устройства и доплата за новую технику Apple.',
+  description: 'Trade-In в ФОХСТОР: оценка вашего устройства и доплата за новую технику Apple.',
+  alternates: {
+    canonical: '/trade-in',
+  },
 }
 
 export default async function TradeInPage() {

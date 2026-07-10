@@ -18,11 +18,14 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'FOX APPLE — техника Apple в Самаре',
-    template: '%s | FOX APPLE',
+    default: 'ФОХСТОР — техника Apple в Самаре',
+    template: '%s | ФОХСТОР',
   },
   description:
     'Каталог техники Apple в Самаре: iPhone, iPad, MacBook, AirPods, Apple Watch, аксессуары, Trade-In и рассрочка.',
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -34,8 +37,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ru_RU',
-    siteName: 'FOX APPLE',
-    title: 'FOX APPLE — техника Apple в Самаре',
+    siteName: 'ФОХСТОР',
+    title: 'ФОХСТОР — техника Apple в Самаре',
     description:
       'Актуальные цены, наличие, гарантия 12 месяцев, Trade-In, рассрочка и доставка по Самаре.',
     url: SITE_URL,

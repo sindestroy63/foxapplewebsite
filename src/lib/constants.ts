@@ -1,5 +1,5 @@
 export const CONTACTS = {
-  shopName: 'FOX APPLE',
+  shopName: 'ФОХСТОР',
   phone: '+7 (917) 954-64-64',
   telegramUsername: '@FoxAppleSeller',
   telegramUrl: 'https://t.me/FoxAppleSeller',
@@ -10,15 +10,16 @@ export const CONTACTS = {
     lon: 50.192962,
   },
   workTime: 'с 11:00 до 20:00, ежедневно',
-  mainDomain: 'foxapple.ru',
-  secondaryDomain: 'фоксэпл.рф',
-  heroTitle: 'FOX APPLE — техника Apple в Самаре',
+  // Основной публичный домен (кириллица). Технический ASCII/punycode-эквивалент — secondaryDomain.
+  mainDomain: 'фохстор.рф',
+  secondaryDomain: 'xn--n1aagcfji.xn--p1ai',
+  heroTitle: 'ФОХСТОР — техника Apple в Самаре',
   heroSubtitle: 'Оригинальная техника Apple, гарантия 1 год, Trade-In, рассрочка и доставка.',
   aboutText:
-    'FOX APPLE помогает быстро выбрать актуальную технику Apple, проверить наличие и забронировать товар в Самаре.',
+    'ФОХСТОР помогает быстро выбрать актуальную технику Apple, проверить наличие и забронировать товар в Самаре.',
   homepageMediaTitle: 'Загляните к нам',
   homepageMediaText:
-    'Новые поставки, живые обзоры и выдача техники — смотрите, что происходит в FOX APPLE прямо сейчас.',
+    'Новые поставки, живые обзоры и выдача техники — смотрите, что происходит в ФОХСТОР прямо сейчас.',
 }
 
 export const SELLER = {
@@ -39,4 +40,13 @@ export const CATEGORY_SEED = [
   { name: 'Б/У техника', slug: 'used' },
 ] as const
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost'
+// Единая точка правды для базового URL сайта. Используется в metadata, canonical,
+// sitemap, robots, JSON-LD и абсолютных ссылках (например, в Telegram-заявках),
+// чтобы домен не собирался в нескольких местах независимо друг от друга.
+// В проде задаётся через NEXT_PUBLIC_SITE_URL (см. .env.example); на localhost работает без ENV.
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost').replace(/\/$/, '')
+
+export function absoluteUrl(path = ''): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${SITE_URL}${normalizedPath}`
+}

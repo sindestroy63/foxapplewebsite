@@ -9,8 +9,8 @@ export function BrandWordmark({ className, subtitle }: BrandWordmarkProps) {
   return (
     <span className={classes}>
       <span className="brand-wordmark-text" aria-hidden="true">
-        <span>FOX</span>
-        <span>APPLE.</span>
+        <span>ФОХ</span>
+        <span>СТОР.</span>
       </span>
       {subtitle ? <span className="brand-wordmark-subtitle">{subtitle}</span> : null}
     </span>

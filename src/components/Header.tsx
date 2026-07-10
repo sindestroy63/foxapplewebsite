@@ -31,7 +31,7 @@ export function Header({ settings, navData }: { settings: SiteSettings; navData?
       </div>
 
       <div className="container header-inner">
-        <Link href="/" className="brand" aria-label="FOX APPLE">
+        <Link href="/" className="brand" aria-label="ФОХСТОР">
           <BrandWordmark subtitle="Apple техника в Самаре" />
         </Link>
 

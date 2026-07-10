@@ -8,7 +8,10 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Ремонт',
-  description: 'Ремонт техники Apple в Самаре. Оставьте заявку в FOX APPLE.',
+  description: 'Ремонт техники Apple в Самаре. Оставьте заявку в ФОХСТОР.',
+  alternates: {
+    canonical: '/repair',
+  },
 }
 
 export default async function RepairPage() {
@@ -23,7 +26,7 @@ export default async function RepairPage() {
           <RichText content={page.content} />
         ) : (
           <div className="rich-text">
-            <p>FOX APPLE выполняет ремонт техники Apple в Самаре. Диагностика, замена экранов, аккумуляторов, разъёмов и других компонентов.</p>
+            <p>ФОХСТОР выполняет ремонт техники Apple в Самаре. Диагностика, замена экранов, аккумуляторов, разъёмов и других компонентов.</p>
             <h3>Что мы ремонтируем</h3>
             <ul>
               <li>Замена экрана iPhone и iPad</li>

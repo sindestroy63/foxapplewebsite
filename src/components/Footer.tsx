@@ -39,14 +39,14 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           <Link href="/purchase-return">Условия покупки и возврата</Link>
         </div>
         <p>
-          Сайт foxapple.ru не является официальным сайтом Apple Inc. и не аффилирован с компанией
+          Сайт фохстор.рф не является официальным сайтом Apple Inc. и не аффилирован с компанией
           Apple. Все товарные знаки принадлежат их правообладателям.
         </p>
         <p>Информация на сайте не является публичной офертой.</p>
         <p>Instagram принадлежит компании Meta, признанной экстремистской организацией и запрещенной в РФ.</p>
       </div>
       <div className="container footer-bottom">
-        <span>© {new Date().getFullYear()} FOX APPLE</span>
+        <span>© {new Date().getFullYear()} ФОХСТОР</span>
         <span className="footer-seller">
           {SELLER.typeAndName} · ИНН {SELLER.inn} · ОГРНИП {SELLER.ogrnip}
         </span>

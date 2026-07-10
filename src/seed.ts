@@ -33,7 +33,7 @@ const richText = (paragraphs: string[]): RichText => ({
 const pageText: Record<string, string[]> = {
   installment: [
     'Рассрочка помогает забрать нужную технику сейчас и распределить платежи. Точные условия зависят от выбранной модели и решения партнера.',
-    'Перед оформлением сотрудник FOX APPLE проверит наличие, подберет комплектацию и расскажет все условия без скрытых платежей.',
+    'Перед оформлением сотрудник ФОХСТОР проверит наличие, подберет комплектацию и расскажет все условия без скрытых платежей.',
   ],
   'trade-in': [
     'Принесите свое устройство в магазин, чтобы сотрудник оценил состояние, комплектацию и рыночную стоимость.',
@@ -42,7 +42,7 @@ const pageText: Record<string, string[]> = {
   warranty: [],
   repair: [],
   contacts: [
-    'Магазин FOX APPLE находится в Самаре. Напишите в Telegram или позвоните, чтобы уточнить наличие нужной модели перед визитом.',
+    'Магазин ФОХСТОР находится в Самаре. Напишите в Telegram или позвоните, чтобы уточнить наличие нужной модели перед визитом.',
   ],
 }
 
@@ -52,7 +52,7 @@ function buildFromNew(seed: ProductSeedNew): ProductSeedNew & { shortDescription
     ...seed,
     shortDescription:
       seed.shortDescription ||
-      `${seed.name}. Актуальная поставка FOX APPLE, наличие и итоговую комплектацию уточнит сотрудник магазина.`,
+      `${seed.name}. Актуальная поставка ФОХСТОР, наличие и итоговую комплектацию уточнит сотрудник магазина.`,
     slug,
   }
 }
@@ -196,7 +196,7 @@ async function upsertProduct(
     shortDescription: product.shortDescription,
     description: richText([product.shortDescription]),
     seoTitle: product.name,
-    seoDescription: `${product.name} в FOX APPLE, Самара. Актуальная цена и наличие.`,
+    seoDescription: `${product.name} в ФОХСТОР, Самара. Актуальная цена и наличие.`,
   }
 
   if (product.variants && product.variants.length > 0) {
@@ -298,10 +298,10 @@ export const script = async (config: SanitizedConfig) => {
 
   const pages = [
     { slug: 'installment', title: 'Рассрочка на технику Apple' },
-    { slug: 'trade-in', title: 'Trade-In в FOX APPLE' },
+    { slug: 'trade-in', title: 'Trade-In в ФОХСТОР' },
     { slug: 'warranty', title: 'Гарантия 12 месяцев' },
     { slug: 'repair', title: 'Ремонт техники Apple' },
-    { slug: 'contacts', title: 'Контакты FOX APPLE' },
+    { slug: 'contacts', title: 'Контакты ФОХСТОР' },
   ]
 
   for (const page of pages) {
@@ -310,7 +310,7 @@ export const script = async (config: SanitizedConfig) => {
       ...page,
       content: texts.length > 0 ? richText(texts) : null,
       seoTitle: page.title,
-      seoDescription: `${page.title}. FOX APPLE, Самара.`,
+      seoDescription: `${page.title}. ФОХСТОР, Самара.`,
     }
     await upsertBySlug(payload, 'pages', page.slug, data)
   }
@@ -351,6 +351,6 @@ export const script = async (config: SanitizedConfig) => {
     fs.rmSync(TMP_DIR, { recursive: true, force: true })
   }
 
-  payload.logger.info('FOX APPLE seed completed (users reset)')
+  payload.logger.info('ФОХСТОР seed completed (users reset)')
   process.exit(0)
 }

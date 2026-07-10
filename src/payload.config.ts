@@ -26,6 +26,25 @@ const dirname = path.dirname(filename)
 const serverURL =
   process.env.PAYLOAD_PUBLIC_SERVER_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost'
 
+// Единый список разрешённых origin для CORS/CSRF. Технический (punycode) домен обязателен —
+// кириллица в Origin-заголовках браузеров не встречается. Список расширяется через ENV,
+// без хардкода конкретного бренд-домена в коде.
+const extraAllowedOrigins = (process.env.PAYLOAD_ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+const allowedOrigins = Array.from(
+  new Set([
+    serverURL,
+    'https://xn--n1aagcfji.xn--p1ai',
+    'https://www.xn--n1aagcfji.xn--p1ai',
+    'http://localhost',
+    'http://localhost:3000',
+    ...extraAllowedOrigins,
+  ]),
+)
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -39,7 +58,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: ' | FOX APPLE CMS',
+      titleSuffix: ' | ФОХСТОР CMS',
       icons: [
         { url: '/favicon.ico', type: 'image/x-icon' },
         { url: '/icon-32.png', type: 'image/png', sizes: '32x32' },
@@ -54,8 +73,8 @@ export default buildConfig({
       scriptPath: path.resolve(dirname, 'seed.ts'),
     },
   ],
-  cors: [serverURL, 'https://foxapple.ru', 'https://www.foxapple.ru', 'http://foxapple.ru', 'http://localhost', 'http://localhost:3000'],
-  csrf: [serverURL, 'https://foxapple.ru', 'https://www.foxapple.ru', 'http://foxapple.ru', 'http://localhost', 'http://localhost:3000'],
+  cors: allowedOrigins,
+  csrf: allowedOrigins,
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',

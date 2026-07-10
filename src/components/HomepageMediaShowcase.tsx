@@ -34,7 +34,7 @@ function MediaTile({
         </>
       ) : (
         <img
-          alt={media.alt || 'FOX APPLE'}
+          alt={media.alt || 'ФОХСТОР'}
           className="showcase-media"
           loading={priority ? 'eager' : 'lazy'}
           src={url}

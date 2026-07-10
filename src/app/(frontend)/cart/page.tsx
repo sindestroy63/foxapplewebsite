@@ -7,7 +7,10 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Корзина',
-  description: 'Оформление заказа в FOX APPLE. Проверьте состав корзины и отправьте заявку.',
+  description: 'Оформление заказа в ФОХСТОР. Проверьте состав корзины и отправьте заявку.',
+  alternates: {
+    canonical: '/cart',
+  },
 }
 
 export default async function CartPage() {

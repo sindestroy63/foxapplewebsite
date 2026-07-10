@@ -25,9 +25,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: category.name,
-    description: `${category.name} в наличии и под заказ в FOX APPLE, Самара.`,
+    description: `${category.name} в наличии и под заказ в ФОХСТОР, Самара.`,
+    alternates: {
+      canonical: `/catalog/${categorySlug}`,
+    },
     openGraph: {
-      title: `${category.name} | FOX APPLE`,
+      title: `${category.name} | ФОХСТОР`,
       description: `Актуальные цены на ${category.name} в Самаре.`,
     },
   }

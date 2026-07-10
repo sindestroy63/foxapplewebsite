@@ -1,7 +1,7 @@
 export function LoginLogo() {
   return (
     <div
-      aria-label="FOX APPLE"
+      aria-label="ФОХСТОР"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -14,8 +14,8 @@ export function LoginLogo() {
         marginBottom: 32,
       }}
     >
-      <span style={{ fontSize: 52 }}>FOX</span>
-      <span style={{ fontSize: 52 }}>APPLE.</span>
+      <span style={{ fontSize: 52 }}>ФОХ</span>
+      <span style={{ fontSize: 52 }}>СТОР.</span>
       <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: '#888', marginTop: 8 }}>
         Apple техника в Самаре
       </span>
@@ -26,7 +26,7 @@ export function LoginLogo() {
 export function NavIcon() {
   return (
     <span
-      aria-label="FOX APPLE"
+      aria-label="ФОХСТОР"
       style={{
         fontFamily: "'Inter', system-ui, sans-serif",
         fontWeight: 900,
@@ -37,7 +37,7 @@ export function NavIcon() {
         whiteSpace: 'nowrap',
       }}
     >
-      FOX APPLE.
+      ФОХСТОР.
     </span>
   )
 }

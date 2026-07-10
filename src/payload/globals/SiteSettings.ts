@@ -14,7 +14,7 @@ export const SiteSettings: GlobalConfig = {
       name: 'shopName',
       type: 'text',
       label: 'Название магазина',
-      defaultValue: 'FOX APPLE',
+      defaultValue: 'ФОХСТОР',
     },
     {
       name: 'phone',
@@ -60,19 +60,19 @@ export const SiteSettings: GlobalConfig = {
       name: 'mainDomain',
       type: 'text',
       label: 'Основной домен',
-      defaultValue: 'foxapple.ru',
+      defaultValue: 'фохстор.рф',
     },
     {
       name: 'secondaryDomain',
       type: 'text',
       label: 'Дополнительный домен',
-      defaultValue: 'фоксэпл.рф',
+      defaultValue: 'xn--n1aagcfji.xn--p1ai',
     },
     {
       name: 'heroTitle',
       type: 'text',
       label: 'Hero заголовок',
-      defaultValue: 'FOX APPLE — техника Apple в Самаре',
+      defaultValue: 'ФОХСТОР — техника Apple в Самаре',
     },
     {
       name: 'heroSubtitle',
@@ -85,13 +85,13 @@ export const SiteSettings: GlobalConfig = {
       type: 'textarea',
       label: 'О магазине',
       defaultValue:
-        'FOX APPLE помогает быстро выбрать актуальную технику Apple, проверить наличие и забронировать товар в Самаре.',
+        'ФОХСТОР помогает быстро выбрать актуальную технику Apple, проверить наличие и забронировать товар в Самаре.',
     },
     {
       name: 'homepageMediaTitle',
       type: 'text',
       label: 'Заголовок медиа-блока на главной',
-      defaultValue: 'FOX APPLE вживую',
+      defaultValue: 'ФОХСТОР вживую',
     },
     {
       name: 'homepageMediaText',

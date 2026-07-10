@@ -9,9 +9,12 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Каталог техники',
-  description: 'Актуальный каталог FOX APPLE: iPhone, iPad, MacBook, AirPods, Apple Watch, PlayStation и аксессуары.',
+  description: 'Актуальный каталог ФОХСТОР: iPhone, iPad, MacBook, AirPods, Apple Watch, PlayStation и аксессуары.',
+  alternates: {
+    canonical: '/catalog',
+  },
   openGraph: {
-    title: 'Каталог техники FOX APPLE',
+    title: 'Каталог техники ФОХСТОР',
     description: 'Проверяйте цены и наличие техники Apple в Самаре.',
   },
 }

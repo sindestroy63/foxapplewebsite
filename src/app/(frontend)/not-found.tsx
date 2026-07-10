@@ -6,7 +6,7 @@ export default function NotFound() {
       <div className="container content-page">
         <p className="eyebrow">404</p>
         <h1>Страница не найдена</h1>
-        <p>Проверьте адрес или откройте каталог FOX APPLE.</p>
+        <p>Проверьте адрес или откройте каталог ФОХСТОР.</p>
         <Link className="button" href="/catalog">
           Открыть каталог
         </Link>

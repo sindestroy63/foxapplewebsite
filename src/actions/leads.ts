@@ -1,5 +1,6 @@
 'use server'
 
+import { absoluteUrl } from '@/lib/constants'
 import { sendTelegramMessage } from '@/lib/telegram'
 
 export type LeadActionState = {
@@ -126,7 +127,7 @@ function formatTelegramMessage(data: {
 
   // Page URL
   if (data.pageUrl) {
-    const fullUrl = data.pageUrl.startsWith('http') ? data.pageUrl : `https://foxapple.ru${data.pageUrl}`
+    const fullUrl = data.pageUrl.startsWith('http') ? data.pageUrl : absoluteUrl(data.pageUrl)
     lines.push(`\uD83D\uDD17 <b>Страница:</b> <a href="${escapeHtml(fullUrl)}">${escapeHtml(fullUrl)}</a>`)
   }
 

@@ -4,7 +4,10 @@ import { SELLER } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Условия покупки и возврата',
-  description: 'Условия покупки, оплаты, доставки и возврата товаров FOX APPLE.',
+  description: 'Условия покупки, оплаты, доставки и возврата товаров ФОХСТОР.',
+  alternates: {
+    canonical: '/purchase-return',
+  },
 }
 
 export default function PurchaseReturnPage() {
@@ -16,8 +19,7 @@ export default function PurchaseReturnPage() {
         <div className="rich-text">
           <h2>1. Общие положения</h2>
           <p>
-            Настоящие условия регулируют порядок приобретения товаров на сайте foxapple.ru /
-            фоксэпл.рф.
+            Настоящие условия регулируют порядок приобретения товаров на сайте фохстор.рф.
           </p>
           <p>
             Продавец:
