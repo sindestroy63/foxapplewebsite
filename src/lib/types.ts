@@ -66,6 +66,7 @@ export type Product = {
   name: string
   slug: string
   model?: string
+  badge?: string
   memory?: string
   color?: string
   simType?: string

@@ -68,6 +68,14 @@ export const Products: CollectionConfig = {
       label: 'Модель',
     },
     {
+      name: 'badge',
+      type: 'text',
+      label: 'Метка товара',
+      admin: {
+        description: 'Например: Новинка, Хит, Акция. Оставьте пустым, если метка не нужна.',
+      },
+    },
+    {
       name: 'memory',
       type: 'text',
       label: 'Память',

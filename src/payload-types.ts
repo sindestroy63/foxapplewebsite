@@ -243,7 +243,8 @@ export interface Product {
    * Формируется автоматически из названия.
    */
   slug: string;
-  model?: string | null;
+    model?: string | null;
+    badge?: string | null;
   memory?: string | null;
   color?: string | null;
   simType?: string | null;
@@ -694,7 +695,8 @@ export interface ProductsSelect<T extends boolean = true> {
   category?: T;
   name?: T;
   slug?: T;
-  model?: T;
+    model?: T;
+    badge?: T;
   memory?: T;
   color?: T;
   simType?: T;

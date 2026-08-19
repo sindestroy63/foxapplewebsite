@@ -9,3 +9,26 @@ Thumbs.db
 *.log
 .seed-tmp
 media*.sql
+# Secrets / local env
+.env*
+!.env.example
+
+# Database backups
+*.sql
+*.dump
+backups/
+
+# Local backups
+*.backup-*
+*.backup
+backup-*
+
+# Archives
+*.tar.gz
+
+# Temporary files
+tmp/
+
+# TypeScript cache
+*.tsbuildinfo
+foxstore_site_icons/

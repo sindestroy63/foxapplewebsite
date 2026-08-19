@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-type NavCategory = { slug: string; name: string; products: { model: string; slug: string }[] }
+type NavCategory = { slug: string; name: string; products: { model: string; slug: string; badge?: string | null }[] }
 
 const secondaryLinks = [
   { href: '/installment', label: 'Рассрочка' },

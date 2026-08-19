@@ -20,6 +20,7 @@ import * as migration_20260501_120000_color_images from './20260501_120000_color
 import * as migration_20260519_170000_variant_generation from './20260519_170000_variant_generation';
 import * as migration_20260601_133000_add_hide_unavailable_colors from './20260601_133000_add_hide_unavailable_colors';
 import * as migration_20260602_144500_leads_telegram_utm from './20260602_144500_leads_telegram_utm';
+import * as migration_20260819_120000_product_badge from './20260819_120000_product_badge';
 
 export const migrations = [
   {
@@ -126,5 +127,10 @@ export const migrations = [
     up: migration_20260602_144500_leads_telegram_utm.up,
     down: migration_20260602_144500_leads_telegram_utm.down,
     name: '20260602_144500_leads_telegram_utm'
+  },
+  {
+    up: migration_20260819_120000_product_badge.up,
+    down: migration_20260819_120000_product_badge.down,
+    name: '20260819_120000_product_badge'
   },
 ];

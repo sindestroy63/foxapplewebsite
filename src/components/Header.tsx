@@ -48,6 +48,7 @@ export function Header({ settings, navData }: { settings: SiteSettings; navData?
                     {cat.products.map((p) => (
                       <Link key={p.slug} href={`/catalog/${cat.slug}?model=${p.slug}`}>
                         {p.model}
+                        {p.badge?.trim() && <span className="nav-product-badge">{p.badge.trim()}</span>}
                       </Link>
                     ))}
                   </div>

@@ -223,7 +223,7 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
 export type NavCategory = {
   slug: string
   name: string
-  products: { model: string; slug: string }[]
+  products: { model: string; slug: string; badge?: string | null }[]
 }
 
 export { sortProductsByPriority }
@@ -246,7 +246,7 @@ export async function getNavData(): Promise<NavCategory[]> {
             const cid = typeof p.category === 'object' ? p.category?.id : p.category
             return cid == cat.id
           })
-          .map(p => ({ model: p.model || p.name, slug: p.slug, name: p.name })),
+          .map(p => ({ model: p.model || p.name, slug: p.slug, name: p.name, badge: p.badge || null })),
       ),
     }))
   } catch (error) {
