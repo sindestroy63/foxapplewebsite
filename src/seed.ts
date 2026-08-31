@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './lib/constants'
 import { slugify } from './payload/utils/slugify'
+import { productSku, variantSku } from './payload/utils/sku'
 import { seedDictionaries, type DictIds } from './seed-dictionaries'
 import { MODEL_IMAGES } from './seed-images'
 import { ALL_PRODUCTS, type ProductSeed as ProductSeedNew } from './seed-products'
@@ -183,6 +184,7 @@ async function upsertProduct(
     name: product.name,
     slug: product.slug,
     model: product.model,
+    sku: product.sku || (byIdentity as any)?.sku || productSku(product.slug),
     memory: product.memory,
     color: product.color,
     simType: product.simType,
@@ -200,8 +202,12 @@ async function upsertProduct(
   }
 
   if (product.variants && product.variants.length > 0) {
-    data.variants = product.variants.map((v) => {
+    const existingVariants = Array.isArray((byIdentity as any)?.variants)
+      ? ((byIdentity as any).variants as Array<{ sku?: string | null }>)
+      : []
+    data.variants = product.variants.map((v, index) => {
       const row: Record<string, unknown> = {
+        sku: v.sku || existingVariants[index]?.sku || variantSku(product.slug, v, index),
         chip: v.chip,
         ram: v.ram,
         screenSize: v.screenSize,

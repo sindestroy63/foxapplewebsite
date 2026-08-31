@@ -11,13 +11,16 @@ import {
 import { getProductImage } from '@/lib/media'
 import type { Category, Product, SiteSettings } from '@/lib/types'
 import { ProductPill } from './ProductPill'
+import { ImageWithFallback } from './ImageWithFallback'
+import { productGroupSlug } from '@/lib/catalog-groups'
 
 function productHref(product: Product): string {
   const category = product.category
-  const categorySlug =
+  const categorySlug = productGroupSlug(product.productGroup) || (
     category && typeof category === 'object' && 'slug' in category
       ? (category as Category).slug
       : null
+  )
 
   return categorySlug ? `/catalog/${categorySlug}/${product.slug}` : '/catalog'
 }
@@ -50,9 +53,9 @@ export function ProductCard({ product, settings }: { product: Product; settings:
       <div className="product-card-media-wrap">
         <Link className="product-card-media" href={productHref(product)} aria-label={product.name}>
           {image.url ? (
-            <img src={image.url} alt={image.alt} loading="lazy" />
+            <ImageWithFallback src={image.url} alt={image.alt} loading="lazy" />
           ) : (
-            <span className="product-placeholder">{product.model || product.name}</span>
+            <span className="product-placeholder" aria-hidden="true" />
           )}
           {product.isNew ? <span className="badge badge-new">Новинка</span> : null}
         </Link>

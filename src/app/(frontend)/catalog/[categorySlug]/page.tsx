@@ -5,8 +5,11 @@ import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
 import { LeadForm } from '@/components/LeadForm'
 import {
   getProductsByCategorySlug,
+  getProductsByProductGroup,
   getSiteSettings,
 } from '@/lib/cms'
+import { LEGACY_CATEGORY_GROUP_ALIASES } from '@/lib/catalog-groups'
+import GroupCatalogPage from '@/components/GroupCatalogPage'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await getProductsByCategorySlug(categorySlug)
 
   if (!category) {
+    const aliasGroup = LEGACY_CATEGORY_GROUP_ALIASES[categorySlug]
+    if (aliasGroup) return { title: `${aliasGroup} | FOXSTORE` }
     return { title: 'Категория не найдена' }
   }
 
@@ -47,6 +52,30 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   ])
 
   if (!data.category) {
+    const aliasGroup = LEGACY_CATEGORY_GROUP_ALIASES[categorySlug]
+    if (aliasGroup) {
+      const [settings, grouped] = await Promise.all([
+        getSiteSettings(),
+        getProductsByProductGroup(aliasGroup),
+      ])
+      return <GroupCatalogPage group={grouped.group!} products={grouped.products} phone={settings.phone} />
+    }
+    // Keep the historical used-items URL available even when the local dump
+    // does not contain a `used` category record. Used is a technical state,
+    // not one of the approved product groups.
+    if (categorySlug === 'used') {
+      return (
+        <section className="page-section"><div className="container">
+          <CategoryCatalogClient
+            categoryName="Б/У"
+            categorySlug="used"
+            products={[]}
+            phone={settings.phone || '+7 (917) 954-64-64'}
+            telegramUsername={settings.telegramUsername}
+          />
+        </div></section>
+      )
+    }
     notFound()
   }
 

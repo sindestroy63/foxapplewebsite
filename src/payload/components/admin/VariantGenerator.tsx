@@ -4,6 +4,9 @@
 import { useField, useFormFields } from '@payloadcms/ui'
 import React, { useCallback, useEffect, useState } from 'react'
 
+import { classifyVariantForNormalization } from '../../catalog-normalization/classification'
+import { isAllowedStorageValue } from '../../catalog-normalization/allowed-values'
+
 type ColorDoc = {
   id: number
   value: string
@@ -16,6 +19,13 @@ type ColorDoc = {
 type StorageDoc = {
   id: number
   value: string
+  archived?: boolean
+}
+
+type SizeDoc = {
+  id: number
+  value: string
+  archived?: boolean
 }
 
 type SimDoc = {
@@ -29,6 +39,7 @@ type DeviceModelDoc = {
   name: string
   availableColors?: ColorDoc[]
   availableStorage?: StorageDoc[]
+  availableSizes?: SizeDoc[]
   availableSim?: SimDoc[]
   chip?: string
   ram?: string
@@ -45,11 +56,40 @@ type GeneratedVariant = {
   sim?: number
   chip?: string
   ram?: string
+  size?: string
+  hasTouchId?: boolean
   screenSize?: string
   connectivity?: string
   price: number
   status: string
   isAvailable: boolean
+}
+
+function normalizeGeneratedStorage(storage: StorageDoc | undefined, model: DeviceModelDoc, allStorage: StorageDoc[]) {
+  if (!storage) return { ram: model.ram || undefined }
+  const classified = classifyVariantForNormalization({
+    productId: 'variant-generator',
+    productName: model.name,
+    category: { slug: model.storageIsSize ? 'apple-watch' : 'generated' },
+    storage: storage.value,
+    ram: model.ram || null,
+  })
+  if (classified.status === 'auto_size') {
+    return { size: classified.proposedSize || undefined, ram: model.ram || undefined }
+  }
+  if (classified.status === 'unchanged') {
+    return { storage: storage.id, ram: model.ram || undefined }
+  }
+  if (classified.status === 'auto_split' || classified.status === 'auto_touch_id') {
+    const cleanStorage = allStorage.find((option) => option.value === classified.proposedStorage)
+    if (!cleanStorage) throw new Error(`Не найдено чистое значение накопителя ${classified.proposedStorage} в справочнике.`)
+    return {
+      storage: cleanStorage.id,
+      ram: classified.proposedRam || model.ram || undefined,
+      hasTouchId: classified.proposedHasTouchId || undefined,
+    }
+  }
+  throw new Error(`Значение «${storage.value}» нельзя безопасно использовать при генерации вариантов.`)
 }
 
 const containerStyle: React.CSSProperties = {
@@ -150,10 +190,13 @@ export default function VariantGenerator() {
   const variantsField = useField<GeneratedVariant[]>({ path: 'variants' })
 
   const [model, setModel] = useState<DeviceModelDoc | null>(null)
+  const [allStorage, setAllStorage] = useState<StorageDoc[]>([])
   const [loading, setLoading] = useState(false)
+  const [generatorError, setGeneratorError] = useState('')
 
   const [selectedColors, setSelectedColors] = useState<Set<number>>(new Set())
   const [selectedStorage, setSelectedStorage] = useState<Set<number>>(new Set())
+  const [selectedSizes, setSelectedSizes] = useState<Set<number>>(new Set())
   const [selectedSim, setSelectedSim] = useState<Set<number>>(new Set())
 
   const [bulkPrice, setBulkPrice] = useState('')
@@ -170,13 +213,17 @@ export default function VariantGenerator() {
     let cancelled = false
     setLoading(true)
 
-    fetch(`/api/device-models/${deviceModelId}?depth=2`)
-      .then((r) => r.json())
-      .then((data: DeviceModelDoc) => {
+    Promise.all([
+      fetch(`/api/device-models/${deviceModelId}?depth=2`).then((r) => r.json() as Promise<DeviceModelDoc>),
+      fetch('/api/storage-options?limit=1000&depth=0&where[archived][not_equals]=true').then((r) => r.json() as Promise<{ docs?: StorageDoc[] }>),
+    ])
+      .then(([data, storageData]) => {
         if (cancelled) return
         setModel(data)
+        setAllStorage((storageData.docs || []).filter((storage) => !storage.archived).filter((storage) => isAllowedStorageValue(storage.value)))
         setSelectedColors(new Set((data.availableColors || []).map((c) => c.id)))
-        setSelectedStorage(new Set((data.availableStorage || []).map((s) => s.id)))
+        setSelectedStorage(new Set((data.availableStorage || []).filter((s) => !s.archived).filter((s) => isAllowedStorageValue(s.value)).map((s) => s.id)))
+        setSelectedSizes(new Set((data.availableSizes || []).filter((s) => !s.archived).map((s) => s.id)))
         setSelectedSim(new Set((data.availableSim || []).map((s) => s.id)))
         setLoading(false)
       })
@@ -214,15 +261,27 @@ export default function VariantGenerator() {
     })
   }, [])
 
+  const toggleSize = useCallback((id: number) => {
+    setSelectedSizes((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
   const generateVariants = useCallback(() => {
     if (!model) return
+    setGeneratorError('')
 
     const colors = (model.availableColors || []).filter((c) => selectedColors.has(c.id))
     const storages = (model.availableStorage || []).filter((s) => selectedStorage.has(s.id))
+    const sizes = (model.availableSizes || []).filter((s) => selectedSizes.has(s.id) && !s.archived)
     const sims = (model.availableSim || []).filter((s) => selectedSim.has(s.id))
 
     const simList: (SimDoc | undefined)[] = sims.length > 0 ? sims : [undefined]
-    const storageList = storages.length > 0 ? storages : [undefined]
+    const storageList = model.storageIsSize ? [undefined] : (storages.length > 0 ? storages : [undefined])
+    const sizeList = model.storageIsSize ? (sizes.length > 0 ? sizes : [undefined]) : [undefined]
     const colorList = colors.length > 0 ? colors : [undefined]
 
     const variants: GeneratedVariant[] = []
@@ -231,26 +290,38 @@ export default function VariantGenerator() {
       for (const color of colorList) {
         for (let i = 0; i < storageList.length; i++) {
           const storage = storageList[i]
-          const price = (model.basePrice || 0) + (model.priceStep || 0) * i
+          for (let j = 0; j < sizeList.length; j++) {
+          const size = sizeList[j]
+          const price = (model.basePrice || 0) + (model.priceStep || 0) * (model.storageIsSize ? j : i)
+
+          let normalizedStorage: ReturnType<typeof normalizeGeneratedStorage>
+          try {
+            normalizedStorage = model.storageIsSize
+              ? { size: size?.value, ram: model.ram || undefined }
+              : normalizeGeneratedStorage(storage, model, allStorage)
+          } catch (error) {
+            setGeneratorError(error instanceof Error ? error.message : 'Не удалось нормализовать характеристики варианта.')
+            return
+          }
 
           variants.push({
             color: color?.id,
-            storage: storage?.id,
+            ...normalizedStorage,
             sim: sim?.id,
             chip: model.chip || undefined,
-            ram: model.ram || undefined,
             screenSize: model.screenSize || undefined,
             connectivity: model.connectivity || undefined,
             price,
             status: 'in_stock',
             isAvailable: true,
           })
+          }
         }
       }
     }
 
     variantsField.setValue(variants)
-  }, [model, selectedColors, selectedStorage, selectedSim, variantsField])
+  }, [model, allStorage, selectedColors, selectedStorage, selectedSizes, selectedSim, variantsField])
 
   const applyBulkPrice = useCallback(() => {
     const priceNum = Number(bulkPrice)
@@ -299,11 +370,12 @@ export default function VariantGenerator() {
   }
 
   const colors = model.availableColors || []
-  const storages = model.availableStorage || []
+  const storages = (model.availableStorage || []).filter((storage) => !storage.archived).filter((storage) => isAllowedStorageValue(storage.value))
+  const sizes = (model.availableSizes || []).filter((size) => !size.archived)
   const sims = model.availableSim || []
   const totalCombinations =
     Math.max(selectedColors.size, 1) *
-    Math.max(selectedStorage.size, 1) *
+    Math.max(model.storageIsSize ? selectedSizes.size : selectedStorage.size, 1) *
     Math.max(selectedSim.size, 1)
 
   return (
@@ -311,6 +383,9 @@ export default function VariantGenerator() {
       <h4 style={headingStyle}>
         Генератор вариантов — {model.name}
       </h4>
+      <p style={{ ...infoStyle, color: 'var(--theme-warning-500)' }}>
+        Внимание: генератор может заменить текущие варианты товара. Используйте только при создании нового товара или после проверки.
+      </p>
 
       {colors.length > 0 && (
         <div style={sectionStyle}>
@@ -331,18 +406,18 @@ export default function VariantGenerator() {
         </div>
       )}
 
-      {storages.length > 0 && (
+      {(model.storageIsSize ? sizes.length > 0 : storages.length > 0) && (
         <div style={sectionStyle}>
           <span style={labelStyle}>
-            {model.storageIsSize ? 'Размеры' : 'Память'} ({selectedStorage.size} из {storages.length})
+            {model.storageIsSize ? 'Размер корпуса' : 'Накопитель'} ({selectedStorage.size} из {storages.length})
           </span>
           <div style={checkboxGridStyle}>
-            {storages.map((s) => (
+            {(model.storageIsSize ? sizes : storages).map((s) => (
               <label key={s.id} style={checkboxLabelStyle}>
                 <input
                   type="checkbox"
-                  checked={selectedStorage.has(s.id)}
-                  onChange={() => toggleStorage(s.id)}
+                  checked={model.storageIsSize ? selectedSizes.has(s.id) : selectedStorage.has(s.id)}
+                  onChange={() => model.storageIsSize ? toggleSize(s.id) : toggleStorage(s.id)}
                 />
                 {s.value}
               </label>
@@ -377,6 +452,8 @@ export default function VariantGenerator() {
           Заменит текущие варианты
         </span>
       </div>
+
+      {generatorError && <p style={{ ...infoStyle, color: 'var(--theme-error-500)' }}>{generatorError}</p>}
 
       <hr style={{ border: 'none', borderTop: '1px solid var(--theme-elevation-150)', margin: '16px 0' }} />
 

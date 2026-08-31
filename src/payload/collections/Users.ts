@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { admins, adminsOrFirstUser, roleFieldAccess, superadmins } from '../access'
+import { denyAll } from '../access'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -9,18 +9,25 @@ export const Users: CollectionConfig = {
     plural: 'Администраторы',
   },
   admin: {
+    hidden: true,
     useAsTitle: 'email',
     defaultColumns: ['email', 'role', 'name', 'createdAt'],
   },
   auth: true,
   access: {
-    read: admins,
-    create: adminsOrFirstUser,
-    update: ({ req }) => {
-      const role = (req.user as any)?.role
-      return role === 'superadmin' || role === 'admin'
-    },
-    delete: superadmins,
+    read: ({ req, id }) => req.user && id ? { id: { equals: req.user.id } } : false,
+    create: denyAll,
+    update: ({ req, id }) => req.user && id ? { id: { equals: req.user.id } } : false,
+    delete: denyAll,
+  },
+  hooks: {
+    beforeChange: [({ data, originalDoc }) => {
+      if (originalDoc && data) {
+        if (data.email && data.email !== originalDoc.email) throw new Error('Email cannot be changed from account settings.')
+        if (data.role && data.role !== originalDoc.role) throw new Error('Role cannot be changed from account settings.')
+      }
+      return data
+    }],
   },
   fields: [
     {
@@ -40,7 +47,7 @@ export const Users: CollectionConfig = {
         { label: 'Менеджер', value: 'manager' },
       ],
       access: {
-        update: roleFieldAccess,
+        update: () => false,
       },
       admin: {
         description: 'Суперадмин — полный доступ. Админ — управление каталогом и создание менеджеров. Менеджер — только редактирование товаров.',

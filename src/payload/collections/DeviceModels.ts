@@ -46,7 +46,17 @@ export const DeviceModels: CollectionConfig = {
       relationTo: 'storage-options',
       hasMany: true,
       label: 'Доступная память / размеры',
+      filterOptions: { archived: { not_equals: true } },
       admin: { description: '128GB, 256GB… или 42mm, 46mm для Watch' },
+    },
+    {
+      name: 'availableSizes',
+      type: 'relationship',
+      relationTo: 'variant-size-options',
+      hasMany: true,
+      label: 'Размеры корпуса',
+      filterOptions: { archived: { not_equals: true } },
+      admin: { description: 'Размеры корпуса часов из отдельного справочника.' },
     },
     {
       name: 'availableSim',

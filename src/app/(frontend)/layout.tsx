@@ -8,7 +8,7 @@ import { CookieBanner } from '@/components/CookieBanner'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { Particles } from '@/components/Particles'
 import { SITE_URL } from '@/lib/constants'
-import { getSiteSettings, getNavData } from '@/lib/cms'
+import { getSiteSettings, getNavData, getGroupNavData, getCatalogNavigation } from '@/lib/cms'
 import { CartProvider } from '@/contexts/CartContext'
 
 import './globals.css'
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 }
 
 export default async function FrontendLayout({ children }: { children: React.ReactNode }) {
-  const [settings, navData] = await Promise.all([getSiteSettings(), getNavData()])
+  const [settings, navData, groupNavData, catalogNavigation] = await Promise.all([getSiteSettings(), getNavData(), getGroupNavData(), getCatalogNavigation()])
 
   return (
     <html lang="ru">
@@ -54,7 +54,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
         <CartProvider>
           <Particles />
           <div className="site-shell">
-            <Header settings={settings} navData={navData} />
+            <Header settings={settings} navData={navData} groupNavData={groupNavData} catalogNavigation={catalogNavigation} />
             <main className="site-main">{children}</main>
             <Footer settings={settings} />
           </div>

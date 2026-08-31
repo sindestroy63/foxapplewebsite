@@ -21,7 +21,7 @@ services:
       context: .
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -33,7 +33,12 @@ services:
       NODE_OPTIONS: --dns-result-order=ipv4first
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost}
       PAYLOAD_PUBLIC_SERVER_URL: ${PAYLOAD_PUBLIC_SERVER_URL:-http://localhost}
+      PAYLOAD_ALLOWED_ORIGINS: ${PAYLOAD_ALLOWED_ORIGINS:-http://localhost:3001}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:-local-development-secret-change-me}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://vibecode.moe/v1}
+      OPENAI_PRICE_MODEL: ${OPENAI_PRICE_MODEL:-gpt-5.4-mini}
+      OPENAI_RESPONSE_FORMAT: ${OPENAI_RESPONSE_FORMAT:-json_schema}
       PORT: 3000
       RUN_MIGRATIONS_ON_START: ${RUN_MIGRATIONS_ON_START:-true}
       PAYLOAD_SEED_ON_START: ${PAYLOAD_SEED_ON_START:-false}

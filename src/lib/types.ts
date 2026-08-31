@@ -24,9 +24,26 @@ export type ProductStatus = 'in_stock' | 'preorder' | 'out_of_stock'
 
 export type CatalogSort = 'price_asc' | 'price_desc'
 
+export type ProductGroup =
+  | 'smartphones'
+  | 'tablets'
+  | 'laptops'
+  | 'smart-watches'
+  | 'audio'
+  | 'gaming-consoles'
+  | 'home-appliances'
+  | 'smart-devices'
+  | 'accessories'
+  | 'other'
+  | 'trade-in'
+
 export type CatalogFilters = {
   query?: string
   sort?: CatalogSort
+  productGroup?: ProductGroup
+  condition?: 'new' | 'used'
+  brand?: string
+  line?: string
 }
 
 export type VariantColor = {
@@ -39,15 +56,20 @@ export type VariantColor = {
 
 export type ProductVariant = {
   id?: string
+  sku?: string
   color?: VariantColor
   memory?: string
   simType?: string
   size?: string
+  hasTouchId?: boolean | null
+  storage?: string
+  sim?: string
   chip?: string
   ram?: string
   screenSize?: string
   connectivity?: string
   generation?: string
+  packageLabel?: string
   price: number
   oldPrice?: number
   status?: ProductStatus
@@ -66,6 +88,11 @@ export type Product = {
   name: string
   slug: string
   model?: string
+  productGroup?: ProductGroup
+  brand?: string
+  productType?: string
+  productLine?: string
+  sku?: string
   badge?: string
   memory?: string
   color?: string

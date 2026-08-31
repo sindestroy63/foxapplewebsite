@@ -9,16 +9,27 @@ import sharp from 'sharp'
 import { Categories } from './payload/collections/Categories'
 import { Colors } from './payload/collections/Colors'
 import { DeviceModels } from './payload/collections/DeviceModels'
+import { RamOptions } from './payload/collections/RamOptions'
+import { VariantSizeOptions } from './payload/collections/VariantSizeOptions'
+import { ScreenSizeOptions } from './payload/collections/ScreenSizeOptions'
+import { ConnectivityOptions } from './payload/collections/ConnectivityOptions'
+import { CatalogNavigation } from './payload/collections/CatalogNavigation'
 import { Leads } from './payload/collections/Leads'
 import { Media } from './payload/collections/Media'
 import { Pages } from './payload/collections/Pages'
+import { PriceImportItems } from './payload/collections/PriceImportItems'
+import { PriceImportSessions } from './payload/collections/PriceImportSessions'
 import { Products } from './payload/collections/Products'
+import { PriceUpdateBatches } from './payload/collections/PriceUpdateBatches'
+import { PriceUpdateItems } from './payload/collections/PriceUpdateItems'
 import { SimOptions } from './payload/collections/SimOptions'
 import { StorageOptions } from './payload/collections/StorageOptions'
 import { Users } from './payload/collections/Users'
 import { SiteAppearance } from './payload/globals/SiteAppearance'
 import { SiteSettings } from './payload/globals/SiteSettings'
+import { priceUpdateEndpoints } from './payload/price-updates/endpoints'
 import { migrations } from './migrations'
+import { catalogNavigationAdminEndpoints } from './payload/catalog-navigation-admin'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -41,6 +52,7 @@ const allowedOrigins = Array.from(
     'https://www.xn--n1aagcfji.xn--p1ai',
     'http://localhost',
     'http://localhost:3000',
+    'http://localhost:3001',
     ...extraAllowedOrigins,
   ]),
 )
@@ -49,13 +61,31 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     components: {
+      afterNavLinks: ['/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
       graphics: {
         Icon: '/payload/components/admin/Branding#NavIcon',
         Logo: '/payload/components/admin/Branding#LoginLogo',
       },
+      views: {
+        priceUpdates: {
+          Component: '/payload/components/admin/PriceUpdateView',
+          path: '/price-updates',
+          exact: true,
+          meta: { title: 'Обновление цен' },
+        },
+        catalogNavigation: {
+          Component: '/payload/components/admin/CatalogNavigationView',
+          path: '/catalog-navigation',
+          exact: true,
+          meta: { title: 'Навигация каталога' },
+        },
+      },
     },
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    dashboard: {
+      widgets: [],
     },
     meta: {
       titleSuffix: ' | ФОХСТОР CMS',
@@ -65,7 +95,11 @@ export default buildConfig({
       ],
     },
   },
-  collections: [Users, Media, Categories, Products, Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels],
+  collections: [
+    Users, Media, Categories, Products, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
+    Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
+  ],
+  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints],
   globals: [SiteSettings, SiteAppearance],
   bin: [
     {

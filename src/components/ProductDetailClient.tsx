@@ -6,6 +6,7 @@ import { ProductGallery } from './ProductGallery'
 import { ProductPill } from './ProductPill'
 import { AddToCartButton } from './AddToCartButton'
 import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
+import { PRODUCT_PRICING_NOTICE } from '@/lib/product-pricing-notice'
 
 const SIM_LABELS: Record<string, string> = {
   SIM_ESIM: 'SIM + eSIM',
@@ -23,7 +24,7 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
   return (items || []).filter((m): m is Media => Boolean(m) && typeof m === 'object' && 'id' in m)
 }
 
-type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'memory' | 'connectivity' | 'size' | 'generation'
+type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'packageLabel'
 
 function toSortableNumber(s: string): number | null {
   const m = s.match(/^([\d.]+)\s*(TB|ТБ|GB|ГБ|MB|МБ)?$/i)
@@ -93,10 +94,11 @@ const STRING_AXES: { key: StringKey; title: string }[] = [
   { key: 'screenSize', title: 'Диагональ' },
   { key: 'chip', title: 'Чип' },
   { key: 'ram', title: 'Оперативная память' },
-  { key: 'memory', title: 'Накопитель' },
+  { key: 'storage', title: 'Накопитель' },
   { key: 'connectivity', title: 'Подключение' },
-  { key: 'size', title: 'Размер' },
+  { key: 'size', title: 'Размер корпуса' },
   { key: 'generation', title: 'Поколение' },
+  { key: 'packageLabel', title: 'Комплектация' },
 ]
 
 function displayLabel(key: StringKey, value: string): string {
@@ -284,6 +286,8 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
             </div>
           )}
         </div>
+
+        <p className="detail-pricing-notice" role="note">{PRODUCT_PRICING_NOTICE}</p>
 
         <span className={`detail-status status ${tone}`}>{statusLabel(displayStatus)}</span>
 

@@ -32,3 +32,315 @@
 .foxapple-admin-icon span:last-child {
   margin-top: -0.35rem;
 }
+/* Price update admin tool */
+.price-update-nav-link {
+  margin: 8px 0 14px;
+
+  a {
+    display: block;
+    padding: 9px 12px;
+    color: var(--theme-elevation-800);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+  }
+
+  a:hover,
+  a.active {
+    background: var(--theme-elevation-100);
+    border-left-color: var(--theme-success-500);
+  }
+}
+
+.price-update-tool {
+  width: min(1440px, 100%);
+  padding: 32px 48px 64px;
+
+  h1,
+  h2,
+  p {
+    margin-top: 0;
+  }
+}
+
+.price-update-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+
+  h1 {
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--theme-elevation-600);
+  }
+}
+
+.price-update-input {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 14px;
+    resize: vertical;
+    color: var(--theme-text);
+    background: var(--theme-input-bg);
+    border: 1px solid var(--theme-elevation-250);
+    border-radius: 4px;
+    font: 14px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+}
+
+.price-update-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 16px 0 24px;
+
+  button {
+    min-height: 40px;
+    padding: 0 18px;
+    color: var(--theme-text);
+    background: var(--theme-elevation-150);
+    border: 1px solid var(--theme-elevation-300);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button.primary {
+    color: var(--theme-success-900);
+    background: var(--theme-success-150);
+    border-color: var(--theme-success-400);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.price-update-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  padding: 14px 0;
+  border-top: 1px solid var(--theme-elevation-200);
+  border-bottom: 1px solid var(--theme-elevation-200);
+}
+
+.price-update-table-wrap {
+  overflow-x: auto;
+  margin-top: 20px;
+
+  table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 11px 10px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--theme-elevation-200);
+  }
+
+  th {
+    color: var(--theme-elevation-600);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  select {
+    display: block;
+    width: min(420px, 100%);
+    min-height: 38px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    color: var(--theme-text);
+    background: var(--theme-input-bg);
+    border: 1px solid var(--theme-elevation-300);
+    border-radius: 4px;
+  }
+
+  button {
+    min-height: 36px;
+    white-space: nowrap;
+    padding: 0 12px;
+    color: var(--theme-text);
+    background: var(--theme-elevation-150);
+    border: 1px solid var(--theme-elevation-300);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  td:last-child {
+    min-width: 220px;
+    overflow: visible;
+  }
+}
+
+.price-update-status {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--theme-elevation-150);
+  white-space: nowrap;
+
+  &.ready,
+  &.updated {
+    color: var(--theme-success-800);
+    background: var(--theme-success-150);
+  }
+
+  &.conflict,
+  &.failed,
+  &.invalid_price,
+  &.not_found,
+  &.duplicate_sku_in_input {
+    color: var(--theme-error-800);
+    background: var(--theme-error-150);
+  }
+}
+
+.price-update-errors {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--theme-elevation-200);
+
+  h2 {
+    font-size: 18px;
+  }
+}
+
+.price-update-alert {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--theme-elevation-300);
+  border-radius: 4px;
+
+  &.error {
+    color: var(--theme-error-800);
+    background: var(--theme-error-100);
+  }
+
+  &.success {
+    color: var(--theme-success-800);
+    background: var(--theme-success-100);
+  }
+}
+
+@media (max-width: 768px) {
+  .price-update-tool {
+    padding: 24px 18px 48px;
+  }
+
+  .price-update-heading {
+    flex-direction: column;
+  }
+}
+
+.product-form-section {
+  margin: 28px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--theme-elevation-200);
+  color: var(--theme-elevation-800);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.product-placement {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 4px;
+  background: var(--theme-elevation-50);
+
+  strong {
+    display: block;
+    font-size: 15px;
+  }
+
+  label {
+    display: grid;
+    gap: 6px;
+    color: var(--theme-elevation-700);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  select {
+    min-height: 38px;
+    min-width: 0;
+    padding: 7px 10px;
+    color: var(--theme-text);
+    background: var(--theme-input-bg);
+    border: 1px solid var(--theme-elevation-300);
+    border-radius: 4px;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--theme-elevation-600);
+    font-size: 13px;
+  }
+}
+
+.product-placement-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.product-placement-result {
+  margin-top: 14px;
+  color: var(--theme-elevation-700);
+  font-size: 13px;
+
+  strong { display: inline; margin-left: 4px; }
+}
+
+.product-placement-save {
+  margin-top: 12px;
+  min-height: 36px;
+  padding: 0 14px;
+  color: var(--theme-text);
+  background: var(--theme-elevation-150);
+  border: 1px solid var(--theme-elevation-300);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .product-placement-fields { grid-template-columns: 1fr; }
+}
+
+.product-system-data {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid var(--theme-elevation-200);
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) 1fr;
+    gap: 6px 16px;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+
+  dt { color: var(--theme-elevation-600); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+}

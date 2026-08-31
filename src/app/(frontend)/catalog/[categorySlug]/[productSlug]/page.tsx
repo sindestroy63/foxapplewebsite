@@ -22,18 +22,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
+  const seoName = product.name?.trim() || product.model?.trim() || 'Техника в ФОХСТОР'
+  const seoTitle = `${seoName} — купить в Самаре | ФОХСТОР`
+  const seoDescription = `${seoName}. Цена, наличие и доставка в Самаре. ФОХСТОР.`
   return {
-    title: product.seoTitle || product.name,
-    description:
-      product.seoDescription ||
-      product.shortDescription ||
-      `${product.name} в ФОХСТОР. Актуальная цена и наличие в Самаре.`,
+    title: seoTitle,
+    description: seoDescription,
     alternates: {
       canonical: `/catalog/${categorySlug}/${productSlug}`,
     },
     openGraph: {
-      title: product.name,
-      description: product.shortDescription || 'Уточните наличие и забронируйте товар в ФОХСТОР.',
+      title: seoTitle,
+      description: seoDescription,
     },
   }
 }

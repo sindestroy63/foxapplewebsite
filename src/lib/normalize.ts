@@ -7,10 +7,10 @@ function nc(r: any): VariantColor | undefined {
 }
 
 function nv(v: Record<string, any>): ProductVariant {
-  let memory = v.memory, size = v.size, simType = v.simType
-  if (v.storage?.value) { if (/^\d+mm$/.test(v.storage.value)) size = v.storage.value; else memory = v.storage.value }
+  const storage = v.storage?.value
+  let simType = v.simType
   if (v.sim?.value) simType = v.sim.value
-  return { id: v.id, color: nc(v.color), memory, simType, size, chip: v.chip, ram: v.ram, screenSize: v.screenSize, connectivity: v.connectivity, generation: v.generation, price: v.price, oldPrice: v.oldPrice, status: v.status, isAvailable: v.isAvailable, images: v.images }
+  return { id: v.id, sku: v.sku, color: nc(v.color), memory: storage, simType, size: v.size, hasTouchId: v.hasTouchId, storage, sim: v.sim?.value, chip: v.chip, ram: v.ram, screenSize: v.screenSize, connectivity: v.connectivity, generation: v.generation, packageLabel: v.packageLabel, price: v.price, oldPrice: v.oldPrice, status: v.status, isAvailable: v.isAvailable, images: v.images }
 }
 
 function nci(ci: Record<string, any>): ColorImageGroup {

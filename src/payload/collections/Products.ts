@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 import { admins, anyone, authenticated } from '../access'
 import { slugify } from '../utils/slugify'
+import { validateProductSkus } from '../utils/sku'
+
+const productGroup = (data: any) => data?.productGroup || data?.product_group
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -11,7 +14,7 @@ export const Products: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'category', 'price', 'status', 'isAvailable', 'sortOrder'],
+    defaultColumns: ['name', 'sku', 'price', 'status', 'isAvailable', 'sortOrder'],
   },
   access: {
     read: anyone,
@@ -21,7 +24,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [
-      ({ data, operation }) => {
+      async ({ data, operation, originalDoc, req }) => {
         if (data?.name && !data.slug) {
           data.slug = slugify(data.name)
         }
@@ -32,17 +35,26 @@ export const Products: CollectionConfig = {
             throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
           }
         }
-        return data
+        return validateProductSkus({
+          data: data as Record<string, unknown>,
+          originalDoc: originalDoc as Record<string, unknown> | null,
+          req,
+        })
       },
     ],
   },
   fields: [
     {
+      name: 'basicsSection',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductSection#BasicsSection' } },
+    },
+    {
       name: 'category',
       type: 'relationship',
       label: 'Категория',
       relationTo: 'categories',
-      required: true,
+      admin: { hidden: true },
       index: true,
     },
     {
@@ -57,8 +69,10 @@ export const Products: CollectionConfig = {
       label: 'URL slug',
       required: true,
       unique: true,
+      access: { update: () => false },
       index: true,
       admin: {
+        readOnly: true,
         description: 'Формируется автоматически из названия.',
       },
     },
@@ -66,14 +80,63 @@ export const Products: CollectionConfig = {
       name: 'model',
       type: 'text',
       label: 'Модель',
+      admin: { hidden: true },
+    },
+    {
+      name: 'placementSection',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductSection#PlacementSection' } },
+    },
+    {
+      name: 'catalogPlacement',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductCatalogPlacement' } },
+    },
+    {
+      name: 'productGroup',
+      type: 'select',
+      label: 'Верхняя группа',
+      options: [
+        ['smartphones', 'Смартфоны'], ['tablets', 'Планшеты'], ['laptops', 'Ноутбуки'], ['smart-watches', 'Смарт-часы'],
+        ['audio', 'Наушники и аудио'], ['gaming-consoles', 'Игровые консоли'], ['home-appliances', 'Бытовая техника'],
+        ['smart-devices', 'Умные устройства'], ['accessories', 'Аксессуары'], ['other', 'Другое'], ['trade-in', 'Trade-in / Б/У товары'],
+      ].map(([value, label]) => ({ value, label })),
+      admin: { hidden: true },
+    },
+    {
+      name: 'condition',
+      type: 'select',
+      label: 'Состояние товара',
+      options: [
+        { label: 'Новый', value: 'new' },
+        { label: 'Б/У', value: 'used' },
+      ],
+      admin: {
+        hidden: true,
+        readOnly: true,
+        description: 'Необязательное техническое поле; существующие товары не изменяются автоматически.',
+      },
+    },
+    { name: 'brand', type: 'text', label: 'Бренд', admin: { hidden: true } },
+    { name: 'productType', type: 'text', label: 'Тип товара', admin: { hidden: true } },
+    { name: 'productLine', type: 'text', label: 'Линейка товара', admin: { hidden: true } },
+    {
+      name: 'sku',
+      type: 'text',
+      label: 'Артикул (SKU)',
+      unique: true,
+      index: true,
+      access: { update: () => false },
+      admin: {
+        readOnly: true,
+        description: 'Используется для массового обновления цен',
+      },
     },
     {
       name: 'badge',
       type: 'text',
       label: 'Метка товара',
-      admin: {
-        description: 'Например: Новинка, Хит, Акция. Оставьте пустым, если метка не нужна.',
-      },
+      admin: { hidden: true },
     },
     {
       name: 'memory',
@@ -102,6 +165,11 @@ export const Products: CollectionConfig = {
       admin: {
         description: 'Базовая розничная цена рассчитывается автоматически (+20%)',
       },
+    },
+    {
+      name: 'commerceSection',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductSection#CommerceSection' } },
     },
     {
       name: 'status',
@@ -145,18 +213,21 @@ export const Products: CollectionConfig = {
       label: 'Популярный товар',
       defaultValue: false,
       index: true,
+      admin: { hidden: true },
     },
     {
       name: 'isNew',
       type: 'checkbox',
       label: 'Новинка',
       defaultValue: false,
+      admin: { hidden: true },
     },
     {
       name: 'sortOrder',
       type: 'number',
       label: 'Порядок сортировки',
       defaultValue: 100,
+      admin: { hidden: true, readOnly: true, description: 'Используется для технического порядка карточек в каталоге.' },
     },
     {
       name: 'shortDescription',
@@ -167,6 +238,10 @@ export const Products: CollectionConfig = {
       name: 'description',
       type: 'richText',
       label: 'Описание',
+      admin: {
+        hidden: true,
+        description: 'Устаревшее поле сохранено для обратной совместимости.',
+      },
     },
     {
       name: 'images',
@@ -182,6 +257,11 @@ export const Products: CollectionConfig = {
       admin: {
         description: 'Рекомендуемый размер: 1000×1000 px (квадрат). Формат: JPG, PNG или WebP. Первое фото — основное.',
       },
+    },
+    {
+      name: 'mediaSection',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductSection#MediaSection' } },
     },
     {
       name: 'colorImages',
@@ -214,6 +294,7 @@ export const Products: CollectionConfig = {
       type: 'text',
       label: 'Размер (мм)',
       admin: {
+        hidden: true,
         description: 'Для Apple Watch: 40mm, 42mm и т.д.',
       },
     },
@@ -223,6 +304,7 @@ export const Products: CollectionConfig = {
       relationTo: 'device-models',
       label: 'Модель устройства',
       admin: {
+        hidden: true,
         description: 'Выберите модель для автозаполнения и генерации вариантов.',
         position: 'sidebar',
       },
@@ -231,10 +313,17 @@ export const Products: CollectionConfig = {
       name: 'variantGenerator',
       type: 'ui',
       admin: {
+        // Variant generation remains available in the component code, but is not rendered in the ordinary form.
+        condition: () => false,
         components: {
           Field: '/payload/components/admin/VariantGenerator',
         },
       },
+    },
+    {
+      name: 'variantsSection',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductSection#VariantsSection' } },
     },
     {
       name: 'variants',
@@ -245,21 +334,31 @@ export const Products: CollectionConfig = {
       },
       fields: [
         { type: 'row', fields: [
+          { name: 'sku', type: 'text', label: 'Служебный артикул', unique: true, index: true, access: { update: () => false },
+            admin: { readOnly: true, description: 'Формируется автоматически при создании варианта.' } },
           { name: 'color', type: 'relationship', relationTo: 'colors', label: 'Цвет',
-            admin: { description: 'Выберите из справочника цветов' } },
-          { name: 'storage', type: 'relationship', relationTo: 'storage-options', label: 'Память / Размер',
-            admin: { description: 'Выберите из справочника (128GB, 256GB, 42mm…)' } },
+            admin: { description: 'Выберите из справочника цветов', condition: (data: any) => !['gaming-consoles'].includes(productGroup(data)) } },
+          { name: 'storage', type: 'relationship', relationTo: 'storage-options', label: 'Накопитель', filterOptions: { archived: { not_equals: true } },
+            admin: { condition: (data: any) => ['smartphones', 'tablets', 'laptops'].includes(productGroup(data)), description: 'Выберите накопитель из справочника (128GB, 256GB, 1TB…)' } },
           { name: 'sim', type: 'relationship', relationTo: 'sim-options', label: 'Тип SIM',
-            admin: { description: 'Выберите из справочника SIM-вариантов' } },
+            admin: { condition: (data: any) => ['smartphones'].includes(productGroup(data)), description: 'Выберите из справочника SIM-вариантов' } },
         ] },
         { type: 'row', fields: [
-          { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)' },
-          { name: 'ram', type: 'text', label: 'Оперативная память' },
-          { name: 'screenSize', type: 'text', label: 'Диагональ' },
+          { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)', admin: { condition: (data: any) => ['laptops'].includes(productGroup(data)) } },
+          { name: 'ram', type: 'text', label: 'Устаревшая RAM', admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.ramOption && Boolean(siblingData?.ram) } },
+          { name: 'ramOption', type: 'relationship', relationTo: 'ram-options', label: 'Оперативная память (справочник)', admin: { condition: (data: any) => ['smartphones', 'laptops'].includes(productGroup(data)), description: 'Заполняется после миграции; старое поле ram сохраняется.' } },
+          { name: 'size', type: 'text', label: 'Устаревший размер',
+            admin: { readOnly: true, condition: (data: any, siblingData: any) => productGroup(data) === 'smart-watches' && !siblingData?.sizeOption && Boolean(siblingData?.size), description: 'Старое значение сохранено для совместимости.' } },
+          { name: 'hasTouchId', type: 'checkbox', label: 'Есть Touch ID',
+            admin: { description: 'Есть Touch ID' } },
+          { name: 'screenSize', type: 'text', label: 'Устаревшая диагональ', admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.screenSizeOption && Boolean(siblingData?.screenSize) } },
+          { name: 'screenSizeOption', type: 'relationship', relationTo: 'screen-size-options', label: 'Диагональ (справочник)', admin: { condition: (data: any) => ['tablets', 'laptops'].includes(productGroup(data)) } },
         ] },
         { type: 'row', fields: [
-          { name: 'connectivity', type: 'text', label: 'Подключение (Wi-Fi, Cellular…)' },
+          { name: 'connectivity', type: 'text', label: 'Устаревшее подключение', admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.connectivityOption && Boolean(siblingData?.connectivity) } },
+          { name: 'connectivityOption', type: 'relationship', relationTo: 'connectivity-options', label: 'Подключение (справочник)', admin: { condition: (data: any) => ['tablets', 'smart-watches'].includes(productGroup(data)) } },
           { name: 'generation', type: 'text', label: 'Поколение' },
+          { name: 'packageLabel', type: 'text', label: 'Комплектация', admin: { description: 'Например: 1 шт или 4 шт. Не используйте generation для комплектации.' } },
         ] },
         { type: 'row', fields: [
           { name: 'price', type: 'number', label: 'Цена со скидкой', required: true, min: 0 },
@@ -280,11 +379,20 @@ export const Products: CollectionConfig = {
       name: 'seoTitle',
       type: 'text',
       label: 'SEO title',
+      admin: { hidden: true },
+      access: { update: () => false },
     },
     {
       name: 'seoDescription',
       type: 'textarea',
       label: 'SEO description',
+      admin: { hidden: true },
+      access: { update: () => false },
+    },
+    {
+      name: 'systemDataPreview',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/ProductSystemData' } },
     },
   ],
 }

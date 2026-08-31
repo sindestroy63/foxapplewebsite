@@ -1,13 +1,14 @@
 import type { GlobalConfig } from 'payload'
 
-import { anyone, authenticated } from '../access'
+import { denyAll } from '../access'
 
 export const SiteAppearance: GlobalConfig = {
   slug: 'site-appearance',
   label: 'Оформление сайта',
+  admin: { hidden: true },
   access: {
-    read: anyone,
-    update: authenticated,
+    read: denyAll,
+    update: denyAll,
   },
   fields: [
     {

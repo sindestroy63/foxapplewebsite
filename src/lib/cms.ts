@@ -5,6 +5,7 @@ import { CATEGORY_SEED, CONTACTS } from './constants'
 import { normalizeProduct, normalizeProducts } from './normalize'
 import { sortProductsByPriority } from '@/lib/sort'
 import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
+import { CATALOG_GROUPS, getCatalogGroup, productGroupSlug } from './catalog-groups'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -49,6 +50,9 @@ export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
   return {
     query,
     sort: rawSort === 'price_desc' || rawSort === 'price_asc' ? rawSort : undefined,
+    productGroup: getCatalogGroup(one(searchParams.group) || '')?.slug,
+    brand: one(searchParams.brand)?.trim() || undefined,
+    line: one(searchParams.line)?.trim() || undefined,
   }
 }
 
@@ -64,16 +68,7 @@ function getMinPrice(product: Product): number {
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  try {
-    const payload = await getPayloadClient()
-    const settings = await payload.findGlobal({
-      slug: 'site-settings',
-    })
-    return { ...fallbackSettings, ...(settings as SiteSettings) }
-  } catch (error) {
-    console.error('Failed to load site settings', error)
-    return fallbackSettings
-  }
+  return fallbackSettings
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -133,11 +128,29 @@ export async function getProducts(args?: {
 }): Promise<Product[]> {
   try {
     const payload = await getPayloadClient()
-    const conditions: any[] = [{ isAvailable: { equals: true } }]
+    const conditions: any[] = [{ isAvailable: { equals: true } }, { id: { not_equals: 49 } }, { id: { not_equals: 61 } }, { id: { not_equals: 66 } }, { id: { not_equals: 70 } }]
 
     if (args?.categoryId) {
       conditions.push({ category: { equals: args.categoryId } })
     }
+
+    if (args?.filters?.productGroup) {
+      // The data migration from accessories to other is deliberately pending
+      // confirmation. Treat both values as Other meanwhile, so the public
+      // catalog does not split the same business group during the transition.
+      if (args.filters.productGroup === 'other') {
+        conditions.push({
+          or: [
+            { productGroup: { equals: 'other' } },
+            { productGroup: { equals: 'accessories' } },
+          ],
+        })
+      } else {
+        conditions.push({ productGroup: { equals: args.filters.productGroup } })
+      }
+    }
+    if (args?.filters?.brand) conditions.push({ brand: { equals: args.filters.brand } })
+    if (args?.filters?.line) conditions.push({ productLine: { equals: args.filters.line } })
 
     if (args?.featuredOnly) {
       conditions.push({ isFeatured: { equals: true } })
@@ -176,6 +189,15 @@ export async function getProducts(args?: {
   }
 }
 
+export async function getProductsByProductGroup(productGroup: NonNullable<CatalogFilters['productGroup']>, params?: CatalogFilters) {
+  const group = getCatalogGroup(productGroup)
+  const products = await getProducts({ filters: { ...params, productGroup } })
+  return {
+    group,
+    products,
+  }
+}
+
 export async function getProductsByCategorySlug(
   categorySlug: string,
   params?: CatalogFilters,
@@ -195,25 +217,60 @@ export async function getProductsByCategorySlug(
 
 export async function getProductBySlugs(categorySlug: string, productSlug: string) {
   const category = await getCategoryBySlug(categorySlug)
-  if (!category) {
-    return null
-  }
+  const group = getCatalogGroup(categorySlug)
+  if (!category && !group) return null
 
   try {
     const payload = await getPayloadClient()
+    // Decode a dynamic route parameter once; retain raw and trimmed candidates
+    // for legacy records whose stored slug contains spaces or a trailing space.
+    const decodedSlug = (() => {
+      try {
+        return decodeURIComponent(productSlug)
+      } catch {
+        return productSlug
+      }
+    })()
+    const slugCandidates = [...new Set([productSlug, decodedSlug, decodedSlug.trim()])]
     const result = await payload.find({
       collection: 'products',
       depth: 2,
       limit: 1,
       where: {
         and: [
-          { slug: { equals: productSlug } },
-          { category: { equals: category.id } },
+          { slug: { in: slugCandidates } },
+          ...(category ? [{ category: { equals: category.id } }] : [{ productGroup: { equals: group!.slug } }]),
           { isAvailable: { equals: true } },
         ],
       },
     })
-    return result.docs[0] ? normalizeProduct(result.docs[0]) : null
+    if (result.docs[0]) {
+      const matched = result.docs[0] as any
+      // The former Marshall category URL was retired after moving the product
+      // to the audio group. Keep the category fallback for other legacy URLs.
+      if ([49, 61, 66, 70].includes(Number(matched.id)) || (categorySlug === 'drugoe' && matched.productGroup === 'audio')) return null
+      return normalizeProduct(matched)
+    }
+
+    // A legacy record may contain a trailing space that cannot survive URL
+    // normalization. Match only the trimmed slug within the same category.
+    const fallback = await payload.find({
+      collection: 'products',
+      depth: 2,
+      limit: 100,
+      where: {
+        and: [
+          ...(category ? [{ category: { equals: category.id } }] : [{ productGroup: { equals: group!.slug } }]),
+          { isAvailable: { equals: true } },
+        ],
+      },
+    })
+    const normalized = decodedSlug.trim()
+    const legacyMatch = fallback.docs.find((doc) => {
+      if (typeof doc.slug !== 'string' || doc.slug.trim() !== normalized) return false
+      return !([49, 61, 66, 70].includes(Number((doc as any).id)) || (categorySlug === 'drugoe' && (doc as any).productGroup === 'audio'))
+    })
+    return legacyMatch ? normalizeProduct(legacyMatch) : null
   } catch (error) {
     console.error(`Failed to load product ${productSlug}`, error)
     return null
@@ -224,6 +281,23 @@ export type NavCategory = {
   slug: string
   name: string
   products: { model: string; slug: string; badge?: string | null }[]
+}
+
+export type NavGroup = {
+  slug: string
+  name: string
+  brands: string[]
+}
+
+export type CatalogNavNode = {
+  id: number | string
+  title: string
+  kind: 'group' | 'brand' | 'line' | 'product' | 'custom_link'
+  href: string
+  isNew?: boolean
+  badgeText?: string | null
+  coverImage?: import('./types').Media | null
+  children: CatalogNavNode[]
 }
 
 export { sortProductsByPriority }
@@ -255,13 +329,77 @@ export async function getNavData(): Promise<NavCategory[]> {
   }
 }
 
-export async function getSiteAppearance(): Promise<SiteAppearance> {
+export async function getGroupNavData(): Promise<NavGroup[]> {
   try {
     const payload = await getPayloadClient()
-    const data = await payload.findGlobal({ slug: 'site-appearance' as any, depth: 2 })
-    return data as SiteAppearance
+    const result = await payload.find({ collection: 'products', depth: 0, limit: 1_000, pagination: false, where: { isAvailable: { equals: true } } })
+    const products = result.docs as Array<{ productGroup?: string; brand?: string | null }>
+    return CATALOG_GROUPS.map((group) => ({
+      slug: group.slug,
+      name: group.label,
+      brands: [...new Set(products
+        .filter((product) => group.slug === 'other'
+          ? product.productGroup === 'other' || product.productGroup === 'accessories'
+          : product.productGroup === group.slug)
+        .map((product) => product.brand?.trim())
+        .filter((brand): brand is string => Boolean(brand)))].sort((a, b) => a.localeCompare(b, 'ru')),
+    }))
   } catch {
-    return {}
+    return CATALOG_GROUPS.map((group) => ({ slug: group.slug, name: group.label, brands: [] }))
+  }
+}
+
+export async function getCatalogNavigation(): Promise<CatalogNavNode[]> {
+  try {
+    const payload = await getPayloadClient()
+    const result = await payload.find({ collection: 'catalog-navigation', depth: 2, limit: 1000, pagination: false, sort: 'sortOrder', where: { isVisible: { equals: true } } })
+    const docs = result.docs as any[]
+    const nodes = new Map<string, CatalogNavNode>()
+    for (const doc of docs) {
+      const product = doc.product && typeof doc.product === 'object' ? doc.product : null
+      const category = product?.category && typeof product.category === 'object' ? product.category.slug : null
+      nodes.set(String(doc.id), {
+        id: doc.id,
+        title: doc.title,
+        kind: doc.kind,
+        href: doc.kind === 'product' && product?.slug
+          ? `/catalog/${productGroupSlug(product?.productGroup) || category || 'other'}/${product.slug}`
+          : doc.href || (doc.kind === 'line' && doc.productGroup && doc.brand && doc.productLine
+            ? `/catalog?group=${encodeURIComponent(doc.productGroup)}&brand=${encodeURIComponent(doc.brand)}&line=${encodeURIComponent(doc.productLine)}`
+            : doc.kind === 'brand' && doc.productGroup && doc.brand
+              ? `/catalog?group=${encodeURIComponent(doc.productGroup)}&brand=${encodeURIComponent(doc.brand)}`
+              : doc.productGroup ? `/catalog?group=${encodeURIComponent(doc.productGroup)}` : '/catalog'),
+        isNew: Boolean(doc.isNew),
+        badgeText: doc.badgeText || null,
+        coverImage: doc.coverImage && typeof doc.coverImage === 'object' ? doc.coverImage : null,
+        children: [],
+      })
+    }
+    const roots: CatalogNavNode[] = []
+    for (const doc of docs) {
+      const node = nodes.get(String(doc.id))!
+      const parentId = typeof doc.parent === 'object' ? doc.parent?.id : doc.parent
+      const parent = parentId ? nodes.get(String(parentId)) : undefined
+      if (parent) parent.children.push(node)
+      else roots.push(node)
+    }
+    return roots
+  } catch (error) {
+    console.error('Failed to load catalog navigation', error)
+    return []
+  }
+}
+
+export async function getCatalogRootGroups() {
+  const fallback = CATALOG_GROUPS.map((group) => ({ ...group, isNew: false, coverImage: null as import('./types').Media | null }))
+  try {
+    const roots = (await getCatalogNavigation()).filter((node) => node.kind === 'group')
+    const bySlug = new Map(roots.map((node) => [node.href.split('group=')[1] || '', node]))
+    const groups = CATALOG_GROUPS.map((group) => ({ ...group, isNew: Boolean(bySlug.get(group.slug)?.isNew), coverImage: bySlug.get(group.slug)?.coverImage || null }))
+    const tradeIn = roots.find((node) => node.href.includes('group=trade-in'))
+    return tradeIn ? [...groups, { slug: 'trade-in' as const, label: tradeIn.title, categorySlugs: [], isNew: tradeIn.isNew, coverImage: tradeIn.coverImage || null }] : groups
+  } catch {
+    return fallback
   }
 }
 

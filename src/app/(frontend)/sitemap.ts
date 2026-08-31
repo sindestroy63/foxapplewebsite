@@ -3,6 +3,7 @@ import type { MetadataRoute } from 'next'
 import { SITE_URL } from '@/lib/constants'
 import { getCategories, getProducts } from '@/lib/cms'
 import type { Category } from '@/lib/types'
+import { productGroupSlug } from '@/lib/catalog-groups'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const productRoutes = products
     .map((product) => {
-      const slug = categorySlug(product.category)
+      const slug = productGroupSlug(product.productGroup) || categorySlug(product.category)
       if (!slug) {
         return null
       }

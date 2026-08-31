@@ -1,17 +1,14 @@
 import { CONTACTS } from './constants'
 import type { Product, ProductStatus } from './types'
 
+export { cardPrice } from './pricing'
+
 export function formatPrice(price?: number | null): string {
   if (typeof price !== 'number') {
     return 'Цена по запросу'
   }
 
   return `${Math.round(price).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')} ₽`
-}
-
-export function cardPrice(cashPrice?: number | null): number | null {
-  if (typeof cashPrice !== 'number') return null
-  return Math.round(cashPrice * 1.2)
 }
 
 export function normalizePhone(phone: string): string {

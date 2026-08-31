@@ -13,6 +13,7 @@ export type ColorSeed = {
 }
 
 export type VariantSeed = {
+  sku?: string
   color?: ColorSeed
   memory?: string
   simType?: string
@@ -30,6 +31,7 @@ export type ProductSeed = {
   categorySlug: string
   model: string
   name: string
+  sku?: string
   isFeatured?: boolean
   isNew?: boolean
   shortDescription?: string

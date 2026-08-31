@@ -5,11 +5,50 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run payload -- generate:importmap && next build",
     "start": "next start",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts NODE_OPTIONS=--no-deprecation payload",
-    "seed": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts NODE_OPTIONS=--no-deprecation payload seed"
+    "seed": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts NODE_OPTIONS=--no-deprecation payload seed",
+    "catalog:normalization:dry-run": "tsx src/payload/catalog-normalization/dry-run.ts",
+    "catalog:dictionaries:cleanup-plan": "tsx scripts/catalog-dictionaries-cleanup-plan.ts",
+    "catalog:dictionaries:cleanup-apply": "tsx scripts/catalog-dictionaries-cleanup-apply.ts",
+    "catalog:characteristics:migration-plan": "tsx scripts/catalog-characteristics-migration-plan.ts",
+    "catalog:normalization:apply-preview": "tsx src/payload/catalog-normalization/apply-preview.ts",
+    "catalog:structure:dry-run": "tsx src/payload/catalog-structure/dry-run.ts",
+    "catalog:accessories:dry-run": "tsx src/payload/catalog-structure/accessories-to-other-dry-run.ts"
+    ,"catalog:navigation:plan": "tsx scripts/catalog-navigation-plan.ts"
+    ,"catalog:navigation:apply": "tsx scripts/catalog-navigation-apply.ts"
+    ,"catalog:navigation:orphans-cleanup": "tsx scripts/catalog-navigation-orphans-cleanup.ts"
+    ,"catalog:navigation:root-items:apply": "tsx scripts/catalog-navigation-root-items-apply.ts"
+    ,"catalog:tradein-group:plan": "tsx scripts/catalog-tradein-group-plan.ts"
+    ,"catalog:tradein-group:apply": "tsx scripts/catalog-tradein-group-apply.ts"
+    ,"catalog:routes:audit": "tsx scripts/catalog-routes-audit.ts"
+    ,"catalog:product-group-route-audit": "tsx scripts/catalog-product-group-route-audit.ts"
+    ,"catalog:stale-links-audit": "tsx scripts/catalog-stale-links-audit.ts"
+    ,"catalog:generation-product-audit": "tsx scripts/catalog-generation-product-audit.ts"
+    ,"catalog:product-split-plan": "tsx scripts/catalog-product-split-plan.ts"
+    ,"catalog:product-split-preview": "tsx scripts/catalog-product-split-preview.ts"
+    ,"catalog:integrity:audit": "tsx scripts/catalog-integrity-audit.ts"
+    ,"catalog:media:match-plan": "tsx scripts/catalog-media-match-plan.ts"
+    ,"catalog:apple-accessories-audit": "cross-env CATALOG_SPECIAL_AUDIT=apple tsx scripts/catalog-special-audit.ts"
+    ,"catalog:charging-products-audit": "cross-env CATALOG_SPECIAL_AUDIT=charging tsx scripts/catalog-special-audit.ts"
+    ,"catalog:catalog-placement-audit": "cross-env CATALOG_SPECIAL_AUDIT=placement tsx scripts/catalog-special-audit.ts"
+    ,"catalog:dyson-split-audit": "tsx scripts/catalog-generation-product-audit.ts"
+    ,"catalog:dyson-split-apply": "tsx scripts/catalog-dyson-split-apply.ts"
+    ,"catalog:other-charging-line:apply": "tsx scripts/catalog-other-charging-line-apply.ts"
+    ,"catalog:group-assets:audit": "tsx scripts/catalog-group-assets-audit.ts"
+    ,"catalog:apple-media-transfer:apply": "tsx scripts/catalog-apple-media-transfer-apply.ts"
+    ,"catalog:screen-protectors-audit": "cross-env CATALOG_SPECIAL_AUDIT=placement tsx scripts/catalog-special-audit.ts"
+    ,"catalog:other-menu-audit": "cross-env CATALOG_SPECIAL_AUDIT=placement tsx scripts/catalog-special-audit.ts"
+    ,"catalog:full-cleanup-plan": "tsx scripts/catalog-full-cleanup-plan.ts"
+    ,"catalog:full-cleanup-apply": "tsx scripts/catalog-full-cleanup-apply.ts"
+    ,"catalog:other-navigation:apply": "tsx scripts/catalog-other-navigation-apply.ts"
+    ,"catalog:charging-split-plan": "tsx scripts/catalog-charging-split-plan.ts"
+    ,"catalog:samsung-navigation:plan": "tsx scripts/catalog-samsung-navigation-plan.ts"
+    ,"catalog:samsung-navigation:apply": "tsx scripts/catalog-samsung-navigation-apply.ts"
+    ,"users:provision": "tsx scripts/users-provision.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.84.1",
@@ -18,10 +57,12 @@
     "cross-env": "7.0.3",
     "graphql": "16.13.2",
     "next": "16.2.4",
+    "openai": "^7.5.0",
     "payload": "3.84.1",
     "react": "19.2.5",
     "react-dom": "19.2.5",
-    "sharp": "0.34.5"
+    "sharp": "0.34.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "22.15.3",

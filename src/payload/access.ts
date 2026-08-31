@@ -8,12 +8,15 @@ function getRole(req: any): Role | null {
 
 export const anyone: Access = () => true
 
+export const denyAll: Access = () => false
+
 export const authenticated: Access = ({ req }) => Boolean(req.user)
 
-export const admins: Access = ({ req }) => {
+const adminsImplementation = ({ req }: { req: any }) => {
   const role = getRole(req)
   return role === 'superadmin' || role === 'admin'
 }
+export const admins = adminsImplementation as Access & FieldAccess
 
 export const superadmins: Access = ({ req }) => getRole(req) === 'superadmin'
 

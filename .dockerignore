@@ -6,4 +6,7 @@ README.md
 .env
 .env.local
 media
+backups
+*.dump
+*.tar.gz
 docker-compose-build.log

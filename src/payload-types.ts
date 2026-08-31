@@ -71,12 +71,21 @@ export interface Config {
     media: Media;
     categories: Category;
     products: Product;
+    'price-update-batches': PriceUpdateBatch;
+    'price-update-items': PriceUpdateItem;
+    'price-import-sessions': PriceImportSession;
+    'price-import-items': PriceImportItem;
     leads: Lead;
     pages: Page;
     colors: Color;
     'storage-options': StorageOption;
     'sim-options': SimOption;
     'device-models': DeviceModel;
+    'ram-options': RamOption;
+    'variant-size-options': VariantSizeOption;
+    'screen-size-options': ScreenSizeOption;
+    'connectivity-options': ConnectivityOption;
+    'catalog-navigation': CatalogNavigation;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,12 +97,21 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    'price-update-batches': PriceUpdateBatchesSelect<false> | PriceUpdateBatchesSelect<true>;
+    'price-update-items': PriceUpdateItemsSelect<false> | PriceUpdateItemsSelect<true>;
+    'price-import-sessions': PriceImportSessionsSelect<false> | PriceImportSessionsSelect<true>;
+    'price-import-items': PriceImportItemsSelect<false> | PriceImportItemsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     colors: ColorsSelect<false> | ColorsSelect<true>;
     'storage-options': StorageOptionsSelect<false> | StorageOptionsSelect<true>;
     'sim-options': SimOptionsSelect<false> | SimOptionsSelect<true>;
     'device-models': DeviceModelsSelect<false> | DeviceModelsSelect<true>;
+    'ram-options': RamOptionsSelect<false> | RamOptionsSelect<true>;
+    'variant-size-options': VariantSizeOptionsSelect<false> | VariantSizeOptionsSelect<true>;
+    'screen-size-options': ScreenSizeOptionsSelect<false> | ScreenSizeOptionsSelect<true>;
+    'connectivity-options': ConnectivityOptionsSelect<false> | ConnectivityOptionsSelect<true>;
+    'catalog-navigation': CatalogNavigationSelect<false> | CatalogNavigationSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -243,8 +261,46 @@ export interface Product {
    * Формируется автоматически из названия.
    */
   slug: string;
-    model?: string | null;
-    badge?: string | null;
+  model?: string | null;
+  /**
+   * Необязательная верхняя группа каталога. Существующие товары не изменяются автоматически.
+   */
+  productGroup?:
+    | (
+        | 'smartphones'
+        | 'tablets'
+        | 'laptops'
+        | 'smart-watches'
+        | 'audio'
+        | 'gaming-consoles'
+        | 'home-appliances'
+        | 'smart-devices'
+        | 'accessories'
+        | 'other'
+        | 'trade-in'
+      )
+    | null;
+  condition?: 'new' | 'used' | null;
+  /**
+   * Производитель товара.
+   */
+  brand?: string | null;
+  /**
+   * Общий тип, например смартфон или стайлер.
+   */
+  productType?: string | null;
+  /**
+   * Серия или линейка модели.
+   */
+  productLine?: string | null;
+  /**
+   * Используется для массового обновления цен
+   */
+  sku?: string | null;
+  /**
+   * Например: Новинка, Хит, Акция. Оставьте пустым, если метка не нужна.
+   */
+  badge?: string | null;
   memory?: string | null;
   color?: string | null;
   simType?: string | null;
@@ -254,6 +310,10 @@ export interface Product {
   price: number;
   status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
   isAvailable?: boolean | null;
+  /**
+   * Если включено — цвета, для которых все варианты недоступны, не будут показываться на странице товара.
+   */
+  hideUnavailableColors?: boolean | null;
   isFeatured?: boolean | null;
   isNew?: boolean | null;
   sortOrder?: number | null;
@@ -301,11 +361,15 @@ export interface Product {
   variants?:
     | {
         /**
+         * Используется для массового обновления цен. Например: VAR-IPHONE-16-128GB-BLACK-V001
+         */
+        sku?: string | null;
+        /**
          * Выберите из справочника цветов
          */
         color?: (number | null) | Color;
         /**
-         * Выберите из справочника (128GB, 256GB, 42mm…)
+         * Выберите накопитель из справочника (128GB, 256GB, 1TB…)
          */
         storage?: (number | null) | StorageOption;
         /**
@@ -314,9 +378,24 @@ export interface Product {
         sim?: (number | null) | SimOption;
         chip?: string | null;
         ram?: string | null;
+        /**
+         * Заполняется после миграции; старое поле ram сохраняется.
+         */
+        ramOption?: (number | null) | RamOption;
+        /**
+         * Размер корпуса часов, например 40mm или 46mm
+         */
+        size?: string | null;
+        /**
+         * Есть Touch ID
+         */
+        hasTouchId?: boolean | null;
         screenSize?: string | null;
+        screenSizeOption?: (number | null) | ScreenSizeOption;
         connectivity?: string | null;
+        connectivityOption?: (number | null) | ConnectivityOption;
         generation?: string | null;
+        packageLabel?: string | null;
         price: number;
         status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
         isAvailable?: boolean | null;
@@ -380,6 +459,10 @@ export interface DeviceModel {
    */
   availableStorage?: (number | StorageOption)[] | null;
   /**
+   * Размеры корпуса часов из отдельного справочника.
+   */
+  availableSizes?: (number | VariantSizeOption)[] | null;
+  /**
    * Оставьте пустым, если SIM не применим
    */
   availableSim?: (number | SimOption)[] | null;
@@ -420,6 +503,23 @@ export interface StorageOption {
    */
   value: string;
   sortOrder?: number | null;
+  /**
+   * Архивные записи не предлагаются для новых вариантов.
+   */
+  archived?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "variant-size-options".
+ */
+export interface VariantSizeOption {
+  id: number;
+  key: string;
+  label: string;
+  sortOrder?: number | null;
+  archived?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -443,6 +543,168 @@ export interface SimOption {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ram-options".
+ */
+export interface RamOption {
+  id: number;
+  key: string;
+  label: string;
+  sortOrder?: number | null;
+  archived?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "screen-size-options".
+ */
+export interface ScreenSizeOption {
+  id: number;
+  key: string;
+  label: string;
+  sortOrder?: number | null;
+  archived?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "connectivity-options".
+ */
+export interface ConnectivityOption {
+  id: number;
+  key: string;
+  label: string;
+  sortOrder?: number | null;
+  archived?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Журнал предпросмотров и подтверждений массового обновления цен.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-update-batches".
+ */
+export interface PriceUpdateBatch {
+  id: number;
+  author: number | User;
+  sourceText: string;
+  status: 'preview' | 'confirming' | 'confirmed' | 'failed' | 'expired';
+  confirmationToken: string;
+  expiresAt: string;
+  confirmedAt?: string | null;
+  totalLines: number;
+  readyCount: number;
+  errorCount: number;
+  updatedCount: number;
+  errorMessage?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-update-items".
+ */
+export interface PriceUpdateItem {
+  id: number;
+  author: number | User;
+  batch: number | PriceUpdateBatch;
+  lineNumber: number;
+  sourceLine: string;
+  sku?: string | null;
+  matchType?: ('product' | 'variant') | null;
+  product?: (number | null) | Product;
+  coverImage?: (number | null) | Media;
+  productLabel?: string | null;
+  variantId?: string | null;
+  oldCashPrice?: number | null;
+  newCashPrice?: number | null;
+  oldCardPrice?: number | null;
+  newCardPrice?: number | null;
+  status: 'ready' | 'not_found' | 'invalid_price' | 'duplicate_sku_in_input' | 'conflict' | 'updated' | 'failed';
+  errorMessage?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-import-sessions".
+ */
+export interface PriceImportSession {
+  id: number;
+  author: number | User;
+  sourceText: string;
+  questions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  status: 'matching' | 'resolved' | 'previewed' | 'expired' | 'failed';
+  sessionToken: string;
+  expiresAt: string;
+  totalItems: number;
+  resolvedCount: number;
+  skippedCount: number;
+  previewBatch?: (number | null) | PriceUpdateBatch;
+  errorMessage?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-import-items".
+ */
+export interface PriceImportItem {
+  id: number;
+  author: number | User;
+  session: number | PriceImportSession;
+  itemNumber: number;
+  sourceLine: string;
+  contextHeading?: string | null;
+  modelText: string;
+  price: number;
+  storage?: string | null;
+  ram?: string | null;
+  color?: string | null;
+  sim?: string | null;
+  region?: string | null;
+  revision?: string | null;
+  manufacturerModelNumber?: string | null;
+  notes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  matchStatus: 'matched' | 'ambiguous' | 'not_found' | 'missing_attributes' | 'manual_review' | 'excluded_used';
+  reason: string;
+  candidates:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  resolution: 'pending' | 'automatic' | 'manual' | 'skipped';
+  selectedCandidateKey?: string | null;
+  selectedSku?: string | null;
+  selectedProduct?: (number | null) | Product;
+  selectedVariantId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "leads".
  */
 export interface Lead {
@@ -455,8 +717,32 @@ export interface Lead {
   comment?: string | null;
   consent?: boolean | null;
   consentAt?: string | null;
-  source?: ('call' | 'telegram' | 'product_form' | 'contact_form' | 'repair_form') | null;
+  source?:
+    | (
+        | 'call'
+        | 'telegram'
+        | 'product_form'
+        | 'contact_form'
+        | 'repair_form'
+        | 'trade_in_form'
+        | 'installment_form'
+        | 'cart_order'
+      )
+    | null;
   status?: ('new' | 'in_progress' | 'done' | 'failed' | 'cancelled') | null;
+  telegramStatus?: ('not_sent' | 'telegram_sent' | 'telegram_failed') | null;
+  /**
+   * UTM-параметры из URL (utm_source, utm_medium, utm_campaign, utm_term, utm_content)
+   */
+  utm?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Внутренние заметки по заявке. Клиент их не видит.
    */
@@ -489,6 +775,40 @@ export interface Page {
   } | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Управляемое дерево: группа → бренд → линейка → модель. Порядок меняется полем sortOrder внутри одного уровня.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "catalog-navigation".
+ */
+export interface CatalogNavigation {
+  id: number;
+  title: string;
+  kind: 'group' | 'brand' | 'line' | 'product' | 'custom_link';
+  parent?: (number | null) | CatalogNavigation;
+  /**
+   * Технический ключ группы, например smartphones.
+   */
+  productGroup?: string | null;
+  brand?: string | null;
+  productLine?: string | null;
+  product?: (number | null) | Product;
+  coverImage?: (number | null) | Media;
+  /**
+   * Для товара ссылка строится из существующего slug; внешние URL не используйте.
+   */
+  href?: string | null;
+  sortOrder: number;
+  isVisible?: boolean | null;
+  isNew?: boolean | null;
+  /**
+   * По умолчанию «Новинка» при включённом флаге.
+   */
+  badgeText?: string | null;
+  description?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -533,6 +853,22 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
+        relationTo: 'price-update-batches';
+        value: number | PriceUpdateBatch;
+      } | null)
+    | ({
+        relationTo: 'price-update-items';
+        value: number | PriceUpdateItem;
+      } | null)
+    | ({
+        relationTo: 'price-import-sessions';
+        value: number | PriceImportSession;
+      } | null)
+    | ({
+        relationTo: 'price-import-items';
+        value: number | PriceImportItem;
+      } | null)
+    | ({
         relationTo: 'leads';
         value: number | Lead;
       } | null)
@@ -555,6 +891,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'device-models';
         value: number | DeviceModel;
+      } | null)
+    | ({
+        relationTo: 'ram-options';
+        value: number | RamOption;
+      } | null)
+    | ({
+        relationTo: 'variant-size-options';
+        value: number | VariantSizeOption;
+      } | null)
+    | ({
+        relationTo: 'screen-size-options';
+        value: number | ScreenSizeOption;
+      } | null)
+    | ({
+        relationTo: 'connectivity-options';
+        value: number | ConnectivityOption;
+      } | null)
+    | ({
+        relationTo: 'catalog-navigation';
+        value: number | CatalogNavigation;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -695,14 +1051,21 @@ export interface ProductsSelect<T extends boolean = true> {
   category?: T;
   name?: T;
   slug?: T;
-    model?: T;
-    badge?: T;
+  model?: T;
+  productGroup?: T;
+  condition?: T;
+  brand?: T;
+  productType?: T;
+  productLine?: T;
+  sku?: T;
+  badge?: T;
   memory?: T;
   color?: T;
   simType?: T;
   price?: T;
   status?: T;
   isAvailable?: T;
+  hideUnavailableColors?: T;
   isFeatured?: T;
   isNew?: T;
   sortOrder?: T;
@@ -721,14 +1084,21 @@ export interface ProductsSelect<T extends boolean = true> {
   variants?:
     | T
     | {
+        sku?: T;
         color?: T;
         storage?: T;
         sim?: T;
         chip?: T;
         ram?: T;
+        ramOption?: T;
+        size?: T;
+        hasTouchId?: T;
         screenSize?: T;
+        screenSizeOption?: T;
         connectivity?: T;
+        connectivityOption?: T;
         generation?: T;
+        packageLabel?: T;
         price?: T;
         status?: T;
         isAvailable?: T;
@@ -737,6 +1107,99 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   seoTitle?: T;
   seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-update-batches_select".
+ */
+export interface PriceUpdateBatchesSelect<T extends boolean = true> {
+  author?: T;
+  sourceText?: T;
+  status?: T;
+  confirmationToken?: T;
+  expiresAt?: T;
+  confirmedAt?: T;
+  totalLines?: T;
+  readyCount?: T;
+  errorCount?: T;
+  updatedCount?: T;
+  errorMessage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-update-items_select".
+ */
+export interface PriceUpdateItemsSelect<T extends boolean = true> {
+  author?: T;
+  batch?: T;
+  lineNumber?: T;
+  sourceLine?: T;
+  sku?: T;
+  matchType?: T;
+  product?: T;
+  coverImage?: T;
+  productLabel?: T;
+  variantId?: T;
+  oldCashPrice?: T;
+  newCashPrice?: T;
+  oldCardPrice?: T;
+  newCardPrice?: T;
+  status?: T;
+  errorMessage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-import-sessions_select".
+ */
+export interface PriceImportSessionsSelect<T extends boolean = true> {
+  author?: T;
+  sourceText?: T;
+  questions?: T;
+  status?: T;
+  sessionToken?: T;
+  expiresAt?: T;
+  totalItems?: T;
+  resolvedCount?: T;
+  skippedCount?: T;
+  previewBatch?: T;
+  errorMessage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "price-import-items_select".
+ */
+export interface PriceImportItemsSelect<T extends boolean = true> {
+  author?: T;
+  session?: T;
+  itemNumber?: T;
+  sourceLine?: T;
+  contextHeading?: T;
+  modelText?: T;
+  price?: T;
+  storage?: T;
+  ram?: T;
+  color?: T;
+  sim?: T;
+  region?: T;
+  revision?: T;
+  manufacturerModelNumber?: T;
+  notes?: T;
+  matchStatus?: T;
+  reason?: T;
+  candidates?: T;
+  resolution?: T;
+  selectedCandidateKey?: T;
+  selectedSku?: T;
+  selectedProduct?: T;
+  selectedVariantId?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -755,6 +1218,8 @@ export interface LeadsSelect<T extends boolean = true> {
   consentAt?: T;
   source?: T;
   status?: T;
+  telegramStatus?: T;
+  utm?: T;
   adminNotes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -794,6 +1259,7 @@ export interface ColorsSelect<T extends boolean = true> {
 export interface StorageOptionsSelect<T extends boolean = true> {
   value?: T;
   sortOrder?: T;
+  archived?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -817,6 +1283,7 @@ export interface DeviceModelsSelect<T extends boolean = true> {
   category?: T;
   availableColors?: T;
   availableStorage?: T;
+  availableSizes?: T;
   availableSim?: T;
   chip?: T;
   ram?: T;
@@ -826,6 +1293,76 @@ export interface DeviceModelsSelect<T extends boolean = true> {
   priceStep?: T;
   storageIsSize?: T;
   sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ram-options_select".
+ */
+export interface RamOptionsSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  sortOrder?: T;
+  archived?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "variant-size-options_select".
+ */
+export interface VariantSizeOptionsSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  sortOrder?: T;
+  archived?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "screen-size-options_select".
+ */
+export interface ScreenSizeOptionsSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  sortOrder?: T;
+  archived?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "connectivity-options_select".
+ */
+export interface ConnectivityOptionsSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  sortOrder?: T;
+  archived?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "catalog-navigation_select".
+ */
+export interface CatalogNavigationSelect<T extends boolean = true> {
+  title?: T;
+  kind?: T;
+  parent?: T;
+  productGroup?: T;
+  brand?: T;
+  productLine?: T;
+  product?: T;
+  coverImage?: T;
+  href?: T;
+  sortOrder?: T;
+  isVisible?: T;
+  isNew?: T;
+  badgeText?: T;
+  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }

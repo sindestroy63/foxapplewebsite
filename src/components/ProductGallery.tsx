@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import type { Media } from '@/lib/types'
 import { getMediaUrl } from '@/lib/media'
+import { ImageWithFallback } from './ImageWithFallback'
 
 type Props = {
   images: Media[]
@@ -22,7 +23,7 @@ export function ProductGallery({ images, alt, overlay }: Props) {
       <div className="gallery">
         <div className="gallery-main-wrap">
           <div className="gallery-main">
-            <div className="gallery-placeholder">{alt}</div>
+            <span className="image-placeholder" role="img" aria-label={alt} />
           </div>
           {overlay}
         </div>
@@ -37,7 +38,7 @@ export function ProductGallery({ images, alt, overlay }: Props) {
     <div className="gallery">
       <div className="gallery-main-wrap">
         <div className="gallery-main">
-        {mainUrl && <img src={mainUrl} alt={current?.alt || alt} draggable={false} />}
+        {mainUrl ? <ImageWithFallback src={mainUrl} alt={current?.alt || alt} className="gallery-image" /> : <span className="image-placeholder" role="img" aria-label={alt} />}
         {images.length > 1 && (
           <>
             <button className="gallery-arrow gallery-arrow--left" onClick={prev} aria-label="Предыдущее фото" type="button">‹</button>
@@ -59,7 +60,7 @@ export function ProductGallery({ images, alt, overlay }: Props) {
                 type="button"
                 aria-label={`Фото ${i + 1}`}
               >
-                {thumbUrl && <img src={thumbUrl} alt={img.alt || `${alt} ${i + 1}`} draggable={false} />}
+                {thumbUrl ? <ImageWithFallback src={thumbUrl} alt={img.alt || `${alt} ${i + 1}`} /> : <span className="image-placeholder" role="img" aria-label={`${alt} ${i + 1}`} />}
               </button>
             )
           })}
