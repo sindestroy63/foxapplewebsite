@@ -1,10 +1,34 @@
 import type { CollectionConfig } from 'payload'
+import { randomBytes } from 'node:crypto'
 
-import { admins, anyone, authenticated } from '../access'
-import { slugify } from '../utils/slugify'
+import { admins, anyone } from '../access'
+import { composeProductSlug, isProductSlug } from '../utils/slugify'
 import { validateProductSkus } from '../utils/sku'
 
 const productGroup = (data: any) => data?.productGroup || data?.product_group
+
+const createSlugSuffix = () => randomBytes(3).toString('hex')
+
+const ensureUniqueSlugOnCreate = async ({ name, requestedSlug, req }: { name: unknown; requestedSlug: unknown; req: any }) => {
+  const requestedCandidate = isProductSlug(requestedSlug) ? requestedSlug : null
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const candidate = attempt === 0 && requestedCandidate
+      ? requestedCandidate
+      : composeProductSlug(typeof name === 'string' ? name : '', createSlugSuffix())
+    const existing = await req.payload.find({
+      collection: 'products',
+      where: { slug: { equals: candidate } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    if (existing.totalDocs === 0) return candidate
+  }
+
+  throw new Error('Unable to generate a unique product URL slug.')
+}
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -19,14 +43,27 @@ export const Products: CollectionConfig = {
   access: {
     read: anyone,
     create: admins,
-    update: authenticated,
+    update: ({ req }) => {
+      if (!req.user) return false
+      if (req.user.role === 'admin' || req.user.role === 'superadmin') return true
+      if (req.user.role === 'manager') return { productGroup: { not_equals: 'trade-in' } }
+      return false
+    },
     delete: admins,
   },
   hooks: {
+    beforeChange: [
+      ({ data, originalDoc, req }) => {
+        if (req.user?.role === 'manager' && (originalDoc?.productGroup === 'trade-in' || data?.productGroup === 'trade-in' || data?.condition === 'used')) {
+          throw new Error('Trade-in товары доступны только admin и superadmin.')
+        }
+        return data
+      },
+    ],
     beforeValidate: [
       async ({ data, operation, originalDoc, req }) => {
-        if (data?.name && !data.slug) {
-          data.slug = slugify(data.name)
+        if (operation === 'create' && data) {
+          data.slug = await ensureUniqueSlugOnCreate({ name: data.name, requestedSlug: data.slug, req })
         }
         if (data?.slug && (operation === 'create' || operation === 'update')) {
           const s = data.slug as string
@@ -73,6 +110,7 @@ export const Products: CollectionConfig = {
       index: true,
       admin: {
         readOnly: true,
+        components: { Field: '/payload/components/admin/ProductSlugField' },
         description: 'Формируется автоматически из названия.',
       },
     },

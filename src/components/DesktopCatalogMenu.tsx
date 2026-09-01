@@ -16,7 +16,7 @@ const Badge = ({ node }: { node: CatalogNavNode }) => node.isNew
 
 type Direction = 'right' | 'left'
 
-export function DesktopCatalogMenu({ nodes }: { nodes: CatalogNavNode[] }) {
+export function DesktopCatalogMenu({ nodes, trailingLink }: { nodes: CatalogNavNode[]; trailingLink?: { href: string; label: string } }) {
   const groups = nodes.filter((node) => node.kind === 'group')
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
@@ -101,7 +101,7 @@ export function DesktopCatalogMenu({ nodes }: { nodes: CatalogNavNode[] }) {
   </div>
 
   return <div ref={rootRef} className={`desktop-catalog-nav desktop-catalog-nav--${direction}`} onPointerEnter={cancelClose} onPointerLeave={(event) => { const next = event.relatedTarget as Node | null; if (!next || (!rootRef.current?.contains(next) && !flyoutRef.current?.contains(next))) scheduleClose() }} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); closeMenu() } }}>
-    <div className="desktop-catalog-groups">{groups.map((group) => <Link key={group.id} data-group-id={group.id} href={group.href} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</Link>)}</div>
+    <div className="desktop-catalog-groups">{groups.map((group) => <Link key={group.id} data-group-id={group.id} href={group.href} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</Link>)}{trailingLink && <Link href={trailingLink.href} className="nav-dropdown-trigger">{trailingLink.label}</Link>}</div>
     {typeof document !== 'undefined' && flyout ? createPortal(flyout, document.body) : null}
   </div>
 }

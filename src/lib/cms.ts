@@ -198,6 +198,31 @@ export async function getProductsByProductGroup(productGroup: NonNullable<Catalo
   }
 }
 
+/** Public inventory for the separate Trade-in storefront. */
+export async function getTradeInProducts(): Promise<Product[]> {
+  try {
+    const payload = await getPayloadClient()
+    const result = await payload.find({
+      collection: 'products',
+      depth: 2,
+      limit: 100,
+      sort: 'sortOrder',
+      where: {
+        and: [
+          { productGroup: { equals: 'trade-in' } },
+          { condition: { equals: 'used' } },
+          { isAvailable: { equals: true } },
+        ],
+      },
+    })
+
+    return normalizeProducts(result.docs)
+  } catch (error) {
+    console.error('Failed to load Trade-in products', error)
+    return []
+  }
+}
+
 export async function getProductsByCategorySlug(
   categorySlug: string,
   params?: CatalogFilters,

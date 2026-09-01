@@ -30,6 +30,7 @@ import { SiteSettings } from './payload/globals/SiteSettings'
 import { priceUpdateEndpoints } from './payload/price-updates/endpoints'
 import { migrations } from './migrations'
 import { catalogNavigationAdminEndpoints } from './payload/catalog-navigation-admin'
+import { tradeInAdminEndpoints } from './payload/trade-in-admin'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -61,7 +62,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     components: {
-      afterNavLinks: ['/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
+      afterNavLinks: ['/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/TradeInNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
       graphics: {
         Icon: '/payload/components/admin/Branding#NavIcon',
         Logo: '/payload/components/admin/Branding#LoginLogo',
@@ -78,6 +79,12 @@ export default buildConfig({
           path: '/catalog-navigation',
           exact: true,
           meta: { title: 'Навигация каталога' },
+        },
+        tradeIn: {
+          Component: '/payload/components/admin/TradeInAdminView',
+          path: '/trade-in',
+          exact: true,
+          meta: { title: 'Trade-in' },
         },
       },
     },
@@ -99,7 +106,7 @@ export default buildConfig({
     Users, Media, Categories, Products, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
     Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
   ],
-  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints],
+  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...tradeInAdminEndpoints],
   globals: [SiteSettings, SiteAppearance],
   bin: [
     {

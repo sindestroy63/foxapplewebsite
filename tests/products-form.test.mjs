@@ -7,12 +7,20 @@ const metadata = fs.readFileSync('src/app/(frontend)/catalog/[categorySlug]/[pro
 const system = fs.readFileSync('src/payload/components/admin/ProductSystemData.tsx', 'utf8')
 const placement = fs.readFileSync('src/payload/components/admin/ProductCatalogPlacement.tsx', 'utf8')
 const sections = fs.readFileSync('src/payload/components/admin/ProductSection.tsx', 'utf8')
+const slugField = fs.readFileSync('src/payload/components/admin/ProductSlugField.tsx', 'utf8')
 
 test('Product identifiers and SEO inputs are protected in CMS', () => {
   assert.match(products, /name: 'sku'[\s\S]*?access: \{ update: \(\) => false \}/)
   assert.match(products, /name: 'slug'[\s\S]*?access: \{ update: \(\) => false \}/)
   assert.match(products, /name: 'seoTitle'[\s\S]*?hidden: true/)
   assert.match(products, /name: 'seoDescription'[\s\S]*?hidden: true/)
+})
+
+test('new product form calculates and submits a protected slug field', () => {
+  assert.match(products, /name: 'slug'[\s\S]*?required: true[\s\S]*?unique: true[\s\S]*?readOnly: true[\s\S]*?ProductSlugField/)
+  assert.match(slugField, /useField<string>\(\{ path: 'slug' \}\)/)
+  assert.match(slugField, /slugField\.setValue\(nextSlug\)/)
+  assert.match(slugField, /if \(id\) return/)
 })
 test('metadata uses the automatic SEO template', () => {
   assert.match(metadata, /купить в Самаре \| ФОХСТОР/)

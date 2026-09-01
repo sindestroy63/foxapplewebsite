@@ -24,6 +24,7 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
 
 export function Header({ settings, navData, groupNavData, catalogNavigation }: { settings: SiteSettings; navData?: NavCategory[]; groupNavData?: NavGroup[]; catalogNavigation?: CatalogNavNode[] }) {
   const phone = settings.phone || '+7 (917) 954-64-64'
+  const catalogMenuNodes = catalogNavigation?.filter((node) => !(node.kind === 'group' && node.href.includes('group=trade-in')))
 
   return (
     <header className="site-header">
@@ -44,7 +45,7 @@ export function Header({ settings, navData, groupNavData, catalogNavigation }: {
         </Link>
 
         <nav className="desktop-nav" aria-label="Основная навигация">
-          {catalogNavigation && catalogNavigation.length > 0 ? <DesktopCatalogMenu nodes={catalogNavigation} /> : groupNavData && groupNavData.length > 0 ? (
+          {catalogMenuNodes && catalogMenuNodes.length > 0 ? <DesktopCatalogMenu nodes={catalogMenuNodes} trailingLink={{ href: '/trade-in/catalog', label: 'Каталог Trade-in' }} /> : groupNavData && groupNavData.length > 0 ? (
             groupNavData.map((group) => (
               <div key={group.slug} className="nav-dropdown">
                 <Link href={`/catalog?group=${group.slug}`} className="nav-dropdown-trigger">
@@ -61,6 +62,7 @@ export function Header({ settings, navData, groupNavData, catalogNavigation }: {
           ) : (
             <Link href="/catalog">Каталог</Link>
           )}
+          {(!catalogMenuNodes || catalogMenuNodes.length === 0) && <Link href="/trade-in/catalog" className="nav-dropdown-trigger">Каталог Trade-in</Link>}
         </nav>
 
         <div className="header-actions">

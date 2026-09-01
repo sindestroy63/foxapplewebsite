@@ -44,7 +44,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
         <div className="catalog-cat-grid">
           {rootGroups.map((group) => (
-            <CatalogGroupCard key={group.slug} slug={group.slug} label={group.label} coverImage={group.coverImage} compact />
+            <CatalogGroupCard key={group.slug} slug={group.slug} label={group.label} coverImage={group.coverImage} href={group.slug === 'trade-in' ? '/trade-in/catalog' : undefined} compact />
           ))}
         </div>
       </div>

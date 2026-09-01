@@ -77,14 +77,15 @@ export default function ProductCatalogPlacement() {
     <div className="product-placement" aria-label="Размещение в каталоге">
       <strong>Размещение в каталоге</strong>
       <div className="product-placement-fields">
-        <label>Группа<select value={groupId} onChange={(event) => { setGroupId(event.target.value); setBrandId(''); setLineId('') }} disabled={!groupOptions.length}><option value="">Выберите группу</option>{groupOptions.map((option) => <option key={option.id} value={String(option.id)}>{optionPath(option)[0]}</option>)}</select></label>
+        <label>Группа<select value={groupId} onChange={(event) => { const nextGroupId = event.target.value; setGroupId(nextGroupId); setBrandId(''); setLineId(''); if (groupOptions.find((option) => String(option.id) === nextGroupId)?.path.toLowerCase().startsWith('trade-in')) setStatus('Trade-in создаётся и редактируется в отдельном разделе Trade-in.') }} disabled={!groupOptions.length}><option value="">Выберите группу</option>{groupOptions.map((option) => <option key={option.id} value={String(option.id)}>{optionPath(option)[0]}</option>)}</select></label>
         <label>Бренд<select value={brandId} onChange={(event) => { setBrandId(event.target.value); setLineId('') }} disabled={!groupId}><option value="">Без бренда</option>{brandOptions.map((option) => <option key={option.id} value={String(option.id)}>{optionPath(option).at(-1)}</option>)}</select></label>
         <label>Линейка<select value={lineId} onChange={(event) => setLineId(event.target.value)} disabled={!groupId}><option value="">Без линейки</option>{lineOptions.map((option) => <option key={option.id} value={String(option.id)}>{optionPath(option).at(-1)}</option>)}</select></label>
       </div>
       <div className="product-placement-result"><span>Текущий путь:</span> <strong>{resultPath || 'Выберите группу'}</strong></div>
       <p>Порядок и видимость пункта на сайте настраиваются отдельно в «Навигации каталога».</p>
-      {placementId && (!current || String(current.id) !== String(placementId)) && <button type="button" className="product-placement-save" onClick={() => void savePlacement()}>Сохранить размещение</button>}
+      {placementId && selectedGroup?.path.toLowerCase().startsWith('trade-in') ? null : (!current || String(current.id) !== String(placementId)) && <button type="button" className="product-placement-save" onClick={() => void savePlacement()}>Сохранить размещение</button>}
       {status && <small role="status">{status}</small>}
+      <p>Trade-in создаётся и редактируется в отдельном разделе Trade-in.</p>
     </div>
   )
 }

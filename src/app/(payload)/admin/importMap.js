@@ -1,4 +1,5 @@
 import { BasicsSection as BasicsSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
+import { default as default_8ea1fec1fbdc06b6f021a8ef233fc70c } from '../../../payload/components/admin/ProductSlugField'
 import { PlacementSection as PlacementSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
 import { default as default_c7d5727c98f0077fcc6d276eb0aa5bde } from '../../../payload/components/admin/ProductCatalogPlacement'
 import { CommerceSection as CommerceSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
@@ -32,14 +33,17 @@ import { default as default_b5b131095d52421d2a0942d2135f4a23 } from '../../../pa
 import { NavIcon as NavIcon_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { LoginLogo as LoginLogo_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { default as default_ec5053350bda77791279610b7dbe999f } from '../../../payload/components/admin/PriceUpdateNavLink'
+import { default as default_fb2e118bae473c01606aa87efac53d6b } from '../../../payload/components/admin/TradeInNavLink'
 import { default as default_075e1f6d8a1452089a59e3491038ddc1 } from '../../../payload/components/admin/CatalogNavigationNavLink'
 import { default as default_344063fa61d0dbeb16e9b57e01226dfc } from '../../../payload/components/admin/PriceUpdateView'
 import { default as default_cc8dc95a2bccc5ab171a0a2eb9f4a2df } from '../../../payload/components/admin/CatalogNavigationView'
+import { default as default_516bd9d8b1b67af76d8b375a39242e01 } from '../../../payload/components/admin/TradeInAdminView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
   "/payload/components/admin/ProductSection#BasicsSection": BasicsSection_0f23eed0731f5cda2046b74e09ae11a5,
+  "/payload/components/admin/ProductSlugField#default": default_8ea1fec1fbdc06b6f021a8ef233fc70c,
   "/payload/components/admin/ProductSection#PlacementSection": PlacementSection_0f23eed0731f5cda2046b74e09ae11a5,
   "/payload/components/admin/ProductCatalogPlacement#default": default_c7d5727c98f0077fcc6d276eb0aa5bde,
   "/payload/components/admin/ProductSection#CommerceSection": CommerceSection_0f23eed0731f5cda2046b74e09ae11a5,
@@ -73,8 +77,10 @@ export const importMap = {
   "/payload/components/admin/Branding#NavIcon": NavIcon_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/Branding#LoginLogo": LoginLogo_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/PriceUpdateNavLink#default": default_ec5053350bda77791279610b7dbe999f,
+  "/payload/components/admin/TradeInNavLink#default": default_fb2e118bae473c01606aa87efac53d6b,
   "/payload/components/admin/CatalogNavigationNavLink#default": default_075e1f6d8a1452089a59e3491038ddc1,
   "/payload/components/admin/PriceUpdateView#default": default_344063fa61d0dbeb16e9b57e01226dfc,
   "/payload/components/admin/CatalogNavigationView#default": default_cc8dc95a2bccc5ab171a0a2eb9f4a2df,
+  "/payload/components/admin/TradeInAdminView#default": default_516bd9d8b1b67af76d8b375a39242e01,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
