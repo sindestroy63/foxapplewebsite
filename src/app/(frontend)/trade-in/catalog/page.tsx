@@ -7,7 +7,7 @@ import { getSiteSettings, getTradeInProducts } from '@/lib/cms'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Каталог Trade-in',
+  title: 'TRADE-IN',
   description: 'Доступные устройства Trade-in в ФОКССТОР.',
   alternates: {
     canonical: '/trade-in/catalog',
@@ -28,11 +28,10 @@ export default async function TradeInCatalogPage() {
           <span className="breadcrumbs-sep">›</span>
           <Link href="/trade-in">Trade-in</Link>
           <span className="breadcrumbs-sep">›</span>
-          <span>Каталог Trade-in</span>
+          <span>TRADE-IN</span>
         </nav>
 
-        <h1 className="catalog-category-title">Каталог Trade-in</h1>
-        <p className="catalog-category-subtitle">Проверенные устройства с пробегом.</p>
+        <h1 className="catalog-category-title">TRADE-IN</h1>
 
         {products.length > 0 ? (
           <ProductGrid products={products} settings={settings} />

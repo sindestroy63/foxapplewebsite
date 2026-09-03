@@ -10,8 +10,7 @@ export function canManagePrices(user: unknown): boolean {
 export const readOwnPriceUpdates: Access = ({ req }) => {
   if (!req.user || !canManagePrices(req.user)) return false
   const role = (req.user as { role?: Role }).role
-  if (role === 'superadmin' || role === 'admin') return true
-  return { author: { equals: req.user.id } }
+  return true
 }
 
 export const denyPriceUpdateMutation: Access = () => false

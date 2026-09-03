@@ -124,10 +124,12 @@ export interface Config {
   globals: {
     'site-settings': SiteSetting;
     'site-appearance': SiteAppearance;
+    'brand-catalog-navigation': BrandCatalogNavigation;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'site-appearance': SiteAppearanceSelect<false> | SiteAppearanceSelect<true>;
+    'brand-catalog-navigation': BrandCatalogNavigationSelect<false> | BrandCatalogNavigationSelect<true>;
   };
   locale: null;
   widgets: {
@@ -233,6 +235,8 @@ export interface Media {
   };
 }
 /**
+ * Сервисные категории. Товарный каталог строится через верхнюю группу, бренд, линейку и товар.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
@@ -255,16 +259,13 @@ export interface Category {
  */
 export interface Product {
   id: number;
-  category: number | Category;
+  category?: (number | null) | Category;
   name: string;
   /**
    * Формируется автоматически из названия.
    */
   slug: string;
   model?: string | null;
-  /**
-   * Необязательная верхняя группа каталога. Существующие товары не изменяются автоматически.
-   */
   productGroup?:
     | (
         | 'smartphones'
@@ -280,26 +281,17 @@ export interface Product {
         | 'trade-in'
       )
     | null;
+  /**
+   * Необязательное техническое поле; существующие товары не изменяются автоматически.
+   */
   condition?: 'new' | 'used' | null;
-  /**
-   * Производитель товара.
-   */
   brand?: string | null;
-  /**
-   * Общий тип, например смартфон или стайлер.
-   */
   productType?: string | null;
-  /**
-   * Серия или линейка модели.
-   */
   productLine?: string | null;
   /**
    * Используется для массового обновления цен
    */
   sku?: string | null;
-  /**
-   * Например: Новинка, Хит, Акция. Оставьте пустым, если метка не нужна.
-   */
   badge?: string | null;
   memory?: string | null;
   color?: string | null;
@@ -316,8 +308,14 @@ export interface Product {
   hideUnavailableColors?: boolean | null;
   isFeatured?: boolean | null;
   isNew?: boolean | null;
+  /**
+   * Используется для технического порядка карточек в каталоге.
+   */
   sortOrder?: number | null;
   shortDescription?: string | null;
+  /**
+   * Устаревшее поле сохранено для обратной совместимости.
+   */
   description?: {
     root: {
       type: string;
@@ -361,7 +359,7 @@ export interface Product {
   variants?:
     | {
         /**
-         * Используется для массового обновления цен. Например: VAR-IPHONE-16-128GB-BLACK-V001
+         * Формируется автоматически при создании варианта.
          */
         sku?: string | null;
         /**
@@ -383,7 +381,7 @@ export interface Product {
          */
         ramOption?: (number | null) | RamOption;
         /**
-         * Размер корпуса часов, например 40mm или 46mm
+         * Старое значение сохранено для совместимости.
          */
         size?: string | null;
         /**
@@ -395,6 +393,9 @@ export interface Product {
         connectivity?: string | null;
         connectivityOption?: (number | null) | ConnectivityOption;
         generation?: string | null;
+        /**
+         * Например: 1 шт или 4 шт. Не используйте generation для комплектации.
+         */
         packageLabel?: string | null;
         price: number;
         status?: ('in_stock' | 'preorder' | 'out_of_stock') | null;
@@ -615,7 +616,6 @@ export interface PriceUpdateItem {
   sku?: string | null;
   matchType?: ('product' | 'variant') | null;
   product?: (number | null) | Product;
-  coverImage?: (number | null) | Media;
   productLabel?: string | null;
   variantId?: string | null;
   oldCashPrice?: number | null;
@@ -779,8 +779,6 @@ export interface Page {
   createdAt: string;
 }
 /**
- * Управляемое дерево: группа → бренд → линейка → модель. Порядок меняется полем sortOrder внутри одного уровня.
- *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "catalog-navigation".
  */
@@ -789,26 +787,22 @@ export interface CatalogNavigation {
   title: string;
   kind: 'group' | 'brand' | 'line' | 'product' | 'custom_link';
   parent?: (number | null) | CatalogNavigation;
-  /**
-   * Технический ключ группы, например smartphones.
-   */
   productGroup?: string | null;
   brand?: string | null;
   productLine?: string | null;
   product?: (number | null) | Product;
-  coverImage?: (number | null) | Media;
   /**
-   * Для товара ссылка строится из существующего slug; внешние URL не используйте.
+   * Обложка раздела. Связь можно очистить без удаления Media.
    */
+  coverImage?: (number | null) | Media;
   href?: string | null;
   sortOrder: number;
   isVisible?: boolean | null;
   isNew?: boolean | null;
-  /**
-   * По умолчанию «Новинка» при включённом флаге.
-   */
   badgeText?: string | null;
   description?: string | null;
+  stableKey: string;
+  generatedBy?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1141,7 +1135,6 @@ export interface PriceUpdateItemsSelect<T extends boolean = true> {
   sku?: T;
   matchType?: T;
   product?: T;
-  coverImage?: T;
   productLabel?: T;
   variantId?: T;
   oldCashPrice?: T;
@@ -1363,6 +1356,8 @@ export interface CatalogNavigationSelect<T extends boolean = true> {
   isNew?: T;
   badgeText?: T;
   description?: T;
+  stableKey?: T;
+  generatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1463,6 +1458,53 @@ export interface SiteAppearance {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-catalog-navigation".
+ */
+export interface BrandCatalogNavigation {
+  id: number;
+  groups: {
+    title: string;
+    key: string;
+    href?: string | null;
+    filter?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    sortOrder?: number | null;
+    isVisible?: boolean | null;
+    coverImage?: (number | null) | Media;
+    children?:
+      | {
+          title: string;
+          key: string;
+          href?: string | null;
+          filter?:
+            | {
+                [k: string]: unknown;
+              }
+            | unknown[]
+            | string
+            | number
+            | boolean
+            | null;
+          sortOrder?: number | null;
+          isVisible?: boolean | null;
+          coverImage?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -1497,6 +1539,39 @@ export interface SiteAppearanceSelect<T extends boolean = true> {
   mediaBlockText?: T;
   mediaBlockItems?: T;
   bestOffers?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-catalog-navigation_select".
+ */
+export interface BrandCatalogNavigationSelect<T extends boolean = true> {
+  groups?:
+    | T
+    | {
+        title?: T;
+        key?: T;
+        href?: T;
+        filter?: T;
+        sortOrder?: T;
+        isVisible?: T;
+        coverImage?: T;
+        children?:
+          | T
+          | {
+              title?: T;
+              key?: T;
+              href?: T;
+              filter?: T;
+              sortOrder?: T;
+              isVisible?: T;
+              coverImage?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

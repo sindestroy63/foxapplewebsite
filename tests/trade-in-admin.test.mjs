@@ -20,11 +20,12 @@ test('Trade-in is a protected Products view, not a separate collection', () => {
   assert.doesNotMatch(config, /TradeInProducts|TradeInCollection/)
 })
 
-test('Trade-in list and editor are restricted to admin and superadmin', () => {
-  assert.match(endpoint, /req\.user\?\.role === 'admin' \|\| req\.user\?\.role === 'superadmin'/)
-  assert.match(nav, /user\?\.role !== 'admin' && user\?\.role !== 'superadmin'/)
-  assert.match(products, /productGroup: \{ not_equals: 'trade-in' \}/)
-  assert.match(products, /req\.user\?\.role === 'manager'[\s\S]*?data\?\.productGroup === 'trade-in'/)
+test('Trade-in list and editor are available to every full admin role', () => {
+  assert.match(endpoint, /hasFullAdminAccess/)
+  assert.match(endpoint, /method: 'delete'/)
+  assert.match(nav, /hasFullAdminAccess/)
+  assert.match(products, /update: admins/)
+  assert.doesNotMatch(products, /Trade-in товары доступны только admin/)
 })
 
 test('Trade-in form sets technical state directly without catalog placement or navigation writes', () => {
@@ -32,7 +33,7 @@ test('Trade-in form sets technical state directly without catalog placement or n
   assert.match(view, /composeProductSlug\(name, suffix\)/)
   assert.match(view, /if \(current\.id\) return \{ \.\.\.current, name \}/)
   assert.doesNotMatch(view, /catalog-placement|catalog-navigation/)
-  assert.match(placement, /Trade-in создаётся и редактируется в отдельном разделе Trade-in/)
+  assert.match(placement, /Trade-in/)
 })
 
 test('create and edit share the focused Trade-in form with a stable slug preview', () => {

@@ -32,14 +32,14 @@ test('Trade-in service and catalog links have separate information and category 
   for (const source of [header, mobileMenu]) assert.match(source, /href: '\/trade-in', label: 'Trade-In'/)
   assert.doesNotMatch(header.match(/const secondaryNav = \[[\s\S]*?\n\]/)?.[0] || '', /trade-in\/catalog/)
   assert.doesNotMatch(mobileMenu.match(/const secondaryLinks = \[[\s\S]*?\n\]/)?.[0] || '', /trade-in\/catalog/)
-  assert.match(header, /trailingLink=\{\{ href: '\/trade-in\/catalog', label: 'Каталог Trade-in' \}\}/)
+  assert.match(fs.readFileSync('src/lib/brand-catalog-menu.ts', 'utf8'), /href: '\/trade-in\/catalog'/)
   assert.match(desktopCatalogMenu, /groups\.map[\s\S]*?\{trailingLink && <Link href=\{trailingLink\.href\} className="nav-dropdown-trigger">\{trailingLink\.label\}<\/Link>\}/)
-  assert.match(mobileMenu, /<Link href="\/trade-in\/catalog" onClick=\{close\} className="mobile-(?:tree-link|nav-cat)">Каталог Trade-in<\/Link>/)
-  for (const source of [header, mobileMenu]) assert.match(source, /node\.href\.includes\('group=trade-in'\)/)
+  assert.match(mobileMenu, /brandNavigation/)
+  assert.match(fs.readFileSync('src/lib/brand-catalog-menu.ts', 'utf8'), /key: 'trade-in'/)
 })
 
 test('catalog category card sends Trade-in visitors to the public Trade-in catalog', () => {
-  assert.match(catalog, /group\.slug === 'trade-in' \? '\/trade-in\/catalog' : undefined/)
+  assert.match(fs.readFileSync('src/lib/brand-catalog-menu.ts', 'utf8'), /key: 'trade-in'/)
   assert.match(catalogCard, /href \|\| `\/catalog\?group=\$\{slug\}`/)
 })
 

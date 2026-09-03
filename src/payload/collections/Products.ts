@@ -43,20 +43,12 @@ export const Products: CollectionConfig = {
   access: {
     read: anyone,
     create: admins,
-    update: ({ req }) => {
-      if (!req.user) return false
-      if (req.user.role === 'admin' || req.user.role === 'superadmin') return true
-      if (req.user.role === 'manager') return { productGroup: { not_equals: 'trade-in' } }
-      return false
-    },
+    update: admins,
     delete: admins,
   },
   hooks: {
     beforeChange: [
       ({ data, originalDoc, req }) => {
-        if (req.user?.role === 'manager' && (originalDoc?.productGroup === 'trade-in' || data?.productGroup === 'trade-in' || data?.condition === 'used')) {
-          throw new Error('Trade-in товары доступны только admin и superadmin.')
-        }
         return data
       },
     ],

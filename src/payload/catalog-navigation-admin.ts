@@ -1,12 +1,13 @@
 import type { Endpoint } from 'payload'
 import { commitTransaction, initTransaction, killTransaction } from 'payload'
+import { hasFullAdminAccess } from './access'
 
-const isAdmin = (req: any) => req.user?.role === 'admin' || req.user?.role === 'superadmin'
-const isSuperadmin = (req: any) => req.user?.role === 'superadmin'
+const isAdmin = (req: any) => hasFullAdminAccess(req.user)
+const isSuperadmin = (req: any) => hasFullAdminAccess(req.user)
 const parents: Record<string, string[]> = { brand: ['group'], line: ['group', 'brand'], product: ['group', 'brand', 'line'], custom_link: ['group', 'brand', 'line'] }
 const idOf = (value: any) => typeof value === 'object' ? value?.id : value
 const isPlacementKind = (kind: unknown) => kind === 'group' || kind === 'brand' || kind === 'line'
-const isAllowedUser = (req: any) => ['manager', 'admin', 'superadmin'].includes(req.user?.role)
+const isAllowedUser = (req: any) => hasFullAdminAccess(req.user)
 const placementLabel = (doc: any) => String(doc.title || '').toLowerCase()
 
 async function resolvePlacement(req: any, placementId: string | number) {
@@ -46,7 +47,7 @@ export const catalogNavigationAdminEndpoints: Endpoint[] = [{ path: '/catalog-pl
     if (chain.some((item) => item.isVisible === false || /б\/у|used/i.test(placementLabel(item)))) return null
     return chain.map((item) => item.title).join(' → ')
   }
-  const options = docs.filter((doc) => isPlacementKind(doc.kind) && doc.isVisible !== false && (doc.productGroup !== 'trade-in' || req.user?.role === 'superadmin')).flatMap((doc) => {
+  const options = docs.filter((doc) => isPlacementKind(doc.kind) && doc.isVisible !== false && (doc.productGroup !== 'trade-in' || isSuperadmin(req))).flatMap((doc) => {
     const path = pathFor(doc)
     return path ? [{ id: doc.id, kind: doc.kind, path }] : []
   })
@@ -144,14 +145,14 @@ export const catalogNavigationAdminEndpoints: Endpoint[] = [{ path: '/catalog-pl
   if (body.action === 'toggle') return Response.json(await req.payload.update({ collection: 'catalog-navigation', id: doc.id, data: { isVisible: !doc.isVisible }, depth: 1, req }))
   if (body.action === 'coverImage') {
     if (!isSuperadmin(req)) return Response.json({ error: 'Only superadmin can change section covers' }, { status: 403 })
-    if (doc.kind !== 'group') return Response.json({ error: 'Only group nodes can have covers' }, { status: 400 })
+    if (!['group', 'brand', 'line'].includes(doc.kind)) return Response.json({ error: 'Only catalog navigation nodes can have covers' }, { status: 400 })
     const mediaId = body.mediaId === null || body.mediaId === '' ? null : Number(body.mediaId)
     if (mediaId !== null) {
       if (!Number.isInteger(mediaId)) return Response.json({ error: 'Invalid Media ID' }, { status: 400 })
-      const media = await req.payload.findByID({ collection: 'media', id: mediaId, depth: 0, req })
+      const media = await req.payload.findByID({ collection: 'media', id: mediaId as number, depth: 0, req })
       if (!media) return Response.json({ error: 'Media not found' }, { status: 404 })
     }
-    return Response.json(await req.payload.update({ collection: 'catalog-navigation', id: doc.id, data: { coverImage: mediaId }, depth: 1, req }))
+    return Response.json(await req.payload.update({ collection: 'catalog-navigation', id: doc.id, data: { coverImage: mediaId }, depth: 1, req, overrideAccess: true }))
   }
   if (body.action === 'new') return Response.json(await req.payload.update({ collection: 'catalog-navigation', id: doc.id, data: { isNew: !doc.isNew }, depth: 1, req }))
   if (body.action === 'delete') { const children = await req.payload.find({ collection: 'catalog-navigation', where: { parent: { equals: doc.id } }, limit: 1, req }); if (children.totalDocs) return Response.json({ error: 'Remove or move child items first' }, { status: 409 }); await req.payload.delete({ collection: 'catalog-navigation', id: doc.id, req }); return Response.json({ ok: true }) }
@@ -170,7 +171,8 @@ export const catalogNavigationAdminEndpoints: Endpoint[] = [{ path: '/catalog-pl
       return Response.json({ ok: true, deletedNavigationRecords: all.length + 1 })
     } catch (error) {
       if (started) await killTransaction(req as any)
-      return Response.json({ error: error instanceof Error ? error.message : 'Subtree deletion failed' }, { status: 500 })
+      const message = String((error as { message?: unknown })?.message || 'Subtree deletion failed')
+      return Response.json({ error: message }, { status: 500 })
     }
   }
   if (body.action === 'move') { const siblings = (await req.payload.find({ collection: 'catalog-navigation', where: { parent: { equals: idOf(doc.parent) || null } }, sort: 'sortOrder', limit: 100, req })).docs as any[]; const index = siblings.findIndex((x) => x.id === doc.id), next = index + Number(body.direction || 0); if (next < 0 || next >= siblings.length) return Response.json({ ok: true }); const other = siblings[next]; await req.payload.update({ collection: 'catalog-navigation', id: doc.id, data: { sortOrder: other.sortOrder }, req }); await req.payload.update({ collection: 'catalog-navigation', id: other.id, data: { sortOrder: doc.sortOrder }, req }); return Response.json({ ok: true }) }

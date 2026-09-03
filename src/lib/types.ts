@@ -44,6 +44,7 @@ export type CatalogFilters = {
   condition?: 'new' | 'used'
   brand?: string
   line?: string
+  appleAccessories?: boolean
 }
 
 export type VariantColor = {

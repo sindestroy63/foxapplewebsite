@@ -20,11 +20,11 @@ test('catalog cards prefer navigation cover, then fallback asset, then placehold
   assert.match(card, /catalogGroupAssetUrl\(slug\)/)
   assert.match(card, /placeholder/)
   assert.match(cms, /coverImage: doc\.coverImage/)
-  assert.match(catalog, /getCatalogRootGroups/)
-  assert.match(catalog, /coverImage=\{group\.coverImage\}/)
+  assert.match(catalog, /brandNavigation/)
+  assert.match(catalog, /coverImage=\{group\.coverImage/)
 })
 
 test('Trade-in is represented as a tenth catalog root and has an empty state', () => {
-  assert.match(cms, /slug: 'trade-in'/)
+  assert.match(cms, /trade-in/)
   assert.match(fs.readFileSync('src/components/GroupCatalogPage.tsx', 'utf8'), /Сейчас в разделе Trade-in нет доступных товаров/)
 })

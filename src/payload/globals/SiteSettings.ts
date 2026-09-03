@@ -1,13 +1,13 @@
 import type { GlobalConfig } from 'payload'
 
-import { denyAll } from '../access'
+import { anyone, denyAll } from '../access'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Настройки сайта',
   admin: { hidden: true },
   access: {
-    read: denyAll,
+    read: anyone,
     update: denyAll,
   },
   fields: [

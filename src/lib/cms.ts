@@ -6,6 +6,8 @@ import { normalizeProduct, normalizeProducts } from './normalize'
 import { sortProductsByPriority } from '@/lib/sort'
 import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
 import { CATALOG_GROUPS, getCatalogGroup, productGroupSlug } from './catalog-groups'
+import { DEFAULT_BRAND_CATALOG_MENU, visibleBrandMenu, type BrandMenu } from './brand-catalog-menu'
+import { catalogPlacementHref, getCatalogPlacementByChildKey } from './product-catalog-placement'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -53,6 +55,7 @@ export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
     productGroup: getCatalogGroup(one(searchParams.group) || '')?.slug,
     brand: one(searchParams.brand)?.trim() || undefined,
     line: one(searchParams.line)?.trim() || undefined,
+    appleAccessories: one(searchParams.appleAccessories) === '1' ? true : undefined,
   }
 }
 
@@ -130,6 +133,9 @@ export async function getProducts(args?: {
     const payload = await getPayloadClient()
     const conditions: any[] = [{ isAvailable: { equals: true } }, { id: { not_equals: 49 } }, { id: { not_equals: 61 } }, { id: { not_equals: 66 } }, { id: { not_equals: 70 } }]
 
+    // Trade-in inventory has its own public storefront and must not leak into brand filters.
+    if (args?.filters?.productGroup !== 'trade-in') conditions.push({ productGroup: { not_equals: 'trade-in' } })
+
     if (args?.categoryId) {
       conditions.push({ category: { equals: args.categoryId } })
     }
@@ -151,6 +157,15 @@ export async function getProducts(args?: {
     }
     if (args?.filters?.brand) conditions.push({ brand: { equals: args.filters.brand } })
     if (args?.filters?.line) conditions.push({ productLine: { equals: args.filters.line } })
+    if (args?.filters?.appleAccessories) {
+      conditions.push({
+        or: [
+          { and: [{ productGroup: { equals: 'other' } }, { brand: { equals: 'Apple' } }] },
+          { and: [{ productGroup: { equals: 'other' } }, { name: { like: 'Apple Pencil' } }] },
+          { and: [{ productGroup: { equals: 'other' } }, { name: { like: 'Аксессуары Apple' } }] },
+        ],
+      })
+    }
 
     if (args?.featuredOnly) {
       conditions.push({ isFeatured: { equals: true } })
@@ -256,7 +271,16 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
         return productSlug
       }
     })()
-    const slugCandidates = [...new Set([productSlug, decodedSlug, decodedSlug.trim()])]
+    // Temporary read-only alias until the duplicate product records are cleaned up manually.
+    // The published URL is preserved; only the product read is resolved to the canonical record.
+    const readOnlyAlias: Record<string, string> = {
+      'iphone-17-pro-gwbejz': 'iphone-17-pro',
+    }
+    const resolvedSlug = readOnlyAlias[productSlug] || readOnlyAlias[decodedSlug] || productSlug
+    const isAliased = resolvedSlug !== productSlug
+    const slugCandidates = isAliased
+      ? [resolvedSlug]
+      : [...new Set([productSlug, decodedSlug, decodedSlug.trim()])]
     const result = await payload.find({
       collection: 'products',
       depth: 2,
@@ -323,6 +347,65 @@ export type CatalogNavNode = {
   badgeText?: string | null
   coverImage?: import('./types').Media | null
   children: CatalogNavNode[]
+}
+
+export type BrandCatalogNavigationItem = { title: string; key: string; href?: string; filter?: Record<string, string>; isVisible?: boolean; sortOrder?: number; coverImage?: import('./types').Media | null; children?: BrandCatalogNavigationItem[] }
+
+/** Build a public catalog URL from the normalized filter stored in the Global. */
+function hrefFromFilter(filter: unknown): string | undefined {
+  if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return undefined
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filter as Record<string, unknown>)) {
+    if (value == null || value === '') continue
+    params.set(key, String(value))
+  }
+  const query = params.toString()
+  return query ? `/catalog?${query}` : undefined
+}
+
+/**
+ * Global rows created by older versions may have lost href/filter values.
+ * Recover only from the explicit fallback map; never turn an unresolved item
+ * into the unfiltered /catalog route.
+ */
+function resolveBrandHref(key: string, href: unknown, filter: unknown): string | undefined {
+  const confirmedPlacement = getCatalogPlacementByChildKey(key)
+  if (confirmedPlacement) return catalogPlacementHref(confirmedPlacement)
+  const fromFilter = hrefFromFilter(filter)
+  // A bare /catalog is the legacy placeholder. Prefer the structured filter
+  // whenever one is available so child links never lose their query.
+  if (fromFilter && (typeof href !== 'string' || !href.trim() || href.trim() === '/catalog')) return fromFilter
+  if (typeof href === 'string' && href.trim()) return href
+  if (fromFilter) return fromFilter
+  const fallback = DEFAULT_BRAND_CATALOG_MENU.find((group) => group.key === key)
+    || DEFAULT_BRAND_CATALOG_MENU.flatMap((group) => group.items).find((item) => item.key === key)
+  return fallback?.href
+}
+
+export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
+  try {
+    const payload = await getPayloadClient()
+    const value = await payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 1 }) as any
+    const source = Array.isArray(value.groups) && value.groups.length >= 6 ? value.groups : DEFAULT_BRAND_CATALOG_MENU
+    const menu = visibleBrandMenu(source.map((group: any) => ({
+      label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
+      coverImage: group.coverImage || null, isVisible: group.isVisible !== false, sortOrder: Number(group.sortOrder ?? 0),
+      items: Array.isArray(group.children) ? group.children.map((child: any) => ({
+        label: String(child.title ?? child.label), key: String(child.key), href: resolveBrandHref(String(child.key), child.href, child.filter), filter: child.filter || undefined,
+        coverImage: child.coverImage || null, isVisible: child.isVisible !== false, sortOrder: Number(child.sortOrder ?? 0),
+      })) : [],
+    })) as BrandMenu[])
+    return menu.map((group) => ({
+      title: group.label, key: group.key, href: group.href, filter: group.filter, coverImage: group.coverImage,
+      isVisible: group.isVisible, sortOrder: group.sortOrder,
+      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, sortOrder: child.sortOrder })),
+    }))
+  } catch {
+    return DEFAULT_BRAND_CATALOG_MENU.map((group) => ({
+      title: group.label, key: group.key, href: group.href, filter: group.filter, coverImage: null, isVisible: true, sortOrder: group.sortOrder,
+      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: null, isVisible: true, sortOrder: child.sortOrder })),
+    }))
+  }
 }
 
 export { sortProductsByPriority }

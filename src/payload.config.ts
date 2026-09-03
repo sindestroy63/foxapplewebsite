@@ -27,9 +27,11 @@ import { StorageOptions } from './payload/collections/StorageOptions'
 import { Users } from './payload/collections/Users'
 import { SiteAppearance } from './payload/globals/SiteAppearance'
 import { SiteSettings } from './payload/globals/SiteSettings'
+import { BrandCatalogNavigation } from './payload/globals/BrandCatalogNavigation'
 import { priceUpdateEndpoints } from './payload/price-updates/endpoints'
 import { migrations } from './migrations'
 import { catalogNavigationAdminEndpoints } from './payload/catalog-navigation-admin'
+import { brandCatalogNavigationEndpoints } from './payload/brand-catalog-navigation-admin'
 import { tradeInAdminEndpoints } from './payload/trade-in-admin'
 
 const filename = fileURLToPath(import.meta.url)
@@ -74,17 +76,17 @@ export default buildConfig({
           exact: true,
           meta: { title: 'Обновление цен' },
         },
-        catalogNavigation: {
-          Component: '/payload/components/admin/CatalogNavigationView',
-          path: '/catalog-navigation',
-          exact: true,
-          meta: { title: 'Навигация каталога' },
-        },
         tradeIn: {
           Component: '/payload/components/admin/TradeInAdminView',
           path: '/trade-in',
           exact: true,
           meta: { title: 'Trade-in' },
+        },
+        catalogNavigation: {
+          Component: '/payload/components/admin/CatalogNavigationView',
+          path: '/catalog-navigation',
+          exact: true,
+          meta: { title: 'Навигация каталога' },
         },
       },
     },
@@ -106,8 +108,8 @@ export default buildConfig({
     Users, Media, Categories, Products, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
     Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
   ],
-  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...tradeInAdminEndpoints],
-  globals: [SiteSettings, SiteAppearance],
+  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...brandCatalogNavigationEndpoints, ...tradeInAdminEndpoints],
+  globals: [SiteSettings, SiteAppearance, BrandCatalogNavigation],
   bin: [
     {
       key: 'seed',

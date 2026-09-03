@@ -36,8 +36,8 @@ import { default as default_ec5053350bda77791279610b7dbe999f } from '../../../pa
 import { default as default_fb2e118bae473c01606aa87efac53d6b } from '../../../payload/components/admin/TradeInNavLink'
 import { default as default_075e1f6d8a1452089a59e3491038ddc1 } from '../../../payload/components/admin/CatalogNavigationNavLink'
 import { default as default_344063fa61d0dbeb16e9b57e01226dfc } from '../../../payload/components/admin/PriceUpdateView'
-import { default as default_cc8dc95a2bccc5ab171a0a2eb9f4a2df } from '../../../payload/components/admin/CatalogNavigationView'
 import { default as default_516bd9d8b1b67af76d8b375a39242e01 } from '../../../payload/components/admin/TradeInAdminView'
+import { default as default_cc8dc95a2bccc5ab171a0a2eb9f4a2df } from '../../../payload/components/admin/CatalogNavigationView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -80,7 +80,7 @@ export const importMap = {
   "/payload/components/admin/TradeInNavLink#default": default_fb2e118bae473c01606aa87efac53d6b,
   "/payload/components/admin/CatalogNavigationNavLink#default": default_075e1f6d8a1452089a59e3491038ddc1,
   "/payload/components/admin/PriceUpdateView#default": default_344063fa61d0dbeb16e9b57e01226dfc,
-  "/payload/components/admin/CatalogNavigationView#default": default_cc8dc95a2bccc5ab171a0a2eb9f4a2df,
   "/payload/components/admin/TradeInAdminView#default": default_516bd9d8b1b67af76d8b375a39242e01,
+  "/payload/components/admin/CatalogNavigationView#default": default_cc8dc95a2bccc5ab171a0a2eb9f4a2df,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

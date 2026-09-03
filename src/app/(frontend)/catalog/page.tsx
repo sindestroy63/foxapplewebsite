@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { getCatalogRootGroups, getGroupNavData, getProductsByProductGroup, readCatalogParams } from '@/lib/cms'
+import { getBrandCatalogNavigation, getGroupNavData, getProducts, getProductsByProductGroup, readCatalogParams } from '@/lib/cms'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
+import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,16 +21,22 @@ export const metadata: Metadata = {
 
 export default async function CatalogPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams
-  const groupSlug = readCatalogParams(query).productGroup
+  const filters = readCatalogParams(query)
+  const groupSlug = filters.productGroup
   if (groupSlug) {
     const [{ group, products }, groupNavigation] = await Promise.all([
-      getProductsByProductGroup(groupSlug, readCatalogParams(query)),
+      getProductsByProductGroup(groupSlug, filters),
       getGroupNavData(),
     ])
     const { default: GroupCatalogPage } = await import('@/components/GroupCatalogPage')
     return <GroupCatalogPage group={group!} products={products} brands={groupNavigation.find((item) => item.slug === groupSlug)?.brands} />
   }
-  const rootGroups = await getCatalogRootGroups()
+  if (filters.brand || filters.line || filters.query) {
+    const products = await getProducts({ filters })
+    const title = filters.line || filters.brand || 'Каталог'
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" /></div></section>
+  }
+  const brandNavigation = await getBrandCatalogNavigation()
   return (
     <section className="page-section">
       <div className="container catalog-categories-page">
@@ -43,8 +50,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         <p className="catalog-category-subtitle">Выберите категорию, чтобы подобрать модель и конфигурацию.</p>
 
         <div className="catalog-cat-grid">
-          {rootGroups.map((group) => (
-            <CatalogGroupCard key={group.slug} slug={group.slug} label={group.label} coverImage={group.coverImage} href={group.slug === 'trade-in' ? '/trade-in/catalog' : undefined} compact />
+          {brandNavigation.map((group) => (
+            <CatalogGroupCard key={group.key} slug={group.key} label={group.title} href={group.href} coverImage={group.coverImage || null} compact />
           ))}
         </div>
       </div>

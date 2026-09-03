@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 import { ProductGrid } from '@/components/ProductGrid'
 import { normalizeProducts } from '@/lib/normalize'
-import { getCatalogRootGroups, getProducts, getSiteSettings } from '@/lib/cms'
+import { getBrandCatalogNavigation, getProducts, getSiteSettings } from '@/lib/cms'
 import { heroMedia } from '@/lib/catalog-group-assets'
 import { getMediaUrl } from '@/lib/media'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
@@ -28,10 +28,10 @@ const benefits = [
 ]
 
 export default async function HomePage() {
-  const [settings, featuredProducts, rootGroups] = await Promise.all([
+  const [settings, featuredProducts, brandNavigation] = await Promise.all([
     getSiteSettings(),
     getProducts({ featuredOnly: true, limit: 6 }),
-    getCatalogRootGroups(),
+    getBrandCatalogNavigation(),
   ])
   const bestOffers = featuredProducts
 
@@ -49,7 +49,7 @@ export default async function HomePage() {
           <h1>{CONTACTS.heroTitle}</h1>
           <p className="hero-subtitle">{CONTACTS.heroSubtitle}</p>
           <div className="hero-actions">
-            <Link className="button hero-primary" href="/catalog/iphone">
+            <Link className="button hero-primary" href="/catalog">
               Подобрать технику
             </Link>
             <Link className="button hero-secondary" href="/contacts">
@@ -72,7 +72,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="container category-grid">
-          {rootGroups.map((group) => <CatalogGroupCard key={group.slug} slug={group.slug} label={group.label} coverImage={group.coverImage} />)}
+          {brandNavigation.map((group) => <CatalogGroupCard key={group.key} slug={group.key} label={group.title} href={group.href} coverImage={group.coverImage || null} />)}
         </div>
       </section>
       </ScrollReveal>

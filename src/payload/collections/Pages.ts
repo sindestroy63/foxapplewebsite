@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyone, superadmins } from '../access'
+import { anyone, denyAll } from '../access'
 import { slugify } from '../utils/slugify'
 
 export const Pages: CollectionConfig = {
@@ -16,9 +16,9 @@ export const Pages: CollectionConfig = {
   },
   access: {
     read: anyone,
-    create: superadmins,
-    update: superadmins,
-    delete: superadmins,
+    create: denyAll,
+    update: denyAll,
+    delete: denyAll,
   },
   hooks: {
     beforeValidate: [

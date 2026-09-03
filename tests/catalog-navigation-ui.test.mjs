@@ -62,8 +62,8 @@ test('header and flyout stacking keeps controls below the open cascade', () => {
   assert.match(css, /\.catalog-flyout\s*\{[^}]*z-index:\s*1001/s)
   assert.match(css, /\.site-header\s*\{[^}]*overflow:\s*visible/s)
 })
-test('top-level catalog uses two controlled rows and dropdown starts below both', () => {
-  assert.match(css, /\.desktop-catalog-groups\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(5,[^}]*grid-template-rows:\s*repeat\(2,/s)
+test('top-level catalog uses one controlled row and dropdown starts below it', () => {
+  assert.match(css, /\.desktop-catalog-groups\s*\{[^}]*display:\s*flex;[^}]*flex-wrap:\s*nowrap/s)
   assert.match(css, /\.catalog-flyout\s*\{[^}]*top:\s*100%[^}]*overflow:\s*visible/s)
   assert.match(css, /\.catalog-flyout-list\s*\{[^}]*overflow-y:\s*auto/s)
   assert.doesNotMatch(css.slice(css.indexOf('.desktop-catalog-groups'), css.indexOf('.catalog-mega-menu')), /margin:\s*-/)

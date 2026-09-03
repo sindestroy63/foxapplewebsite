@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { denyAll } from '../access'
+import { anyone, denyAll } from '../access'
 import { slugify } from '../utils/slugify'
 
 export const Categories: CollectionConfig = {
@@ -16,7 +16,7 @@ export const Categories: CollectionConfig = {
     defaultColumns: ['name', 'slug', 'coverImage', 'sortOrder', 'isActive'],
   },
   access: {
-    read: denyAll,
+    read: anyone,
     create: denyAll,
     update: denyAll,
     delete: denyAll,
@@ -24,9 +24,6 @@ export const Categories: CollectionConfig = {
   hooks: {
     beforeValidate: [
       ({ data }) => {
-        if (data?.slug && String(data.slug).toLowerCase() !== 'trade-in') {
-          throw new Error('Разрешена только сервисная категория Trade-in. Товарные категории создаются через productGroup.')
-        }
         if (data?.name && !data.slug) {
           data.slug = slugify(data.name)
         }

@@ -1,29 +1,515 @@
-'use client'
+"use client";
+import { useEffect, useState } from "react";
+import "./CatalogNavigationView.scss";
+// Legacy /api/catalog-navigation-admin remains intentionally unused by this UI.
 
-import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
-import './CatalogNavigationView.scss'
+type Item = {
+  title: string;
+  key: string;
+  href?: string;
+  filter?: unknown;
+  sortOrder?: number;
+  isVisible?: boolean;
+  coverImage?: { id?: number; url?: string; filename?: string } | number | null;
+  children?: Item[];
+};
+type Media = { id: number; filename?: string; url?: string };
+type Editor = { item: Item; parent?: string; isNew?: boolean };
 
-type Node = { id: number; title: string; kind: string; parent?: number | { id: number } | null; isVisible?: boolean; isNew?: boolean; sortOrder?: number; coverImage?: { id?: number; filename?: string } | number | null }
-const kindLabels: Record<string, string> = { group: 'Группа', brand: 'Бренд', line: 'Линейка', product: 'Товар', custom_link: 'Ссылка' }
-const childLabel = (n: number) => n === 1 ? '1 дочерний пункт' : n >= 2 && n <= 4 ? `${n} дочерних пункта` : `${n} дочерних пунктов`
+const itemKey = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/(^-|-$)/g, "") || `item-${Date.now()}`;
 
 export default function CatalogNavigationView() {
-  const [items, setItems] = useState<Node[]>([])
-  const [open, setOpen] = useState<Set<number>>(new Set())
-  const [menu, setMenu] = useState<number | null>(null)
-  const [forbidden, setForbidden] = useState(false)
-  const [canManageRoots, setCanManageRoots] = useState(false)
-  const [canDeleteSubtrees, setCanDeleteSubtrees] = useState(false)
-  const load = async () => { const response = await fetch('/api/catalog-navigation-admin'); if (response.status === 403) { setForbidden(true); return }; if (!response.ok) throw new Error('load failed'); const data = await response.json(); setItems(Array.isArray(data) ? data : data.docs || []); setCanManageRoots(Boolean(data.canManageRoots)); setCanDeleteSubtrees(Boolean(data.canDeleteSubtrees)) }
-  useEffect(() => { load().catch(() => setItems([])) }, [])
-  const children = (parent: Node | null) => items.filter((item) => (typeof item.parent === 'object' ? item.parent?.id : item.parent) === (parent?.id || null))
-  const action = async (id: number, actionName: string, extra: any = {}) => { setMenu(null); const response = await fetch('/api/catalog-navigation-admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: actionName, ...extra }) }); if (!response.ok) { const data = await response.json().catch(() => ({})); window.alert(data.error || 'Операция не выполнена'); return }; await load() }
-  const addRoot = async () => { const type = window.prompt('Тип раздела: group или service_link', 'group')?.trim().toLowerCase(); if (!type) return; const kind = type === 'service_link' || type === 'custom_link' ? 'custom_link' : type; if (!['group', 'custom_link'].includes(kind)) return; const title = window.prompt('Название раздела')?.trim(); if (!title) return; const payload: any = { action: 'createRoot', kind, title }; if (kind === 'group') payload.groupKey = window.prompt('Ключ группы')?.trim(); else payload.href = window.prompt('Внутренний путь', '/trade-in')?.trim(); await action(0, 'createRoot', payload) }
-  const addChild = async (parent: Node) => { setMenu(null); if (!['group', 'brand', 'line'].includes(parent.kind)) return; const kind = window.prompt('Тип дочернего пункта: brand, line или product')?.trim(); if (!kind || !['brand', 'line', 'product'].includes(kind)) return; const title = window.prompt('Название пункта')?.trim(); if (!title) return; const extra: any = { action: 'create', kind, parentId: parent.id, title }; if (kind === 'product') extra.productId = Number(window.prompt('ID существующего товара')); await action(parent.id, 'create', extra) }
-  const edit = async (node: Node) => { setMenu(null); const title = window.prompt('Название пункта', node.title); if (title) await action(node.id, 'edit', { title }) }
-  const deleteSubtree = async (node: Node, count: number) => { setMenu(null); if (!window.confirm('Будет удалён этот раздел и все его пункты только из навигации сайта. Товары, варианты, цены, SKU и фотографии сохранятся.')) return; const typed = window.prompt(`Введите точное название раздела: ${node.title}`); if (typed !== node.title) { window.alert('Название не совпадает. Удаление отменено.'); return }; if (!window.confirm(`Окончательно удалить раздел «${node.title}» и ${count} дочерних пунктов?`)) return; await action(node.id, 'deleteSubtree', { confirmTitle: node.title }) }
-  const render = (node: Node, depth = 0): React.ReactNode => { const kids = children(node); const expanded = open.has(node.id); const active = menu === node.id; return <React.Fragment key={node.id}><div className={`catalog-tree-row depth-${depth} kind-${node.kind} ${node.isVisible === false ? 'is-hidden' : ''}`}><button type="button" className="tree-toggle" aria-label={expanded ? 'Свернуть' : 'Развернуть'} onClick={() => setOpen((current) => { const next = new Set(current); next.has(node.id) ? next.delete(node.id) : next.add(node.id); return next })}>{kids.length ? (expanded ? '−' : '+') : '·'}</button><div className="tree-title"><strong>{node.title}</strong><span className="tree-meta"><span className={`visibility-status ${node.isVisible === false ? 'hidden' : 'visible'}`}><i aria-hidden="true" />{node.isVisible === false ? 'Скрыта' : 'Видна'}</span>{node.isNew && <span className="new-status">Новинка</span>}{kids.length > 0 && <span className="children-count">{childLabel(kids.length)}</span>}<span className="kind-label">{kindLabels[node.kind] || node.kind}</span></span></div><div className="tree-menu-wrap"><button type="button" className="tree-menu-button" aria-label="Действия пункта меню" title="Действия пункта меню" aria-expanded={active} onClick={() => setMenu(active ? null : node.id)}>⋮</button>{active && <div className="tree-action-menu" role="menu"><button type="button" onClick={() => addChild(node)} disabled={!['group', 'brand', 'line'].includes(node.kind)}>Добавить дочерний пункт</button><button type="button" onClick={() => edit(node)}>Изменить</button><div className="menu-divider" /><button type="button" onClick={() => action(node.id, 'toggle')}>{node.isVisible === false ? 'Показать в меню' : 'Скрыть в меню'}</button><button type="button" onClick={() => action(node.id, 'new')}>{node.isNew ? 'Убрать новинку' : 'Пометить как новинку'}</button><div className="menu-divider" /><button type="button" onClick={() => action(node.id, 'move', { direction: -1 })}>Переместить выше</button><button type="button" onClick={() => action(node.id, 'move', { direction: 1 })}>Переместить ниже</button><div className="menu-divider" /><button type="button" className="danger" disabled={kids.length > 0} onClick={() => !kids.length && window.confirm('Пункт будет удалён только из меню. Сам товар и его данные сохранятся.') && action(node.id, 'delete')}>Удалить из меню</button>{canDeleteSubtrees && kids.length > 0 && node.kind !== 'custom_link' && <button type="button" className="danger subtree-danger" onClick={() => deleteSubtree(node, kids.length)}>Удалить раздел вместе с пунктами</button>}</div>}</div></div>{expanded && kids.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map((child) => render(child, depth + 1))}</React.Fragment> }
-  if (forbidden) return <main className="catalog-navigation-admin"><h1>Навигация каталога</h1><p>Доступ разрешён только администраторам.</p></main>
-  return <main className="catalog-navigation-admin"><nav className="payload-breadcrumbs"><Link href="/admin">Панель</Link><span aria-hidden="true"> / </span><span>Навигация каталога</span></nav><Link className="payload-back-button" href="/admin">← К панели</Link><h1>Навигация каталога</h1><p className="catalog-navigation-subtitle">Управляйте порядком и видимостью пунктов меню сайта.</p>{canManageRoots && <button type="button" className="catalog-add-root" onClick={addRoot}>+ Добавить раздел</button>}<div className="catalog-tree-toolbar"><button type="button" onClick={() => setOpen(new Set(items.map((item) => item.id)))}>Раскрыть всё</button><button type="button" onClick={() => setOpen(new Set())}>Свернуть всё</button></div><section className="catalog-tree">{items.filter((item) => !(typeof item.parent === 'object' ? item.parent?.id : item.parent)).map((item) => render(item))}</section></main>
+  const [groups, setGroups] = useState<Item[]>([]);
+  const [media, setMedia] = useState<Media[]>([]);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [menu, setMenu] = useState<string | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [picker, setPicker] = useState<{ key: string; parent?: string } | null>(
+    null,
+  );
+  const [query, setQuery] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/brand-catalog-navigation")
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Не удалось загрузить навигацию");
+        const d = await r.json();
+        setGroups(d.groups || []);
+      })
+      .catch((e) => setError(e.message));
+    fetch("/api/media?limit=200&where[mimeType][like]=image%2F")
+      .then((r) => r.json())
+      .then((d) => setMedia(d.docs || []))
+      .catch(() => undefined);
+  }, []);
+  useEffect(() => {
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(null);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (!(event.target as Element).closest(".action-menu-wrap"))
+        setMenu(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
+  const mark = (fn: (all: Item[]) => Item[]) => {
+    setGroups(fn);
+    setDirty(true);
+    setStatus("");
+  };
+  const update = (key: string, patch: Partial<Item>, parent?: string) =>
+    mark((all) =>
+      all.map((g) =>
+        g.key === (parent || key)
+          ? parent
+            ? {
+                ...g,
+                children: (g.children || []).map((c) =>
+                  c.key === key ? { ...c, ...patch } : c,
+                ),
+              }
+            : { ...g, ...patch }
+          : g,
+      ),
+    );
+  const move = (key: string, direction: -1 | 1, parent?: string) =>
+    mark((all) => {
+      if (!parent) {
+        const list = [...all];
+        const index = list.findIndex((item) => item.key === key);
+        const target = index + direction;
+        if (index < 0 || target < 0 || target >= list.length) return all;
+        [list[index], list[target]] = [list[target], list[index]];
+        return list.map((item, order) => ({ ...item, sortOrder: order }));
+      }
+      return all.map((group) => {
+        if (group.key !== parent) return group;
+        const children = [...(group.children || [])];
+        const index = children.findIndex((item) => item.key === key);
+        const target = index + direction;
+        if (index < 0 || target < 0 || target >= children.length) return group;
+        [children[index], children[target]] = [
+          children[target],
+          children[index],
+        ];
+        return {
+          ...group,
+          children: children.map((item, order) => ({
+            ...item,
+            sortOrder: order,
+          })),
+        };
+      });
+    });
+  const remove = (key: string, parent?: string) => {
+    if (!window.confirm("Удалить этот пункт?")) return;
+    mark((all) =>
+      parent
+        ? all.map((g) =>
+            g.key === parent
+              ? {
+                  ...g,
+                  children: (g.children || []).filter((c) => c.key !== key),
+                }
+              : g,
+          )
+        : all.filter((g) => g.key !== key),
+    );
+  };
+  const save = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const payload = {
+        groups: groups.map((group, groupIndex) => ({
+          title: String(group.title),
+          key: String(group.key),
+          href: group.href || null,
+          filter: group.filter ?? null,
+          sortOrder: groupIndex,
+          isVisible: group.isVisible !== false,
+          coverImage: coverId(group) || null,
+          children: (group.children || []).map((child, childIndex) => ({
+            title: String(child.title),
+            key: String(child.key),
+            href: child.href || null,
+            filter: child.filter ?? null,
+            sortOrder: childIndex,
+            isVisible: child.isVisible !== false,
+            coverImage: coverId(child) || null,
+          })),
+        })),
+      };
+      const r = await fetch("/api/brand-catalog-navigation", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setError(
+          [data.error, data.field, data.reason].filter(Boolean).join(": ") ||
+            "Не удалось сохранить",
+        );
+        return;
+      }
+      setGroups(data.groups || groups);
+      setDirty(false);
+      setStatus("Изменения сохранены");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const coverId = (item: Item) =>
+    typeof item.coverImage === "object" ? item.coverImage?.id : item.coverImage;
+  const cover = (item: Item, parent?: string) => {
+    const id = coverId(item);
+    const image =
+      typeof item.coverImage === "object"
+        ? item.coverImage
+        : media.find((m) => m.id === id);
+    return (
+      <div className="brand-cover">
+        <div className="brand-cover-preview">
+          {image?.url ? (
+            <img src={image.url} alt="" />
+          ) : (
+            <span>Нет обложки</span>
+          )}
+        </div>
+        <div>
+          <div className="brand-cover-name">
+            Обложка: {image?.filename || (id ? `Media #${id}` : "Без обложки")}
+          </div>
+        </div>
+      </div>
+    );
+  };
+  const renderItem = (
+    item: Item,
+    parent: string | undefined,
+    index: number,
+    total: number,
+  ) => {
+    const menuKey = `${parent || "root"}:${item.key}`;
+    return (
+      <article className={parent ? "brand-child" : "brand-root"} key={item.key}>
+        <div className="brand-item-head">
+          <div>
+            <input
+              className="brand-title-input"
+              aria-label={`Название: ${item.title}`}
+              value={item.title}
+              onChange={(e) =>
+                update(item.key, { title: e.target.value }, parent)
+              }
+            />
+            {!parent && (
+              <div className="brand-count">
+                {item.children?.length || 0} подразделов
+              </div>
+            )}
+          </div>
+          <label className="brand-switch">
+            <input
+              type="checkbox"
+              checked={item.isVisible !== false}
+              onChange={(e) =>
+                update(item.key, { isVisible: e.target.checked }, parent)
+              }
+            />{" "}
+            Видим
+          </label>
+          <div className="action-menu-wrap">
+            <button
+              className="action-menu-trigger"
+              type="button"
+              aria-label="Действия"
+              onClick={() => setMenu(menu === menuKey ? null : menuKey)}
+            >
+              ⋮
+            </button>
+            {menu === menuKey && (
+              <div
+                className="action-menu"
+                role="menu"
+                onClick={() => setMenu(null)}
+              >
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => move(item.key, -1, parent)}
+                >
+                  Вверх
+                </button>
+                <button
+                  type="button"
+                  disabled={index === total - 1}
+                  onClick={() => move(item.key, 1, parent)}
+                >
+                  Вниз
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditor({ item: { ...item }, parent })}
+                >
+                  Изменить
+                </button>
+                {!parent && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditor({
+                        item: {
+                          title: "",
+                          key: "",
+                          isVisible: true,
+                          coverImage: null,
+                        },
+                        parent: item.key,
+                        isNew: true,
+                      })
+                    }
+                  >
+                    Добавить подраздел
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPicker({ key: item.key, parent })}
+                >
+                  {coverId(item) ? "Заменить обложку" : "Выбрать обложку"}
+                </button>
+                <button
+                  type="button"
+                  disabled={!coverId(item)}
+                  onClick={() => update(item.key, { coverImage: null }, parent)}
+                >
+                  Убрать обложку
+                </button>
+                <button
+                  className="danger"
+                  type="button"
+                  onClick={() => remove(item.key, parent)}
+                >
+                  Удалить
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {cover(item, parent)}
+      </article>
+    );
+  };
+  const commitEditor = () => {
+    if (!editor?.item.title.trim()) return;
+    const item = {
+      ...editor.item,
+      title: editor.item.title.trim(),
+      key: editor.item.key.trim() || itemKey(editor.item.title),
+    };
+    if (editor.isNew && editor.parent)
+      update(editor.parent, {
+        children: [
+          ...(groups.find((g) => g.key === editor.parent)?.children || []),
+          {
+            ...item,
+            sortOrder:
+              groups.find((g) => g.key === editor.parent)?.children?.length ||
+              0,
+          },
+        ],
+      });
+    else if (editor.isNew)
+      mark((all) => [...all, { ...item, sortOrder: all.length, children: [] }]);
+    else update(item.key, item, editor.parent);
+    setEditor(null);
+  };
+  return (
+    <main className="catalog-navigation-admin">
+      <header className="catalog-editor-header">
+        <div>
+          <h1>Навигация каталога</h1>
+          <p>Управление брендами, разделами и изображениями каталога</p>
+        </div>
+        <div className="catalog-editor-toolbar">
+          <button
+            type="button"
+            onClick={() =>
+              setOpen(Object.fromEntries(groups.map((g) => [g.key, true])))
+            }
+          >
+            Раскрыть всё
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setOpen(Object.fromEntries(groups.map((g) => [g.key, false])))
+            }
+          >
+            Свернуть всё
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setEditor({
+                item: { title: "", key: "", isVisible: true, coverImage: null },
+                isNew: true,
+              })
+            }
+          >
+            Добавить раздел
+          </button>
+          <button className="primary" type="button" disabled={saving} onClick={() => void save()}>
+            {saving ? 'Сохранение...' : 'Сохранить'}
+          </button>
+        </div>
+      </header>
+      {dirty && (
+        <p className="save-status pending">Есть несохранённые изменения</p>
+      )}
+      {status && <p className="save-status success">{status}</p>}
+      {error && (
+        <p role="alert" className="catalog-navigation-error">
+          {error}
+        </p>
+      )}
+      <div className="brand-nav-grid">
+        {groups.map((group, index) => (
+          <section className="brand-nav-card" key={group.key}>
+            <button
+              className="brand-nav-toggle"
+              type="button"
+              onClick={() =>
+                setOpen((s) => ({ ...s, [group.key]: s[group.key] === false }))
+              }
+            >
+              {open[group.key] === false ? "+" : "−"} <span>{group.title}</span>
+              <small>{group.children?.length || 0} подразделов</small>
+            </button>
+            {renderItem(group, undefined, index, groups.length)}
+            {open[group.key] !== false && (
+              <div className="brand-nav-children">
+                {(group.children || []).map((child, i, list) =>
+                  renderItem(child, group.key, i, list.length),
+                )}
+              </div>
+            )}
+          </section>
+        ))}
+      </div>
+      {editor && (
+        <div className="catalog-modal-backdrop">
+          <div className="catalog-modal" role="dialog" aria-modal="true">
+            <h2>
+              {editor.isNew
+                ? editor.parent
+                  ? "Добавить подраздел"
+                  : "Добавить раздел"
+                : "Изменить пункт"}
+            </h2>
+            <label>
+              Название
+              <input
+                value={editor.item.title}
+                onChange={(e) =>
+                  setEditor({
+                    ...editor,
+                    item: { ...editor.item, title: e.target.value },
+                  })
+                }
+              />
+            </label>
+            <label className="brand-switch">
+              <input
+                type="checkbox"
+                checked={editor.item.isVisible !== false}
+                onChange={(e) =>
+                  setEditor({
+                    ...editor,
+                    item: { ...editor.item, isVisible: e.target.checked },
+                  })
+                }
+              />{" "}
+              Видим
+            </label>
+            <div className="modal-actions">
+              <button type="button" onClick={() => setEditor(null)}>
+                Отмена
+              </button>
+              <button className="primary" type="button" onClick={commitEditor}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {picker && (
+        <div className="catalog-modal-backdrop">
+          <div
+            className="catalog-modal media-picker"
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2>Выбрать обложку</h2>
+            <input
+              placeholder="Поиск по имени файла"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <div className="media-grid">
+              {media
+                .filter((m) =>
+                  (m.filename || "")
+                    .toLowerCase()
+                    .includes(query.toLowerCase()),
+                )
+                .map((m) => (
+                  <button
+                    className="media-option"
+                    type="button"
+                    key={m.id}
+                    onClick={() => {
+                      update(picker.key, { coverImage: m.id }, picker.parent);
+                      setPicker(null);
+                    }}
+                  >
+                    {m.url && <img src={m.url} alt="" />}
+                    <span>{m.filename || `Media #${m.id}`}</span>
+                  </button>
+                ))}
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  update(picker.key, { coverImage: null }, picker.parent);
+                  setPicker(null);
+                }}
+              >
+                Без обложки
+              </button>
+              <button type="button" onClick={() => setPicker(null)}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
 }

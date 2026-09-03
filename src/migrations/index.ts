@@ -46,6 +46,8 @@ import * as migration_20260830_240000_split_charging_products from './20260830_2
 import * as migration_20260831_150000_product_condition from './20260831_150000_product_condition';
 import * as migration_20260831_170000_catalog_navigation_cover_image from './20260831_170000_catalog_navigation_cover_image';
 import * as migration_20260831_173000_catalog_navigation_cover_payload_shape from './20260831_173000_catalog_navigation_cover_payload_shape';
+import * as migration_20260902_120000_brand_catalog_navigation_schema from './20260902_120000_brand_catalog_navigation_schema';
+import * as migration_20260902_120000_brand_catalog_navigation_ids from './20260902_120000_brand_catalog_navigation_ids';
 
 export const migrations = [
   {
@@ -282,5 +284,15 @@ export const migrations = [
     up: migration_20260831_173000_catalog_navigation_cover_payload_shape.up,
     down: migration_20260831_173000_catalog_navigation_cover_payload_shape.down,
     name: '20260831_173000_catalog_navigation_cover_payload_shape'
+  },
+  {
+    up: migration_20260902_120000_brand_catalog_navigation_schema.up,
+    down: migration_20260902_120000_brand_catalog_navigation_schema.down,
+    name: '20260902_120000_brand_catalog_navigation_schema'
+  },
+  {
+    up: migration_20260902_120000_brand_catalog_navigation_ids.up,
+    down: migration_20260902_120000_brand_catalog_navigation_ids.down,
+    name: '20260902_120000_brand_catalog_navigation_ids'
   },
 ];

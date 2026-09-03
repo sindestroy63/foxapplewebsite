@@ -107,6 +107,26 @@ export default function TradeInView() {
     }
   }
 
+  const remove = async (product: TradeInProduct) => {
+    if (!window.confirm(`Удалить Trade-in товар «${product.name}»?`)) return
+    setBusy(true)
+    setError('')
+    try {
+      const response = await fetch('/api/trade-in-products', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: product.id }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Не удалось удалить Trade-in товар.')
+      await load()
+    } catch (removeError) {
+      setError(removeError instanceof Error ? removeError.message : 'Ошибка удаления.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (form) {
     return (
       <main className={styles.page}>
@@ -146,7 +166,7 @@ export default function TradeInView() {
             <tbody>{products.map((product) => (
               <tr key={product.id}>
                 <td>{product.name}</td><td>{product.price}</td><td><code>{product.slug}</code></td>
-                <td><button type="button" onClick={() => { setError(''); setForm(toForm(product)) }}>Редактировать</button></td>
+                <td><button type="button" onClick={() => { setError(''); setForm(toForm(product)) }}>Редактировать</button> <button type="button" disabled={busy} onClick={() => void remove(product)}>Удалить</button></td>
               </tr>
             ))}</tbody>
           </table>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CatalogNavNode } from '@/lib/cms'
+import type { BrandMenu } from '@/lib/brand-catalog-menu'
 
 const PANEL_WIDTH = 252
 const PRODUCT_PANEL_WIDTH = 320
@@ -16,7 +17,7 @@ const Badge = ({ node }: { node: CatalogNavNode }) => node.isNew
 
 type Direction = 'right' | 'left'
 
-export function DesktopCatalogMenu({ nodes, trailingLink }: { nodes: CatalogNavNode[]; trailingLink?: { href: string; label: string } }) {
+export function DesktopCatalogMenu({ nodes, trailingLink, brandMenu }: { nodes: CatalogNavNode[]; trailingLink?: { href: string; label: string }; brandMenu?: BrandMenu[] }) {
   const groups = nodes.filter((node) => node.kind === 'group')
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
@@ -101,7 +102,7 @@ export function DesktopCatalogMenu({ nodes, trailingLink }: { nodes: CatalogNavN
   </div>
 
   return <div ref={rootRef} className={`desktop-catalog-nav desktop-catalog-nav--${direction}`} onPointerEnter={cancelClose} onPointerLeave={(event) => { const next = event.relatedTarget as Node | null; if (!next || (!rootRef.current?.contains(next) && !flyoutRef.current?.contains(next))) scheduleClose() }} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); closeMenu() } }}>
-    <div className="desktop-catalog-groups">{groups.map((group) => <Link key={group.id} data-group-id={group.id} href={group.href} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</Link>)}{trailingLink && <Link href={trailingLink.href} className="nav-dropdown-trigger">{trailingLink.label}</Link>}</div>
+    <div className="desktop-catalog-groups">{brandMenu ? brandMenu.map((brand) => <div key={brand.label} className="nav-dropdown"><Link href={brand.href} className="nav-dropdown-trigger">{brand.label}{brand.items.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</Link>{brand.items.length > 0 && <div className="nav-dropdown-menu">{brand.items.map((item) => <Link key={item.href + item.label} href={item.href}>{item.label}</Link>)}</div>}</div>) : groups.map((group) => <Link key={group.id} data-group-id={group.id} href={group.href} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</Link>)}{trailingLink && <Link href={trailingLink.href} className="nav-dropdown-trigger">{trailingLink.label}</Link>}</div>
     {typeof document !== 'undefined' && flyout ? createPortal(flyout, document.body) : null}
   </div>
 }

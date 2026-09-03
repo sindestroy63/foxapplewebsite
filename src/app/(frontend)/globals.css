@@ -224,6 +224,7 @@ textarea {
   gap: 14px 18px;
   flex-wrap: wrap;
   max-width: 100%;
+  min-width: 0;
   color: var(--ink);
   font-size: 13px;
   font-weight: 500;
@@ -2565,7 +2566,8 @@ a.contact-item:hover {
 }
 
 .desktop-catalog-nav { position: relative; z-index: 1000; isolation: isolate; }
-.desktop-catalog-groups { position: relative; z-index: 0; display: grid; grid-template-columns: repeat(5, max-content); grid-template-rows: repeat(2, minmax(28px, auto)); align-items: center; justify-content: center; column-gap: 28px; row-gap: 12px; }
+.desktop-catalog-nav { width: 100%; min-width: 0; }
+.desktop-catalog-groups { position: relative; z-index: 0; display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: clamp(8px, 1.2vw, 20px); min-width: max-content; }
 .catalog-flyout { position: absolute; top: 100%; left: 0; z-index: 1001; width: 252px; max-height: min(620px, calc(100vh - 140px)); overflow: visible; pointer-events: auto; padding: 8px; background: #fff; opacity: 1; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow-lg); }
 .catalog-flyout--portal { position: fixed; }
 .catalog-flyout-list { max-height: min(604px, calc(100vh - 156px)); overflow-y: auto; overflow-x: hidden; }
@@ -2617,8 +2619,14 @@ a.contact-item:hover {
 .mobile-tree-link span, .mobile-tree-level summary span { min-width: 0; overflow-wrap: anywhere; }
 
 @media (max-width: 1100px) {
-  .desktop-catalog-groups { column-gap: 20px; row-gap: 10px; }
+  .desktop-catalog-groups { gap: 10px; }
+  .desktop-catalog-groups .nav-dropdown-trigger { font-size: 12px; }
   .catalog-mega-menu { width: calc(100vw - 24px); }
+}
+
+@media (min-width: 769px) and (max-width: 1250px) {
+  .desktop-catalog-groups { gap: 6px; }
+  .desktop-catalog-groups .nav-dropdown-trigger { font-size: 11px; }
 }
 
 .product-card-media-wrap {

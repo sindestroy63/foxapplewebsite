@@ -7,6 +7,7 @@ import { DesktopCatalogMenu } from '@/components/DesktopCatalogMenu'
 import { normalizePhone } from '@/lib/format'
 import type { CatalogNavNode, NavCategory, NavGroup } from '@/lib/cms'
 import type { SiteSettings } from '@/lib/types'
+import type { BrandMenu } from '@/lib/brand-catalog-menu'
 
 const secondaryNav = [
   { href: '/trade-in', label: 'Trade-In' },
@@ -22,9 +23,12 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
   </div>
 }
 
-export function Header({ settings, navData, groupNavData, catalogNavigation }: { settings: SiteSettings; navData?: NavCategory[]; groupNavData?: NavGroup[]; catalogNavigation?: CatalogNavNode[] }) {
+export function Header({ settings, navData, groupNavData, brandNavigation }: { settings: SiteSettings; navData?: NavCategory[]; groupNavData?: NavGroup[]; brandNavigation?: Array<{ title: string; key: string; href?: string; isVisible?: boolean; sortOrder?: number; coverImage?: import('@/lib/types').Media | null; children?: Array<{ title: string; key: string; href?: string; isVisible?: boolean; sortOrder?: number; coverImage?: import('@/lib/types').Media | null }> }> }) {
   const phone = settings.phone || '+7 (917) 954-64-64'
-  const catalogMenuNodes = catalogNavigation?.filter((node) => !(node.kind === 'group' && node.href.includes('group=trade-in')))
+  const brandMenu: BrandMenu[] = (brandNavigation || []).map((group) => ({
+    label: group.title, key: group.key, href: group.href || '/catalog', isVisible: group.isVisible, sortOrder: group.sortOrder, coverImage: group.coverImage,
+    items: (group.children || []).map((child) => ({ label: child.title, key: child.key, href: child.href || '/catalog', isVisible: child.isVisible, sortOrder: child.sortOrder, coverImage: child.coverImage })),
+  }))
 
   return (
     <header className="site-header">
@@ -45,24 +49,7 @@ export function Header({ settings, navData, groupNavData, catalogNavigation }: {
         </Link>
 
         <nav className="desktop-nav" aria-label="Основная навигация">
-          {catalogMenuNodes && catalogMenuNodes.length > 0 ? <DesktopCatalogMenu nodes={catalogMenuNodes} trailingLink={{ href: '/trade-in/catalog', label: 'Каталог Trade-in' }} /> : groupNavData && groupNavData.length > 0 ? (
-            groupNavData.map((group) => (
-              <div key={group.slug} className="nav-dropdown">
-                <Link href={`/catalog?group=${group.slug}`} className="nav-dropdown-trigger">
-                  {group.name}
-                  {group.brands.length > 0 && <span className="nav-arrow">&#9662;</span>}
-                </Link>
-                {group.brands.length > 0 && (
-                  <div className="nav-dropdown-menu">
-                    {group.brands.map((brand) => <Link key={brand} href={`/catalog?group=${group.slug}&brand=${encodeURIComponent(brand)}`}>{brand}</Link>)}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <Link href="/catalog">Каталог</Link>
-          )}
-          {(!catalogMenuNodes || catalogMenuNodes.length === 0) && <Link href="/trade-in/catalog" className="nav-dropdown-trigger">Каталог Trade-in</Link>}
+          <DesktopCatalogMenu nodes={[]} brandMenu={brandMenu} />
         </nav>
 
         <div className="header-actions">
@@ -70,7 +57,7 @@ export function Header({ settings, navData, groupNavData, catalogNavigation }: {
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>
             Позвонить
           </a>
-          <MobileMenu phone={normalizePhone(phone)} navData={navData} groupNavData={groupNavData} catalogNavigation={catalogNavigation} />
+          <MobileMenu phone={normalizePhone(phone)} navData={navData} groupNavData={groupNavData} brandNavigation={brandMenu} />
         </div>
       </div>
     </header>

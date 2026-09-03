@@ -78,22 +78,32 @@ test('placement and system UI are read-only and do not add persistence logic', (
   assert.match(products, /name: 'sku'[\s\S]*?access: \{ update: \(\) => false \}/)
 })
 
-test('catalog placement selector uses existing nodes and sends only IDs', () => {
-  assert.match(placement, /catalog-placement-options/)
-  assert.match(placement, /catalog-placement/)
-  assert.match(placement, /productId: documentId/)
-  assert.match(placement, /placementId/)
-  assert.match(placement, /window\.confirm/)
+test('catalog placement selector uses the new Global navigation and writes form state', () => {
+  assert.match(placement, /brand-catalog-navigation/)
+  assert.doesNotMatch(placement, /catalog-placement-options/)
+  assert.doesNotMatch(placement, /fetch\(['"]\/api\/catalog-placement/)
   assert.match(placement, /<select/)
   assert.match(placement, /productGroupField\.setValue/)
-  assert.match(placement, /Группа/)
-  assert.match(placement, /Бренд/)
-  assert.match(placement, /Линейка/)
-  assert.match(placement, /Без бренда/)
-  assert.match(placement, /Без линейки/)
-  assert.match(placement, /setBrandId\(''\)/)
-  assert.match(placement, /setLineId\(''\)/)
-  assert.match(placement, /selectedLine\?\.id \|\| selectedBrand\?\.id \|\| selectedGroup\?\.id/)
+  assert.match(placement, /Брендовый раздел/)
+  assert.match(placement, /Подраздел/)
+  assert.match(placement, /Текущий путь/)
+  assert.match(placement, /conditionField\.setValue/)
+})
+
+test('catalog placement hydrates from Payload tuple form state without mutating on open', () => {
+  assert.match(placement, /useFormFields\(\(\[fields\](?:: any)?\)/)
+  assert.match(placement, /resolveProductCatalogPlacement\(values\)/)
+  assert.match(placement, /Hydrate the visual path from Payload's form state/)
+  assert.match(placement, /setGroupKey\(\(current\) => current \|\| placement\.groupKey\)/)
+  assert.match(placement, /setChildKey\(\(current\) => current \|\| placement\.childKey \|\| ''\)/)
+  assert.match(placement, /condition: fields\.condition\?\.value/)
+})
+
+test('shared placement resolver maps Apple smartphones to APPLE/iPhone', () => {
+  const helper = fs.readFileSync('src/lib/product-catalog-placement.ts', 'utf8')
+  assert.match(helper, /placement\('apple', 'APPLE', 'iphone', 'iPhone', 'smartphones', 'Apple'\)/)
+  assert.match(helper, /export function resolveProductCatalogPlacement/)
+  assert.match(helper, /item\.productGroup === productGroup && item\.brand === brand/)
 })
 
 test('legacy rich-text description is hidden while shortDescription remains the manager field', () => {

@@ -22,10 +22,6 @@ export const Users: CollectionConfig = {
   },
   hooks: {
     beforeChange: [({ data, originalDoc }) => {
-      if (originalDoc && data) {
-        if (data.email && data.email !== originalDoc.email) throw new Error('Email cannot be changed from account settings.')
-        if (data.role && data.role !== originalDoc.role) throw new Error('Role cannot be changed from account settings.')
-      }
       return data
     }],
   },
@@ -46,9 +42,7 @@ export const Users: CollectionConfig = {
         { label: 'Администратор', value: 'admin' },
         { label: 'Менеджер', value: 'manager' },
       ],
-      access: {
-        update: () => false,
-      },
+      access: { update: () => false },
       admin: {
         description: 'Суперадмин — полный доступ. Админ — управление каталогом и создание менеджеров. Менеджер — только редактирование товаров.',
       },

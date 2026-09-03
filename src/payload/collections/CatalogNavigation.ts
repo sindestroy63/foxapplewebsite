@@ -1,11 +1,11 @@
 import type { CollectionConfig, Where } from 'payload'
-import { admins } from '../access'
+import { anyone, denyAll } from '../access'
 const kinds = [{ label: 'Группа', value: 'group' }, { label: 'Бренд', value: 'brand' }, { label: 'Линейка', value: 'line' }, { label: 'Товар', value: 'product' }, { label: 'Своя ссылка', value: 'custom_link' }]
 const allowedParents: Record<string, string[]> = { brand: ['group'], line: ['group', 'brand'], product: ['group', 'brand', 'line'], custom_link: ['group', 'brand', 'line'] }
 export const CatalogNavigation: CollectionConfig = {
   slug: 'catalog-navigation', labels: { singular: 'Пункт навигации', plural: 'Навигация каталога' },
   admin: { hidden: true, useAsTitle: 'title', defaultColumns: ['parent', 'sortOrder', 'title', 'kind', 'product', 'isVisible', 'isNew'], group: 'Настройки сайта' },
-  access: { read: ({ req }) => !req.user || req.user.role === 'admin' || req.user.role === 'superadmin', create: admins, update: admins, delete: admins },
+  access: { read: anyone, create: denyAll, update: denyAll, delete: denyAll },
   hooks: { beforeValidate: [async ({ data, req, originalDoc }) => {
     if (!data) return data
     const kind = data.kind || originalDoc?.kind, parentId = data.parent ?? originalDoc?.parent, productId = data.product ?? originalDoc?.product

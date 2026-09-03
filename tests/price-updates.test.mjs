@@ -96,7 +96,7 @@ test('price import decision controls are not clipped', async () => {
   assert.match(source, /td:last-child[\s\S]*min-width: 220px/)
 })
 
-test('internal audit collections and site globals are hidden and access-closed', async () => {
+test('internal audit collections and globals stay protected from CMS mutations', async () => {
   const config = await readFile(new URL('../src/payload.config.ts', import.meta.url), 'utf8')
   const collectionFiles = [
     'PriceUpdateBatches.ts', 'PriceUpdateItems.ts', 'PriceImportSessions.ts', 'PriceImportItems.ts',
@@ -109,7 +109,8 @@ test('internal audit collections and site globals are hidden and access-closed',
   for (const file of ['SiteSettings.ts', 'SiteAppearance.ts']) {
     const source = await readFile(new URL(`../src/payload/globals/${file}`, import.meta.url), 'utf8')
     assert.match(source, /admin:\s*\{\s*hidden:\s*true\s*\}/)
-    assert.match(source, /read:\s*denyAll/)
+    assert.match(source, /read:\s*anyone/)
+    assert.match(source, /update:\s*denyAll/)
   }
   assert.match(config, /priceUpdates:\s*\{/)
   assert.match(config, /path:\s*'\/price-updates'/)

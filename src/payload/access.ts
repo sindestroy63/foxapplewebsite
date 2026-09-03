@@ -12,18 +12,23 @@ export const denyAll: Access = () => false
 
 export const authenticated: Access = ({ req }) => Boolean(req.user)
 
+export function hasFullAdminAccess(user: unknown): boolean {
+  const role = (user as { role?: Role } | null)?.role
+  return role === 'manager' || role === 'admin' || role === 'superadmin'
+}
+
 const adminsImplementation = ({ req }: { req: any }) => {
   const role = getRole(req)
-  return role === 'superadmin' || role === 'admin'
+  return hasFullAdminAccess(req.user)
 }
 export const admins = adminsImplementation as Access & FieldAccess
 
-export const superadmins: Access = ({ req }) => getRole(req) === 'superadmin'
+export const superadmins: Access = ({ req }) => hasFullAdminAccess(req.user)
 
 export const adminsOrFirstUser: Access = async ({ req }) => {
   if (req.user) {
     const role = getRole(req)
-    return role === 'superadmin' || role === 'admin'
+    return hasFullAdminAccess(req.user)
   }
 
   const users = await req.payload.count({ collection: 'users' })
@@ -31,12 +36,6 @@ export const adminsOrFirstUser: Access = async ({ req }) => {
 }
 
 export const roleFieldAccess: FieldAccess = ({ req, siblingData }) => {
-  const myRole = getRole(req)
-  if (myRole === 'superadmin') return true
-  if (myRole === 'admin') {
-    const targetRole = siblingData?.role as Role | undefined
-    if (targetRole === 'superadmin' || targetRole === 'admin') return false
-    return true
-  }
-  return false
+  void siblingData
+  return hasFullAdminAccess(req.user)
 }

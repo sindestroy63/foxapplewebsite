@@ -201,7 +201,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
 
       <div className="detail-info">
         <p className="detail-eyebrow">Карточка товара</p>
-        <h1 className="detail-title">{product.model || product.name}</h1>
+        <h1 className="detail-title">{product.name}</h1>
 
         {hasVariants && (stringAxes.length > 0 || hasColors) && (
           <div className="variant-selector">

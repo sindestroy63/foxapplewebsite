@@ -68,7 +68,7 @@ export function ProductCard({ product, settings }: { product: Product; settings:
 
       <div className="product-card-body">
         <Link href={productHref(product)} className="product-title">
-          {product.model || product.name}
+          {product.name}
         </Link>
         <div className="product-row">
           <div className="price-block">

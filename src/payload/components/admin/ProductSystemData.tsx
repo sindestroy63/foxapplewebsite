@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth, useFormFields } from '@payloadcms/ui'
+import { hasFullAdminAccess } from '../../access'
 
 export default function ProductSystemData() {
   const { user } = useAuth<{ id?: string | number; role?: string }>()
@@ -28,7 +29,7 @@ export default function ProductSystemData() {
     legacyConnectivity: fields.connectivity?.value,
   }))
   const name = String(values.name || values.model || 'Техника в ФОХСТОР').trim()
-  const isSuperadmin = user?.role === 'superadmin' || user?.role === 'admin'
+  const isSuperadmin = hasFullAdminAccess(user)
   const variantCount = Array.isArray(values.variants) ? values.variants.length : 0
   const imageCount = Array.isArray(values.images) ? values.images.length : 0
   const deviceModelLabel = values.deviceModel && typeof values.deviceModel === 'object'
