@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const access = fs.readFileSync('src/payload/access.ts', 'utf8')
 const products = fs.readFileSync('src/payload/collections/Products.ts', 'utf8')
+const leads = fs.readFileSync('src/payload/collections/Leads.ts', 'utf8')
 const users = fs.readFileSync('src/payload/collections/Users.ts', 'utf8')
 const categories = fs.readFileSync('src/payload/collections/Categories.ts', 'utf8')
 const globals = [
@@ -31,6 +32,14 @@ test('manager retains working products, Trade-in, and the custom navigation view
   assert.match(navigation, /access: \{ read: anyone, create: denyAll, update: denyAll, delete: denyAll \}/)
   assert.match(tradeInNav, /hasFullAdminAccess/)
   assert.match(catalogNav, /hasFullAdminAccess/)
+})
+
+test('Leads collection is visible to full-admin roles without changing its access contract', () => {
+  assert.match(leads, /admin:\s*\{[\s\S]*hidden:\s*false/)
+  assert.match(leads, /read: admins/)
+  assert.match(leads, /create: anyone/)
+  assert.match(leads, /update: admins/)
+  assert.match(leads, /delete: admins/)
 })
 
 test('standard CatalogNavigation collection stays hidden while custom navigation is restored', async () => {

@@ -89,6 +89,20 @@ export function getCatalogPlacementByChildKey(childKey?: string | null) {
   return PRODUCT_CATALOG_PLACEMENTS.find((item) => item.childKey === childKey)
 }
 
+export function getCatalogPlacementTabs(fields: { productGroup?: string; brand?: string; line?: string; appleAccessories?: boolean }) {
+  const brand = fields.brand?.trim()
+  return PRODUCT_CATALOG_PLACEMENTS.filter((item) => {
+    if (!item.childKey || item.productGroup === 'trade-in') return false
+    if (brand && item.brand !== brand) return false
+    if (!brand && fields.productGroup !== 'other') return false
+    if (fields.productGroup && fields.productGroup !== 'other' && item.productGroup !== fields.productGroup) return false
+    if (fields.productGroup === 'other' && item.groupKey !== 'other') return false
+    if (fields.appleAccessories && item.childKey !== 'apple-accessories') return false
+    if (fields.line && item.productLine !== fields.line) return false
+    return true
+  })
+}
+
 export function resolveProductCatalogPlacement(fields: ProductCatalogFields): CatalogPlacementDefinition | null {
   const storedProductGroup = String(fields.productGroup || '')
   const productGroup = storedProductGroup === 'accessories' ? 'other' : storedProductGroup

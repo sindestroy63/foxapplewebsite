@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { getBrandCatalogNavigation, getGroupNavData, getProducts, getProductsByProductGroup, readCatalogParams } from '@/lib/cms'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
 import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
+import { getCatalogPlacementTabs, resolveProductCatalogPlacement } from '@/lib/product-catalog-placement'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,12 +30,15 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       getGroupNavData(),
     ])
     const { default: GroupCatalogPage } = await import('@/components/GroupCatalogPage')
-    return <GroupCatalogPage group={group!} products={products} brands={groupNavigation.find((item) => item.slug === groupSlug)?.brands} />
+    const placement = resolveProductCatalogPlacement({ productGroup: groupSlug, brand: filters.brand, productLine: filters.line })
+    const heading = placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : undefined
+    return <GroupCatalogPage group={group!} products={products} heading={heading} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} placementTabs={getCatalogPlacementTabs({ productGroup: groupSlug, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories })} activePlacement={placement} />
   }
   if (filters.brand || filters.line || filters.query) {
     const products = await getProducts({ filters })
     const title = filters.line || filters.brand || 'Каталог'
-    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" /></div></section>
+    const placement = resolveProductCatalogPlacement({ productGroup: filters.productGroup, brand: filters.brand, productLine: filters.line })
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" placementTabs={getCatalogPlacementTabs({ productGroup: filters.productGroup, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories })} activePlacement={placement} breadcrumbBrand={placement && filters.brand ? filters.brand : undefined} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} /></div></section>
   }
   const brandNavigation = await getBrandCatalogNavigation()
   return (

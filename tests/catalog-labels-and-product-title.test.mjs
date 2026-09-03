@@ -22,6 +22,28 @@ test('product renderers always display Products.name, never model or productLine
   assert.doesNotMatch(detail, /product\.model \|\| product\.name/)
 })
 
+test('branded catalog headings and breadcrumbs use the shared placement resolver', () => {
+  const page = fs.readFileSync('src/app/(frontend)/catalog/page.tsx', 'utf8')
+  const group = fs.readFileSync('src/components/GroupCatalogPage.tsx', 'utf8')
+  const client = fs.readFileSync('src/components/CategoryCatalogClient.tsx', 'utf8')
+  assert.match(page, /resolveProductCatalogPlacement\(\{ productGroup: groupSlug, brand: filters\.brand, productLine: filters\.line \}\)/)
+  assert.match(page, /filters\.brand \? `\$\{filters\.brand\} — \$\{placement\.childTitle/)
+  assert.match(group, /heading\?: string; breadcrumbChild\?: string/)
+  assert.match(client, /breadcrumbBrand\?: string/)
+  assert.match(client, /breadcrumbChild\?: string/)
+  assert.match(client, /breadcrumbBrand \?/)
+})
+
+test('catalog placement tabs use filtered brand subdivisions and preserve model level', () => {
+  const client = fs.readFileSync('src/components/CategoryCatalogClient.tsx', 'utf8')
+  const helper = fs.readFileSync('src/lib/product-catalog-placement.ts', 'utf8')
+  assert.match(helper, /export function getCatalogPlacementTabs/)
+  assert.match(client, /catalog-placement-tabs/)
+  assert.match(client, /activePlacement\?\.childKey === placement\.childKey/)
+  assert.match(client, /merged\.map\(\(product, idx\)/)
+  assert.match(client, /catalogPlacementHref\(placement\)/)
+})
+
 test('custom catalog navigation keeps cover editing and standard collection hidden', () => {
   const view = fs.readFileSync('src/payload/components/admin/CatalogNavigationView.tsx', 'utf8')
   const endpoint = fs.readFileSync('src/payload/catalog-navigation-admin.ts', 'utf8')

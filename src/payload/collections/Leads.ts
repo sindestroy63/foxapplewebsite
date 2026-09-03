@@ -11,7 +11,7 @@ export const Leads: CollectionConfig = {
   admin: {
     useAsTitle: 'phone',
     defaultColumns: ['createdAt', 'name', 'phone', 'telegram', 'product', 'source', 'status', 'telegramStatus'],
-    hidden: true, // Скрыто из админки - заявки теперь только в Telegram
+    hidden: false,
   },
   access: {
     read: admins,

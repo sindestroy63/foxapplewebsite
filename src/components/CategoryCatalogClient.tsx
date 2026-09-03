@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import type { Product, ProductVariant } from '@/lib/types'
 import { sortProductsByPriority } from '@/lib/sort'
 import { ProductDetailClient } from './ProductDetailClient'
+import { catalogPlacementHref, type CatalogPlacementDefinition } from '@/lib/product-catalog-placement'
 
 const CATEGORY_SUBTITLES: Record<string, string> = {
   iphone: 'Изысканные технологии в каждой детали.',
@@ -83,9 +84,13 @@ type Props = {
   phone: string
   telegramUsername?: string
   initialModelSlug?: string
+  breadcrumbBrand?: string
+  breadcrumbChild?: string
+  placementTabs?: CatalogPlacementDefinition[]
+  activePlacement?: CatalogPlacementDefinition | null
 }
 
-export function CategoryCatalogClient({ categoryName, categorySlug, products, phone, telegramUsername, initialModelSlug }: Props) {
+export function CategoryCatalogClient({ categoryName, categorySlug, products, phone, telegramUsername, initialModelSlug, breadcrumbBrand, breadcrumbChild, placementTabs, activePlacement }: Props) {
   const merged = useMemo(() => mergeByScreenSize(sortProductsByPriority(products)), [products])
 
   const [selectedIndex, setSelectedIndex] = useState(() => {
@@ -116,8 +121,12 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, ph
         <span className="breadcrumbs-sep">›</span>
         <a href="/catalog">Каталог</a>
         <span className="breadcrumbs-sep">›</span>
-        <span>{categoryName}</span>
+        {breadcrumbBrand ? <><span>{breadcrumbBrand}</span>{breadcrumbChild && <><span className="breadcrumbs-sep">›</span><span>{breadcrumbChild}</span></>}</> : <span>{categoryName}</span>}
       </nav>
+
+      {placementTabs && placementTabs.length > 0 && <nav className="model-tabs catalog-placement-tabs" aria-label="Подразделы">
+        {placementTabs.map((placement) => <a key={placement.childKey} className={`model-tab${activePlacement?.childKey === placement.childKey ? ' model-tab--active' : ''}`} href={catalogPlacementHref(placement)}>{placement.childTitle}</a>)}
+      </nav>}
 
       <h1 className="catalog-category-title">{categoryName}</h1>
       {CATEGORY_SUBTITLES[categorySlug] && (
