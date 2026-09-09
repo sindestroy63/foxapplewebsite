@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Контакты',
-  description: 'ФОХСТОР: Самара, ул. Московское шоссе 55. Телефон, Telegram и график работы магазина.',
+  description: 'ФОХСТОР: ТЦ «Русь на Волге», 1 этаж, секция 113. Телефон, Telegram и график работы магазина.',
   alternates: {
     canonical: '/contacts',
   },

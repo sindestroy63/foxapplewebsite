@@ -112,6 +112,20 @@ export async function seedDictionaries(payload: Payload, categoriesBySlug: Map<s
     simIds.set(s.value, doc.id as number)
   }
 
+  // Watch case sizes live in their own characteristic collection. The old
+  // storage options are archived by migration and cannot be selected on a
+  // device model anymore.
+  const sizeIds = new Map<string, number>()
+  for (const s of STORAGES.filter((option) => option.value.endsWith('mm'))) {
+    const doc = await upsert(payload, 'variant-size-options', 'key', s.value, {
+      key: s.value,
+      label: s.value,
+      sortOrder: s.sortOrder,
+      archived: false,
+    })
+    sizeIds.set(s.value, doc.id as number)
+  }
+
   for (const dm of DMS) {
     const categoryId = categoriesBySlug.get(dm.cat)
     if (!categoryId) continue
@@ -119,7 +133,8 @@ export async function seedDictionaries(payload: Payload, categoriesBySlug: Map<s
       name: dm.name,
       category: categoryId,
       availableColors: dm.colors.map((v) => colorIds.get(v)).filter(Boolean),
-      availableStorage: dm.stor.map((v) => storageIds.get(v)).filter(Boolean),
+      availableStorage: dm.isSize ? [] : dm.stor.map((v) => storageIds.get(v)).filter(Boolean),
+      availableSizes: dm.isSize ? dm.stor.map((v) => sizeIds.get(v)).filter(Boolean) : [],
       availableSim: dm.sim.map((v) => simIds.get(v)).filter(Boolean),
       chip: dm.chip, ram: dm.ram, screenSize: dm.scr, connectivity: dm.conn,
       basePrice: dm.bp, priceStep: dm.ps, storageIsSize: dm.isSize, sortOrder: dm.so,

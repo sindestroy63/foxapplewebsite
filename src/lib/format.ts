@@ -32,24 +32,16 @@ export function productDisplayTitle(product: Pick<Product, 'model' | 'name'>): s
   return product.model || product.name
 }
 
-export function mapEmbedUrl(address?: string, mapUrl?: string): string {
-  if (mapUrl && mapUrl.includes('yandex.ru/map-widget')) {
-    return mapUrl
-  }
-
-  const { lat, lon } = CONTACTS.mapCoordinates
-  return `https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=17&l=map&pt=${lon}%2C${lat}%2Cpm2rdm&lang=ru_RU`
+function yandexMapQuery(address?: string): string {
+  return encodeURIComponent(`Самара, ${address || CONTACTS.address}`)
 }
 
-export function mapLinkUrl(address?: string, mapUrl?: string): string {
-  if (mapUrl && !mapUrl.includes('google.com/maps')) {
-    return mapUrl
-  }
+export function mapEmbedUrl(address?: string, _mapUrl?: string): string {
+  return `https://yandex.ru/map-widget/v1/?mode=search&text=${yandexMapQuery(address)}&z=17&lang=ru_RU`
+}
 
-  const addr = address || CONTACTS.address
-  const query = encodeURIComponent(addr)
-  const { lat, lon } = CONTACTS.mapCoordinates
-  return `https://yandex.ru/maps/?ll=${lon}%2C${lat}&z=16&pt=${lon}%2C${lat}%2Cpm2rdm&text=${query}&mode=search`
+export function mapLinkUrl(address?: string, _mapUrl?: string): string {
+  return `https://yandex.ru/maps/?mode=search&text=${yandexMapQuery(address)}&z=17`
 }
 
 export function statusLabel(status?: ProductStatus): string {

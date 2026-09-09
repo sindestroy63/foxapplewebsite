@@ -40,6 +40,10 @@ export function Header({ settings, navData, groupNavData, brandNavigation }: { s
             </Link>
           ))}
         </nav>
+        <div className="topbar-details">
+          <span>{settings.address}</span>
+          <span>{settings.workTime}</span>
+        </div>
         <a className="topbar-phone" href={`tel:${normalizePhone(phone)}`}>{phone}</a>
       </div>
 
@@ -57,7 +61,7 @@ export function Header({ settings, navData, groupNavData, brandNavigation }: { s
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>
             Позвонить
           </a>
-          <MobileMenu phone={normalizePhone(phone)} navData={navData} groupNavData={groupNavData} brandNavigation={brandMenu} />
+          <MobileMenu phone={normalizePhone(phone)} settings={settings} navData={navData} groupNavData={groupNavData} brandNavigation={brandMenu} />
         </div>
       </div>
     </header>

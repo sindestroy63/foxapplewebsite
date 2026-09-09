@@ -27,13 +27,13 @@ export const SiteSettings: GlobalConfig = {
       name: 'telegramUsername',
       type: 'text',
       label: 'Telegram',
-      defaultValue: '@FoxAppleSeller',
+      defaultValue: '@FoxStorSeller',
     },
     {
       name: 'telegramChannelUrl',
       type: 'text',
       label: 'Telegram-канал',
-      defaultValue: 'https://t.me/foxappleru',
+      defaultValue: 'https://t.me/foxstorerf',
     },
     {
       name: 'whatsappUrl',
@@ -44,13 +44,13 @@ export const SiteSettings: GlobalConfig = {
       name: 'address',
       type: 'text',
       label: 'Адрес',
-      defaultValue: 'Самара, ул. Московское шоссе 55',
+      defaultValue: 'ТЦ «Русь на Волге», 1 этаж, секция 113',
     },
     {
       name: 'workTime',
       type: 'text',
       label: 'График',
-      defaultValue: 'с 11:00 до 20:00, ежедневно',
+      defaultValue: '10:00–21:00 ежедневно',
     },
     {
       name: 'mapUrl',

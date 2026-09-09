@@ -48,6 +48,7 @@ import * as migration_20260831_170000_catalog_navigation_cover_image from './202
 import * as migration_20260831_173000_catalog_navigation_cover_payload_shape from './20260831_173000_catalog_navigation_cover_payload_shape';
 import * as migration_20260902_120000_brand_catalog_navigation_schema from './20260902_120000_brand_catalog_navigation_schema';
 import * as migration_20260902_120000_brand_catalog_navigation_ids from './20260902_120000_brand_catalog_navigation_ids';
+import * as migration_20260909_150000_update_store_contacts from './20260909_150000_update_store_contacts';
 
 export const migrations = [
   {
@@ -294,5 +295,10 @@ export const migrations = [
     up: migration_20260902_120000_brand_catalog_navigation_ids.up,
     down: migration_20260902_120000_brand_catalog_navigation_ids.down,
     name: '20260902_120000_brand_catalog_navigation_ids'
+  },
+  {
+    up: migration_20260909_150000_update_store_contacts.up,
+    down: migration_20260909_150000_update_store_contacts.down,
+    name: '20260909_150000_update_store_contacts'
   },
 ];

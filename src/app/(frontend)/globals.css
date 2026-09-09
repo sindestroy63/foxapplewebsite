@@ -155,6 +155,19 @@ textarea {
   color: var(--ink);
 }
 
+.topbar-details {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.topbar-details span {
+  white-space: nowrap;
+}
+
 .topbar-phone {
   font-size: 12px;
   font-weight: 600;
@@ -2050,9 +2063,20 @@ a.contact-item:hover {
 }
 
 .mobile-nav-contact {
+  display: grid;
+  gap: 6px;
   margin-top: auto;
   padding-top: 24px;
   border-top: 1px solid var(--line);
+}
+
+.mobile-nav-contact > a:not(.button),
+.mobile-nav-address,
+.mobile-nav-hours {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .mobile-nav-phone {

@@ -1,15 +1,11 @@
 export const CONTACTS = {
   shopName: 'ФОХСТОР',
   phone: '+7 (917) 954-64-64',
-  telegramUsername: '@FoxAppleSeller',
-  telegramUrl: 'https://t.me/FoxAppleSeller',
-  telegramChannelUrl: 'https://t.me/foxappleru',
-  address: 'Самара, ул. Московское шоссе 55',
-  mapCoordinates: {
-    lat: 53.224309,
-    lon: 50.192962,
-  },
-  workTime: 'с 11:00 до 20:00, ежедневно',
+  telegramUsername: '@FoxStorSeller',
+  telegramUrl: 'https://t.me/FoxStorSeller',
+  telegramChannelUrl: 'https://t.me/foxstorerf',
+  address: 'ТЦ «Русь на Волге», 1 этаж, секция 113',
+  workTime: '10:00–21:00 ежедневно',
   // Основной публичный домен (кириллица). Технический ASCII/punycode-эквивалент — secondaryDomain.
   mainDomain: 'фохстор.рф',
   secondaryDomain: 'xn--n1aagcfji.xn--p1ai',
