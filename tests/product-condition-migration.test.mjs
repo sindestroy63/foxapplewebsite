@@ -19,5 +19,5 @@ test('Products condition remains optional and constrained to new or used', () =>
   assert.match(field, /hidden: true/)
   assert.match(field, /readOnly: true/)
   assert.doesNotMatch(field, /required: true|defaultValue/)
-  assert.match(types, /condition\?: 'new' \| 'used' \| null/)
+  assert.match(types, /condition\?: (?:\()?['"]new['"] \| ['"]used['"](?:\))? \| null/)
 })

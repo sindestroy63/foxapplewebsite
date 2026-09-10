@@ -40,6 +40,22 @@ export function variantSku(
   return `VAR-${skuPart(productSlug, 'PRODUCT')}${descriptor}-V${stableSuffix}`
 }
 
+export function ensureVariantSkus<T extends { id?: unknown; sku?: string | null }>(productSlug: string, variants: T[], originalVariants: T[] = []): T[] {
+  const originalIDs = new Set(originalVariants.map((variant) => String(variant.id)))
+  const used = new Set(variants.map((variant) => normalizeSku(variant.sku)).filter((sku): sku is string => Boolean(sku)))
+  let skuIndex = 0
+  return variants.map((variant) => {
+    if (variant.sku || (variant.id && originalIDs.has(String(variant.id)))) return variant
+    let sku = ''
+    do {
+      sku = variantSku(productSlug, {}, skuIndex)
+      skuIndex += 1
+    } while (used.has(sku))
+    used.add(sku)
+    return { ...variant, sku }
+  })
+}
+
 type SkuVariant = { sku?: string | null }
 
 type ValidateProductSkuArgs = {

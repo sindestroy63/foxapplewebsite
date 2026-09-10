@@ -49,6 +49,8 @@ import * as migration_20260831_173000_catalog_navigation_cover_payload_shape fro
 import * as migration_20260902_120000_brand_catalog_navigation_schema from './20260902_120000_brand_catalog_navigation_schema';
 import * as migration_20260902_120000_brand_catalog_navigation_ids from './20260902_120000_brand_catalog_navigation_ids';
 import * as migration_20260909_150000_update_store_contacts from './20260909_150000_update_store_contacts';
+import * as migration_20260910_120000_backfill_product_type from './20260910_120000_backfill_product_type';
+import * as migration_20260910_130000_add_device_type from './20260910_130000_add_device_type';
 
 export const migrations = [
   {
@@ -300,5 +302,15 @@ export const migrations = [
     up: migration_20260909_150000_update_store_contacts.up,
     down: migration_20260909_150000_update_store_contacts.down,
     name: '20260909_150000_update_store_contacts'
+  },
+  {
+    up: migration_20260910_120000_backfill_product_type.up,
+    down: migration_20260910_120000_backfill_product_type.down,
+    name: '20260910_120000_backfill_product_type'
+  },
+  {
+    up: migration_20260910_130000_add_device_type.up,
+    down: migration_20260910_130000_add_device_type.down,
+    name: '20260910_130000_add_device_type'
   },
 ];

@@ -8,7 +8,8 @@ import { canManagePrices } from './access'
 import { prepareProductPriceUpdate } from './apply'
 import type { AICatalogItem } from './ai-response'
 import { buildPreviewPriceInput, candidateByKey, canManuallyConfirmMissingAttributes, type CatalogProduct, type MatchCandidate, matchCatalogItem } from './match'
-import { duplicateSkus, parsePriceUpdateInput } from './parse'
+import { duplicateSkus, parseFreeformPriceList, parsePriceUpdateInput } from './parse'
+import { normalizeModelKey } from './normalization.ts'
 import { parseManagerMessage } from './openai-parser'
 import { buildVerifiedPreviewRows, type VerifiedPreviewRow } from './verified-preview'
 import { formatPriceUpdateTarget } from './display.ts'
@@ -430,14 +431,31 @@ function catalogProduct(product: Record<string, any>): CatalogProduct {
       color: relationText(variant.color, ['englishLabel', 'russianLabel', 'value']),
       storage: relationText(variant.storage, ['value']),
       sim: relationText(variant.sim, ['label', 'value']),
-      ram: typeof variant.ram === 'string' ? variant.ram : undefined,
-      size: typeof variant.size === 'string' ? variant.size : undefined,
-      screenSize: typeof variant.screenSize === 'string' ? variant.screenSize : undefined,
-      connectivity: typeof variant.connectivity === 'string' ? variant.connectivity : undefined,
+      ram: relationText(variant.ramOption, ['key', 'label']) || (typeof variant.ram === 'string' ? variant.ram : undefined),
+      size: relationText(variant.sizeOption, ['key', 'label']) || (typeof variant.size === 'string' ? variant.size : undefined),
+      screenSize: relationText(variant.screenSizeOption, ['key', 'label']) || (typeof variant.screenSize === 'string' ? variant.screenSize : undefined),
+      connectivity: relationText(variant.connectivityOption, ['key', 'label']) || (typeof variant.connectivity === 'string' ? variant.connectivity : undefined),
       generation: typeof variant.generation === 'string' ? variant.generation : undefined,
+      chip: typeof variant.chip === 'string' ? variant.chip : undefined,
+      manufacturerModelNumber: typeof variant.manufacturerModelNumber === 'string' ? variant.manufacturerModelNumber : undefined,
+      region: typeof variant.region === 'string' ? variant.region : undefined,
       hasTouchId: variant.hasTouchId === true,
     })).filter((variant) => Boolean(variant.sku)),
   }
+}
+
+async function loadManualModelAliases(req: PayloadRequest, author: number): Promise<Map<string, number | string>> {
+  const result = await req.payload.find({
+    collection: 'price-import-items' as any, depth: 0, limit: MAX_LINES, pagination: false, overrideAccess: true, req,
+    where: { and: [{ author: { equals: author } }, { resolution: { equals: 'manual' } }] },
+  })
+  const aliases = new Map<string, number | string>()
+  for (const item of result.docs as Record<string, any>[]) {
+    const productID = relationshipID(item.selectedProduct)
+    const key = normalizeModelKey(item.modelText)
+    if (productID && key) aliases.set(key, productID)
+  }
+  return aliases
 }
 
 async function loadCatalog(req: PayloadRequest): Promise<CatalogProduct[]> {
@@ -515,16 +533,31 @@ async function priceListMatchHandler(req: PayloadRequest): Promise<Response> {
   if (!message.trim()) return json({ error: 'Вставьте прайс-лист.' }, 400)
   if (message.length > MAX_SOURCE_LENGTH) return json({ error: 'Текст слишком большой.' }, 400)
 
+  const localParsed = parseFreeformPriceList(message)
   let extracted: Awaited<ReturnType<typeof parseManagerMessage>>
-  try { extracted = await parseManagerMessage(message) } catch (error) {
-    req.payload.logger.warn({ err: error instanceof Error ? error.message : 'unknown' }, 'AI price-list extraction failed')
-    return json({ error: error instanceof Error ? error.message : 'Не удалось разобрать прайс.' }, 502)
+  if (localParsed.items.length > 0) {
+    extracted = { items: localParsed.items, questions: localParsed.errors }
+  } else {
+    try { extracted = await parseManagerMessage(message) } catch (error) {
+      req.payload.logger.warn({ err: error instanceof Error ? error.message : 'unknown' }, 'AI price-list extraction failed')
+      return json({ error: error instanceof Error ? error.message : 'Не удалось разобрать прайс.' }, 502)
+    }
   }
   if (extracted.items.length > MAX_LINES) return json({ error: `Допускается не более ${MAX_LINES} позиций.` }, 400)
 
-  const catalog = await loadCatalog(req)
-  const matched = extracted.items.map((item) => ({ item, result: matchCatalogItem(item, catalog) }))
   const author = userID(req) as number
+  const catalog = await loadCatalog(req)
+  const aliases = await loadManualModelAliases(req, author)
+  const matched = extracted.items.map((item) => {
+    const aliasedProductID = aliases.get(normalizeModelKey(item.modelText))
+    const aliasedProduct = aliasedProductID === undefined
+      ? undefined
+      : catalog.find((product) => String(product.id) === String(aliasedProductID))
+    const effectiveItem = aliasedProduct
+      ? { ...item, modelText: aliasedProduct.name, contextHeading: '' }
+      : item
+    return { item, result: matchCatalogItem(effectiveItem, catalog) }
+  })
   const token = crypto.randomUUID()
   const expiresAt = new Date(Date.now() + PREVIEW_TTL_MS).toISOString()
   const automaticallyResolved = matched.filter(({ result }) => result.status === 'matched' && result.selected).length

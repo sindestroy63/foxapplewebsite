@@ -219,6 +219,7 @@ export function PriceUpdateViewClient() {
                   <br /><strong>{candidate.displayPath || candidate.productName}</strong>
                   <br /><small>{candidate.matchType === 'variant' ? 'Вариант' : 'Товар'}</small>
                   <br /><small>Служебный SKU: <code>{candidate.sku}</code></small>
+                  <br /><small>{candidate.reason}</small>
                 </div>)}</div>
               })()}</td>
               <td><strong>{item.matchStatus}</strong><br /><small>{item.reason}</small></td>

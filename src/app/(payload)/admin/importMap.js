@@ -2,6 +2,8 @@ import { BasicsSection as BasicsSection_0f23eed0731f5cda2046b74e09ae11a5 } from 
 import { default as default_8ea1fec1fbdc06b6f021a8ef233fc70c } from '../../../payload/components/admin/ProductSlugField'
 import { PlacementSection as PlacementSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
 import { default as default_c7d5727c98f0077fcc6d276eb0aa5bde } from '../../../payload/components/admin/ProductCatalogPlacement'
+import { default as default_363abedfd70d6897838379b0e4196a8a } from '../../../payload/components/admin/DeviceTypeField'
+import { default as default_07baefa0c9c26249c492ac4f12c7ee5d } from '../../../payload/components/admin/ProductTypeField'
 import { CommerceSection as CommerceSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -46,6 +48,8 @@ export const importMap = {
   "/payload/components/admin/ProductSlugField#default": default_8ea1fec1fbdc06b6f021a8ef233fc70c,
   "/payload/components/admin/ProductSection#PlacementSection": PlacementSection_0f23eed0731f5cda2046b74e09ae11a5,
   "/payload/components/admin/ProductCatalogPlacement#default": default_c7d5727c98f0077fcc6d276eb0aa5bde,
+  "/payload/components/admin/DeviceTypeField#default": default_363abedfd70d6897838379b0e4196a8a,
+  "/payload/components/admin/ProductTypeField#default": default_07baefa0c9c26249c492ac4f12c7ee5d,
   "/payload/components/admin/ProductSection#CommerceSection": CommerceSection_0f23eed0731f5cda2046b74e09ae11a5,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,

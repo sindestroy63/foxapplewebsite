@@ -3,9 +3,10 @@ import { randomBytes } from 'node:crypto'
 
 import { admins, anyone } from '../access'
 import { composeProductSlug, isProductSlug } from '../utils/slugify'
-import { validateProductSkus } from '../utils/sku'
-
-const productGroup = (data: any) => data?.productGroup || data?.product_group
+import { ensureVariantSkus, validateProductSkus } from '../utils/sku'
+import { productTypeCondition, resolveProductType } from '../products/product-type'
+import { deviceTypeCondition, resolveDeviceType } from '../products/device-type'
+import { validateNewVariantConfigurations } from '../products/variant-validation'
 
 const createSlugSuffix = () => randomBytes(3).toString('hex')
 
@@ -63,6 +64,22 @@ export const Products: CollectionConfig = {
           if (variantParts.test(s)) {
             throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
           }
+        }
+        if (data) {
+          const completeData = { ...(originalDoc || {}), ...data }
+          if (typeof completeData.productType !== 'string' || !completeData.productType.trim()) {
+            data.productType = resolveProductType(completeData)
+          }
+          if (!completeData.deviceType) data.deviceType = resolveDeviceType(completeData)
+          if (Array.isArray(data.variants)) {
+            data.variants = ensureVariantSkus(
+              String(data.slug || originalDoc?.slug || 'product'),
+              data.variants as Array<Record<string, any>>,
+              (originalDoc?.variants || []) as Array<Record<string, any>>,
+            )
+          }
+          const validationError = validateNewVariantConfigurations(data as Record<string, unknown>, originalDoc as Record<string, unknown> | null)
+          if (validationError) throw new Error(validationError)
         }
         return validateProductSkus({
           data: data as Record<string, unknown>,
@@ -148,7 +165,24 @@ export const Products: CollectionConfig = {
       },
     },
     { name: 'brand', type: 'text', label: 'Бренд', admin: { hidden: true } },
-    { name: 'productType', type: 'text', label: 'Тип товара', admin: { hidden: true } },
+    {
+      name: 'deviceType',
+      type: 'text',
+      label: 'Тип устройства',
+      admin: {
+        components: { Field: '/payload/components/admin/DeviceTypeField' },
+        description: 'Выберите тип устройства до настройки вариантов.',
+      },
+    },
+    {
+      name: 'productType',
+      type: 'text',
+      label: 'Тип товара',
+      admin: {
+        components: { Field: '/payload/components/admin/ProductTypeField' },
+        description: 'Выберите тип до добавления вариантов.',
+      },
+    },
     { name: 'productLine', type: 'text', label: 'Линейка товара', admin: { hidden: true } },
     {
       name: 'sku',
@@ -367,28 +401,30 @@ export const Products: CollectionConfig = {
           { name: 'sku', type: 'text', label: 'Служебный артикул', unique: true, index: true, access: { update: () => false },
             admin: { readOnly: true, description: 'Формируется автоматически при создании варианта.' } },
           { name: 'color', type: 'relationship', relationTo: 'colors', label: 'Цвет',
-            admin: { description: 'Выберите из справочника цветов', condition: (data: any) => !['gaming-consoles'].includes(productGroup(data)) } },
+            admin: { description: 'Выберите из справочника цветов' } },
           { name: 'storage', type: 'relationship', relationTo: 'storage-options', label: 'Накопитель', filterOptions: { archived: { not_equals: true } },
-            admin: { condition: (data: any) => ['smartphones', 'tablets', 'laptops'].includes(productGroup(data)), description: 'Выберите накопитель из справочника (128GB, 256GB, 1TB…)' } },
-          { name: 'sim', type: 'relationship', relationTo: 'sim-options', label: 'Тип SIM',
-            admin: { condition: (data: any) => ['smartphones'].includes(productGroup(data)), description: 'Выберите из справочника SIM-вариантов' } },
+            admin: { condition: deviceTypeCondition(['phone', 'laptop', 'tablet'], 'storage'), description: 'Выберите накопитель из справочника (128GB, 256GB, 512GB, 1TB, 2TB)' } },
+          { name: 'sim', type: 'relationship', relationTo: 'sim-options', label: 'Тип SIM', filterOptions: { value: { in: ['ESIM', 'SIM_ESIM'] } },
+            admin: { condition: deviceTypeCondition(['phone'], 'sim'), description: 'Выберите eSIM или SIM + eSIM из справочника' } },
         ] },
         { type: 'row', fields: [
-          { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)', admin: { condition: (data: any) => ['laptops'].includes(productGroup(data)) } },
+          { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)', admin: { condition: deviceTypeCondition(['laptop', 'tablet'], 'chip') } },
           { name: 'ram', type: 'text', label: 'Устаревшая RAM', admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.ramOption && Boolean(siblingData?.ram) } },
-          { name: 'ramOption', type: 'relationship', relationTo: 'ram-options', label: 'Оперативная память (справочник)', admin: { condition: (data: any) => ['smartphones', 'laptops'].includes(productGroup(data)), description: 'Заполняется после миграции; старое поле ram сохраняется.' } },
+          { name: 'ramOption', type: 'relationship', relationTo: 'ram-options', label: 'Оперативная память (справочник)', filterOptions: { archived: { not_equals: true } }, admin: { condition: deviceTypeCondition(['laptop'], 'ramOption'), description: 'Выберите RAM для Mac; старое текстовое поле сохраняется.' } },
           { name: 'size', type: 'text', label: 'Устаревший размер',
-            admin: { readOnly: true, condition: (data: any, siblingData: any) => productGroup(data) === 'smart-watches' && !siblingData?.sizeOption && Boolean(siblingData?.size), description: 'Старое значение сохранено для совместимости.' } },
+            admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.sizeOption && Boolean(siblingData?.size), description: 'Старое значение сохранено для совместимости.' } },
+          { name: 'sizeOption', type: 'relationship', relationTo: 'variant-size-options', label: 'Размер корпуса', filterOptions: { archived: { not_equals: true } },
+            admin: { condition: deviceTypeCondition(['smartwatch'], 'sizeOption'), description: 'Размер корпуса Apple Watch из справочника.' } },
           { name: 'hasTouchId', type: 'checkbox', label: 'Есть Touch ID',
-            admin: { description: 'Есть Touch ID' } },
+            admin: { condition: productTypeCondition(['mac'], 'hasTouchId'), description: 'Показывается для конфигураций Mac и сохранённых значений.' } },
           { name: 'screenSize', type: 'text', label: 'Устаревшая диагональ', admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.screenSizeOption && Boolean(siblingData?.screenSize) } },
-          { name: 'screenSizeOption', type: 'relationship', relationTo: 'screen-size-options', label: 'Диагональ (справочник)', admin: { condition: (data: any) => ['tablets', 'laptops'].includes(productGroup(data)) } },
+          { name: 'screenSizeOption', type: 'relationship', relationTo: 'screen-size-options', label: 'Диагональ (справочник)', filterOptions: { archived: { not_equals: true } }, admin: { condition: deviceTypeCondition(['laptop', 'tablet'], 'screenSizeOption') } },
         ] },
         { type: 'row', fields: [
           { name: 'connectivity', type: 'text', label: 'Устаревшее подключение', admin: { readOnly: true, condition: (_data: any, siblingData: any) => !siblingData?.connectivityOption && Boolean(siblingData?.connectivity) } },
-          { name: 'connectivityOption', type: 'relationship', relationTo: 'connectivity-options', label: 'Подключение (справочник)', admin: { condition: (data: any) => ['tablets', 'smart-watches'].includes(productGroup(data)) } },
-          { name: 'generation', type: 'text', label: 'Поколение' },
-          { name: 'packageLabel', type: 'text', label: 'Комплектация', admin: { description: 'Например: 1 шт или 4 шт. Не используйте generation для комплектации.' } },
+          { name: 'connectivityOption', type: 'relationship', relationTo: 'connectivity-options', label: 'Подключение (справочник)', filterOptions: { archived: { not_equals: true } }, admin: { condition: productTypeCondition(['mac', 'ipad', 'apple-watch', 'airpods'], 'connectivityOption'), description: 'Для iPad выберите Wi-Fi/LTE, для AirPods — USB-C/Lightning, если значение есть в справочнике.' } },
+          { name: 'generation', type: 'text', label: 'Поколение / модель', admin: { condition: productTypeCondition(['mac', 'ipad', 'apple-watch', 'airpods'], 'generation') } },
+          { name: 'packageLabel', type: 'text', label: 'Комплектация', admin: { condition: productTypeCondition(['apple-watch', 'airpods', 'other'], 'packageLabel'), description: 'Существующая комплектация или описание ремешка. Не используйте generation для комплектации.' } },
         ] },
         { type: 'row', fields: [
           { name: 'price', type: 'number', label: 'Цена со скидкой', required: true, min: 0 },

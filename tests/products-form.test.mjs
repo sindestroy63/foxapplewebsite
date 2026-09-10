@@ -2,12 +2,21 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
+import { PRODUCT_TYPE_OPTIONS, resolveProductType } from '../src/payload/products/product-type.ts'
+import { validateNewVariantConfigurations } from '../src/payload/products/variant-validation.ts'
+import { ensureVariantSkus } from '../src/payload/utils/sku.ts'
+import { matchCatalogItem } from '../src/payload/price-updates/match.ts'
+import { parseFreeformPriceList } from '../src/payload/price-updates/parse.ts'
+
 const products = fs.readFileSync('src/payload/collections/Products.ts', 'utf8')
 const metadata = fs.readFileSync('src/app/(frontend)/catalog/[categorySlug]/[productSlug]/page.tsx', 'utf8')
 const system = fs.readFileSync('src/payload/components/admin/ProductSystemData.tsx', 'utf8')
 const placement = fs.readFileSync('src/payload/components/admin/ProductCatalogPlacement.tsx', 'utf8')
 const sections = fs.readFileSync('src/payload/components/admin/ProductSection.tsx', 'utf8')
 const slugField = fs.readFileSync('src/payload/components/admin/ProductSlugField.tsx', 'utf8')
+const productTypeField = fs.readFileSync('src/payload/components/admin/ProductTypeField.tsx', 'utf8')
+const priceEndpoints = fs.readFileSync('src/payload/price-updates/endpoints.ts', 'utf8')
+const productTypeMigration = fs.readFileSync('src/migrations/20260910_120000_backfill_product_type.ts', 'utf8')
 
 test('Product identifiers and SEO inputs are protected in CMS', () => {
   assert.match(products, /name: 'sku'[\s\S]*?access: \{ update: \(\) => false \}/)
@@ -62,7 +71,7 @@ test('Products form exposes the approved manager sections without changing data 
 })
 
 test('technical product fields are hidden from ordinary form and retained in read-only system data', () => {
-  for (const field of ['model', 'productGroup', 'brand', 'productType', 'productLine', 'badge', 'isFeatured', 'isNew', 'sortOrder', 'size']) {
+  for (const field of ['model', 'productGroup', 'brand', 'productLine', 'badge', 'isFeatured', 'isNew', 'sortOrder', 'size']) {
     const block = products.slice(products.indexOf(`name: '${field}'`), products.indexOf(`name: '${field}'`) + 1400)
     assert.match(block, /admin: \{[^}]*hidden: true/)
   }
@@ -70,6 +79,97 @@ test('technical product fields are hidden from ordinary form and retained in rea
   assert.match(system, /productLine/)
   assert.match(system, /legacyRam/)
   assert.match(system, /только чтение/)
+})
+
+test('product type reuses the legacy text column through a managed selector', () => {
+  assert.deepEqual(PRODUCT_TYPE_OPTIONS.map(({ value }) => value), ['iphone', 'mac', 'ipad', 'apple-watch', 'airpods', 'samsung', 'other'])
+  assert.match(products, /name: 'productType'[\s\S]*?type: 'text'[\s\S]*?ProductTypeField/)
+  assert.match(productTypeField, /useField<string>\(\{ path: 'productType' \}\)/)
+  assert.match(productTypeField, /Текущее значение:/)
+  assert.equal(resolveProductType({ name: 'iPhone 18' }), 'iphone')
+  assert.equal(resolveProductType({ productGroup: 'laptops', brand: 'Apple' }), 'mac')
+  assert.equal(resolveProductType({ productGroup: 'tablets', brand: 'Apple' }), 'ipad')
+  assert.equal(resolveProductType({ name: 'AirPods Pro 3' }), 'airpods')
+  assert.equal(resolveProductType({ name: 'Galaxy S26', brand: 'Samsung' }), 'samsung')
+})
+
+test('variant fields use existing dictionaries and remain visible when legacy data exists', () => {
+  for (const relation of ['storage-options', 'sim-options', 'ram-options', 'screen-size-options', 'connectivity-options', 'variant-size-options']) {
+    assert.match(products, new RegExp(`relationTo: '${relation}'`))
+  }
+  assert.match(products, /value: \{ in: \['ESIM', 'SIM_ESIM'\] \}/)
+  for (const field of ['storage', 'sim', 'ramOption', 'sizeOption', 'screenSizeOption', 'connectivityOption']) {
+    assert.match(products, new RegExp(`(?:productTypeCondition|deviceTypeCondition)\\([^\n]+['"]${field}['"]`))
+  }
+  assert.match(priceEndpoints, /relationText\(variant\.ramOption/)
+  assert.match(priceEndpoints, /relationText\(variant\.sizeOption/)
+  assert.match(priceEndpoints, /relationText\(variant\.screenSizeOption/)
+  assert.match(priceEndpoints, /relationText\(variant\.connectivityOption/)
+})
+
+test('new configurable variants validate required fields without blocking stored rows', () => {
+  assert.equal(validateNewVariantConfigurations({ productType: 'iphone', variants: [{ color: 1, storage: 2, sim: 3, price: 100000 }] }), null)
+  assert.match(validateNewVariantConfigurations({ productType: 'iphone', variants: [{ color: 1, storage: 2, price: 100000 }] }), /sim/)
+  assert.equal(validateNewVariantConfigurations({ productType: 'mac', variants: [{ color: 1, storage: 2, chip: 'M5', ramOption: 4, price: 100000 }] }), null)
+  assert.equal(validateNewVariantConfigurations({ productType: 'ipad', variants: [{ color: 1, storage: 2, connectivityOption: 3, price: 100000 }] }), null)
+  assert.equal(validateNewVariantConfigurations({ productType: 'apple-watch', variants: [{ color: 1, sizeOption: 2, price: 30000 }] }), null)
+  assert.equal(validateNewVariantConfigurations(
+    { productType: 'iphone', variants: [{ id: 'stored-incomplete', price: 100000 }] },
+    { variants: [{ id: 'stored-incomplete' }] },
+  ), null)
+  assert.match(validateNewVariantConfigurations(
+    { productType: 'iphone', variants: [{ id: 'new-client-id', color: 1, storage: 2, price: 100000 }] },
+    { variants: [{ id: 'stored-incomplete' }] },
+  ), /sim/)
+})
+
+test('device type separates brand from device characteristics', async () => {
+  const { DEVICE_TYPE_OPTIONS, resolveDeviceType } = await import('../src/payload/products/device-type.ts')
+  assert.deepEqual(DEVICE_TYPE_OPTIONS.map(({ value }) => value), ['phone', 'tablet', 'laptop', 'smartwatch', 'headphones', 'game-console', 'hair-dryer', 'vacuum-cleaner', 'accessory', 'other'])
+  assert.equal(resolveDeviceType({ brand: 'Dyson', name: 'Dyson Supersonic' }), 'hair-dryer')
+  assert.equal(resolveDeviceType({ brand: 'Dyson', name: 'Dyson V15' }), 'vacuum-cleaner')
+  assert.equal(resolveDeviceType({ brand: 'Apple', name: 'iPhone 18' }), 'phone')
+  assert.equal(resolveDeviceType({ brand: 'Apple', name: 'MacBook Air' }), 'laptop')
+  assert.equal(resolveDeviceType({ brand: 'Apple', name: 'iPad Air' }), 'tablet')
+  assert.equal(resolveDeviceType({ brand: 'Apple', name: 'Apple Watch' }), 'smartwatch')
+  assert.equal(resolveDeviceType({ brand: 'Apple', name: 'AirPods Pro' }), 'headphones')
+  assert.match(products, /name: 'deviceType'/)
+  assert.match(products, /DeviceTypeField/)
+})
+
+test('new variant SKUs are stable and existing SKUs are never replaced', () => {
+  const existing = { id: 'saved', sku: 'VAR-EXISTING' }
+  const variants = ensureVariantSkus('iphone-18-abcdef', [existing, { color: 1 }, { color: 2 }], [existing])
+  assert.equal(variants[0].sku, 'VAR-EXISTING')
+  assert.equal(variants[1].sku, 'VAR-IPHONE-18-ABCDEF-V001')
+  assert.equal(variants[2].sku, 'VAR-IPHONE-18-ABCDEF-V002')
+  assert.equal(new Set(variants.map(({ sku }) => sku)).size, 3)
+})
+
+test('admin-created iPhone relationships remain compatible with deterministic price matching', () => {
+  const catalog = [{
+    id: 18,
+    name: 'iPhone 18',
+    sku: 'IPHONE-18',
+    variants: [
+      { id: 'black', sku: 'IPHONE-18-256-BLACK-SIM-ESIM', storage: '256GB', color: 'Black', sim: 'SIM + eSIM', price: 99000 },
+      { id: 'white', sku: 'IPHONE-18-256-WHITE-ESIM', storage: '256GB', color: 'White', sim: 'eSIM', price: 99000 },
+    ],
+  }]
+  const parsed = parseFreeformPriceList(`iPhone 18 256GB Black (SIM + eSIM) 100000\niPhone 18 256GB White (eSIM) 101000`)
+  assert.equal(parsed.errors.length, 0)
+  const matches = parsed.items.map((item) => matchCatalogItem(item, catalog))
+  assert.deepEqual(matches.map(({ status }) => status), ['matched', 'matched'])
+  assert.deepEqual(matches.map(({ selected }) => selected?.sku), [
+    'IPHONE-18-256-BLACK-SIM-ESIM',
+    'IPHONE-18-256-WHITE-ESIM',
+  ])
+})
+
+test('product type backfill is idempotent and preserves every non-empty legacy value', () => {
+  assert.match(productTypeMigration, /WHERE "product_type" IS NULL OR btrim\("product_type"\) = ''/)
+  assert.doesNotMatch(productTypeMigration, /SET "product_type" = CASE[\s\S]*WHERE "product_type" IS NOT NULL/)
+  assert.match(fs.readFileSync('src/migrations/index.ts', 'utf8'), /20260910_120000_backfill_product_type/)
 })
 
 test('placement and system UI are read-only and do not add persistence logic', () => {

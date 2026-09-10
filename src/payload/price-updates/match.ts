@@ -1,64 +1,14 @@
 import type { AICatalogItem } from './ai-response'
+import { canonicalText, normalizeColor, normalizeModel, normalizeModelKey, normalizeRam, normalizeRegion, normalizeSim, normalizeStorage } from './normalization.ts'
 
 export type MatchStatus = 'matched' | 'ambiguous' | 'not_found' | 'missing_attributes' | 'manual_review' | 'excluded_used'
-
-export type CatalogVariant = {
-  id: string
-  sku: string
-  price?: number
-  color?: string
-  storage?: string
-  sim?: string
-  ram?: string
-  size?: string
-  screenSize?: string
-  connectivity?: string
-  generation?: string
-  hasTouchId?: boolean
-}
-
-export type CatalogProduct = {
-  id: number | string
-  name: string
-  model?: string
-  sku?: string
-  price?: number
-  category?: { slug?: string; name?: string }
-  productGroup?: string
-  condition?: 'new' | 'used'
-  brand?: string
-  productType?: string
-  productLine?: string
-  variants: CatalogVariant[]
-}
-
-export type MatchCandidate = {
-  productId: number | string
-  productName: string
-  matchType: 'product' | 'variant'
-  variantId?: string
-  sku: string
-  storage?: string
-  ram?: string
-  color?: string
-  sim?: string
-  size?: string
-  screenSize?: string
-  connectivity?: string
-  generation?: string
-  reason: string
-}
-
+export type CatalogVariant = { id: string; sku: string; price?: number; color?: string; storage?: string; sim?: string; ram?: string; size?: string; screenSize?: string; connectivity?: string; generation?: string; chip?: string; manufacturerModelNumber?: string; region?: string; hasTouchId?: boolean }
+export type CatalogProduct = { id: number | string; name: string; model?: string; sku?: string; price?: number; category?: { slug?: string; name?: string }; productGroup?: string; condition?: 'new' | 'used'; brand?: string; productType?: string; productLine?: string; variants: CatalogVariant[] }
+export type MatchCandidate = { productId: number | string; productName: string; matchType: 'product' | 'variant'; variantId?: string; sku: string; storage?: string; ram?: string; color?: string; sim?: string; region?: string; size?: string; screenSize?: string; connectivity?: string; generation?: string; chip?: string; manufacturerModelNumber?: string; reason: string }
 export type MatchResult = { status: MatchStatus; reason: string; candidates: MatchCandidate[]; selected?: MatchCandidate }
 
-export function candidateByKey<T extends MatchCandidate & { key: string }>(candidates: T[], key: string): T | undefined {
-  return candidates.find((candidate) => candidate.key === key)
-}
-
-export function canManuallyConfirmMissingAttributes(status: MatchStatus, candidates: MatchCandidate[]): boolean {
-  return status === 'missing_attributes' && candidates.length === 1
-}
-
+export function candidateByKey<T extends MatchCandidate & { key: string }>(candidates: T[], key: string): T | undefined { return candidates.find((candidate) => candidate.key === key) }
+export function canManuallyConfirmMissingAttributes(status: MatchStatus, candidates: MatchCandidate[]): boolean { return status === 'missing_attributes' && candidates.length === 1 }
 export function buildPreviewPriceInput(items: Array<{ resolution: string; selectedSku?: string | null; price: number }>): string {
   if (items.some((item) => item.resolution === 'pending')) throw new Error('Есть неразрешённые позиции.')
   const selected = items.filter((item) => item.resolution === 'automatic' || item.resolution === 'manual')
@@ -68,99 +18,104 @@ export function buildPreviewPriceInput(items: Array<{ resolution: string; select
   return selected.map((item) => `${item.selectedSku} — ${item.price}`).join('\n')
 }
 
-function words(value: unknown): string {
-  return typeof value === 'string' ? value.normalize('NFKC').toLowerCase().replace(/[ё]/g, 'е')
-    .replace(/([a-zа-я])(\d)/giu, '$1 $2').replace(/(\d)([a-zа-я])/giu, '$1 $2')
-    .replace(/\b(samsung|galaxy|apple)\b/giu, ' ').replace(/\b(20\d{2})\b/gu, ' ')
-    .replace(/\b(disc)\b/gu, 'disk').replace(/[^a-zа-я0-9]+/giu, ' ').trim().replace(/\s+/g, ' ') : ''
-}
-
-function canonicalModel(value: unknown): string {
-  const raw = words(value).replace(/(?:^|\s)1\s*шт(?:$|\s)/gu, ' ').trim().replace(/\s+/gu, ' ')
-  if (!raw) return ''
-  const samsung = raw.match(/^(?:samsung )?(?:galaxy )?(s\d{2})(?: (plus|ultra))?$/u)
-  if (samsung) return `samsung galaxy ${samsung[1]}${samsung[2] ? ` ${samsung[2]}` : ''}`
-  const fold = raw.match(/^(?:samsung )?(?:galaxy )?z fold ?8(?: ultra)?$/u)
-  if (fold) return `samsung galaxy ${raw.includes('ultra') ? 'z fold8 ultra' : 'z fold8'}`
-  if (/^(?:samsung )?(?:galaxy )?a57$/u.test(raw)) return 'samsung galaxy a57'
-  if (/^(?:iphone )?17e$/u.test(raw)) return 'iphone 17e'
-  if (/^(?:iphone )?17 pro max$/u.test(raw)) return 'iphone 17 pro max'
-  if (/^(?:iphone )?17 pro$/u.test(raw)) return 'iphone 17 pro'
-  if (/^(?:iphone )?air$/u.test(raw)) return 'iphone air'
-  if (/^pro max$/u.test(raw)) return 'iphone 17 pro max'
-  const playstation = raw.match(/^(?:playstation|ps) 5(?: slim)? (disk|digital|цифровая|с дисководом|diskovodom)$/u)
-  if (playstation) return `playstation 5 slim ${/digital|цифровая/u.test(playstation[1]) ? 'digital' : 'disk'}`
-  if (raw === '17') return 'iphone 17'
-  if (raw === '17 max') return '17 max'
-  return raw
-}
-
-function storageKey(value?: string | null): string {
-  if (!value) return ''
-  const normalized = value.toUpperCase().replace(/ГБ/g, 'GB').replace(/ТБ/g, 'TB')
-  const matches = [...normalized.matchAll(/(\d+)\s*(GB|TB)/g)]
-  return matches.length ? `${matches[matches.length - 1][1]}${matches[matches.length - 1][2]}` : words(value).replace(/\s/g, '')
-}
-function ramKey(value?: string | null): string { return value ? value.match(/\d+/u)?.[0] || words(value) : '' }
-function textKey(value?: string | null): string { return words(value).replace(/\s/g, '') }
-function simKey(value?: string | null): string {
-  const normalized = textKey(value)
-  if (normalized === 'esim') return 'esim'
-  if (normalized.includes('sim') && normalized.includes('esim')) return 'sim+esim'
-  return normalized
-}
 function isUsed(product: CatalogProduct): boolean {
   const slug = product.category?.slug?.toLowerCase() || ''
   return product.condition === 'used' || product.productGroup === 'trade-in' || slug === 'used' || /\bб\s*\/\s*у\b|\bб\.?у\.?\b|used/i.test(`${product.name} ${product.model || ''}`)
 }
 function variantRam(variant?: CatalogVariant): string {
   if (!variant) return ''
-  if (variant.ram) return ramKey(variant.ram)
-  return variant.storage?.match(/^\s*(\d+)\s*[|/]/u)?.[1] || ''
+  if (variant.ram) return normalizeRam(variant.ram)
+  const match = variant.storage?.match(/^\s*(\d+)\s*[|/]/u)
+  return match ? `${match[1]}GB` : ''
 }
-function candidateFor(product: CatalogProduct, variant?: CatalogVariant, reason = 'Точное совпадение'): MatchCandidate | null {
+function candidateFor(product: CatalogProduct, variant?: CatalogVariant): MatchCandidate | null {
   const sku = variant?.sku || product.sku
   if (!sku) return null
-  return { productId: product.id, productName: product.name, matchType: variant ? 'variant' : 'product', variantId: variant?.id, sku,
-    storage: variant?.storage, ram: variantRam(variant) || undefined, color: variant?.color, sim: variant?.sim,
-    size: variant?.size, screenSize: variant?.screenSize, connectivity: variant?.connectivity, generation: variant?.generation, reason }
+  return { productId: product.id, productName: product.name, matchType: variant ? 'variant' : 'product', variantId: variant?.id, sku, storage: variant?.storage, ram: variantRam(variant) || undefined, color: variant?.color, sim: variant?.sim, region: variant?.region, size: variant?.size, screenSize: variant?.screenSize, connectivity: variant?.connectivity, generation: variant?.generation, chip: variant?.chip, manufacturerModelNumber: variant?.manufacturerModelNumber, reason: 'Точное совпадение' }
 }
-function productModelKeys(product: CatalogProduct): string[] {
-  return [...new Set([canonicalModel(product.name), canonicalModel(product.model), canonicalModel(product.productLine)].filter(Boolean))]
-}
-function modelProducts(item: AICatalogItem, products: CatalogProduct[]): { products: CatalogProduct[]; missingHeading: boolean } {
-  const rawModel = canonicalModel(item.modelText)
-  if (rawModel === '17 max') return { products: products.filter((p) => productModelKeys(p).includes('iphone 17 pro max')), missingHeading: true }
-  const target = rawModel === '17 max' ? 'iphone 17 pro max' : rawModel
-  return { products: products.filter((p) => productModelKeys(p).includes(target)), missingHeading: false }
+function productModelKeys(product: CatalogProduct): string[] { return [...new Set([normalizeModelKey(product.name), normalizeModelKey(product.model), normalizeModelKey(product.productLine)].filter(Boolean))] }
+function modelProductsForItem(item: AICatalogItem, catalog: CatalogProduct[], modelKey: string): CatalogProduct[] {
+  const family = item.productType || ''
+  if (family === 'mac') {
+    const line = /neo/i.test(item.modelText) ? 'neo' : /air/i.test(item.modelText) ? 'air' : /pro/i.test(item.modelText) ? 'pro' : ''
+    return catalog.filter((product) => product.productGroup === 'laptops' && (!line || canonicalText(`${product.name} ${product.model}` || '').includes(line)))
+  }
+  if (family === 'ipad') {
+    const line = /mini/i.test(item.modelText) ? 'mini' : /air/i.test(item.modelText) ? 'air' : /pro/i.test(item.modelText) ? 'pro' : 'base'
+    return catalog.filter((product) => {
+      if (product.productGroup !== 'tablets') return false
+      const text = canonicalText(`${product.name} ${product.model}`)
+      if (line === 'base') return text.includes('ipad') && !/(mini|air|pro)/u.test(text)
+      return text.includes(line)
+    })
+  }
+  if (family === 'watch') {
+    const wanted = canonicalText(item.modelText)
+    return catalog.filter((product) => product.productGroup === 'smart-watches' && canonicalText(`${product.name} ${product.model}`).includes(wanted.replace('applewatch', '')))
+  }
+  return catalog.filter((product) => productModelKeys(product).includes(modelKey))
 }
 function candidatesForProducts(products: CatalogProduct[]): MatchCandidate[] {
-  return products.flatMap((product) => product.variants.length ? product.variants.map((v) => candidateFor(product, v)).filter((v): v is MatchCandidate => Boolean(v)) : [candidateFor(product)].filter((v): v is MatchCandidate => Boolean(v)))
+  return products.flatMap((product) => product.variants.length ? product.variants.map((variant) => candidateFor(product, variant)).filter((entry): entry is MatchCandidate => Boolean(entry)) : [candidateFor(product)].filter((entry): entry is MatchCandidate => Boolean(entry)))
+}
+function candidateMatchScore(candidate: MatchCandidate, item: AICatalogItem, modelKey: string): number {
+  let score = 1
+  if (item.storage && normalizeStorage(candidate.storage) === normalizeStorage(item.storage)) score += 1
+  if (item.ram && normalizeRam(candidate.ram) === normalizeRam(item.ram)) score += 1
+  if (item.color && canonicalText(normalizeColor(candidate.color, modelKey)) === canonicalText(normalizeColor(item.color, modelKey))) score += 1
+  if (item.sim && normalizeSim(candidate.sim) === normalizeSim(item.sim)) score += 1
+  if (item.region && candidate.region && canonicalText(normalizeRegion(candidate.region)) === canonicalText(normalizeRegion(item.region))) score += 1
+  return score
+}
+function topCandidates(candidates: MatchCandidate[], item?: AICatalogItem, modelKey?: string, limit = 5): MatchCandidate[] {
+  return [...candidates].sort((a, b) => {
+    const scoreDelta = item && modelKey ? candidateMatchScore(b, item, modelKey) - candidateMatchScore(a, item, modelKey) : 0
+    if (scoreDelta) return scoreDelta
+    return `${a.productName} ${a.storage || ''} ${a.color || ''} ${a.sim || ''}`.localeCompare(`${b.productName} ${b.storage || ''} ${b.color || ''} ${b.sim || ''}`)
+  }).slice(0, limit)
 }
 
 export function matchCatalogItem(item: AICatalogItem, catalog: CatalogProduct[]): MatchResult {
-  const modelMatch = modelProducts(item, catalog)
-  if (!modelMatch.products.length) return { status: 'not_found', reason: 'Товар с такой моделью не найден.', candidates: [] }
-  const normalProducts = modelMatch.products.filter((product) => !isUsed(product))
-  if (!normalProducts.length) return { status: 'excluded_used', reason: 'Позиция относится к Б/У товару и не участвует в автоматическом обновлении цен', candidates: [] }
-  if (modelMatch.missingHeading) return { status: 'ambiguous', reason: 'Сокращение «17 Max» требует видимого заголовка «17 Pro Max».', candidates: candidatesForProducts(normalProducts) }
-  let candidates = candidatesForProducts(normalProducts)
-  const requestedStorage = storageKey(item.storage), requestedRam = ramKey(item.ram), requestedSim = simKey(item.sim), requestedColor = textKey(item.color)
-  if (requestedStorage) candidates = candidates.filter((c) => storageKey(c.storage) === requestedStorage)
-  if (requestedRam) candidates = candidates.filter((c) => ramKey(c.ram) === requestedRam)
-  if (requestedSim) candidates = candidates.filter((c) => simKey(c.sim) === requestedSim)
-  const beforeColor = candidates
-  if (requestedColor) candidates = candidates.filter((c) => textKey(c.color) === requestedColor)
-  const alias = requestedColor === 'blue' ? 'deepblue' : requestedColor === 'orange' ? 'cosmicorange' : ''
-  const aliasAllowed = normalProducts.length === 1 && /iphone 17 pro max/i.test(`${normalProducts[0].name} ${normalProducts[0].model || ''}`)
-  const aliasCandidates = !candidates.length && alias && aliasAllowed ? beforeColor.filter((c) => textKey(c.color) === alias).map((c) => ({ ...c, reason: `Цвет «${item.color}» требует ручного подтверждения как «${c.color}».` })) : []
-  const relevant = candidates.length ? candidates : aliasCandidates
-  const reviewNote = (item.notes || []).find((note) => /(?:актив|уценк|мятая коробка|\bob\b)/iu.test(note))
-  if (reviewNote && relevant.length) {
-    return { status: 'manual_review', reason: `Пометка «${reviewNote}» требует ручной проверки.`, candidates: relevant }
+  const model = normalizeModel(item.modelText, item.contextHeading)
+  const modelProducts = modelProductsForItem(item, catalog, model.key)
+  if (!modelProducts.length) return { status: 'not_found', reason: 'Не совпало поле «модель»: товар с такой моделью не найден.', candidates: [] }
+  const products = modelProducts.filter((product) => !isUsed(product))
+  if (!products.length) return { status: 'excluded_used', reason: 'Совпала только позиция из раздела Б/У; автоматическое обновление запрещено.', candidates: [] }
+  let candidates = candidatesForProducts(products)
+  const requestedStorage = normalizeStorage(item.storage)
+  const requestedRam = normalizeRam(item.ram)
+  const requestedColor = normalizeColor(item.color, model.key)
+  const requestedSim = normalizeSim(item.sim)
+  const requestedRegion = normalizeRegion(item.region)
+  const requestedChip = typeof item.chip === 'string' ? item.chip.trim().toLowerCase() : ''
+  const requestedScreen = typeof item.screenSize === 'string' ? item.screenSize.replace(/["″]/g, '').trim() : ''
+  const requestedConnectivity = typeof item.connectivity === 'string' ? item.connectivity.toLowerCase().replace(/\s+/g, '') : ''
+  const requestedSize = typeof item.size === 'string' ? item.size.replace(/\s+/g, '').toLowerCase() : ''
+  const requestedArticle = typeof item.manufacturerModelNumber === 'string' ? item.manufacturerModelNumber.trim().toLowerCase() : ''
+  const stages: Array<{ label: string; value: string; test: (candidate: MatchCandidate) => boolean }> = [
+    { label: 'артикул', value: requestedArticle, test: (candidate) => !candidate.manufacturerModelNumber || String(candidate.manufacturerModelNumber).trim().toLowerCase() === requestedArticle },
+    { label: 'накопитель', value: requestedStorage, test: (candidate) => normalizeStorage(candidate.storage) === requestedStorage },
+    { label: 'RAM', value: requestedRam, test: (candidate) => normalizeRam(candidate.ram) === requestedRam },
+    { label: 'цвет', value: requestedColor, test: (candidate) => canonicalText(normalizeColor(candidate.color, model.key)) === canonicalText(requestedColor) },
+    { label: 'SIM', value: requestedSim, test: (candidate) => normalizeSim(candidate.sim) === requestedSim },
+    { label: 'регион', value: requestedRegion, test: (candidate) => !candidate.region || canonicalText(normalizeRegion(candidate.region)) === canonicalText(requestedRegion) },
+    { label: 'чип', value: requestedChip, test: (candidate) => !candidate.chip || String(candidate.chip).trim().toLowerCase() === requestedChip },
+    { label: 'диагональ/размер', value: requestedScreen || requestedSize, test: (candidate) => { const actual = String(candidate.screenSize || candidate.size || '').replace(/["″]/g, '').replace(/\s+/g, '').toLowerCase(); const wanted = requestedScreen || requestedSize; return actual === wanted || actual.startsWith(`${wanted}.`) } },
+    { label: 'подключение', value: requestedConnectivity, test: (candidate) => String(candidate.connectivity || '').toLowerCase().replace(/\s+/g, '') === requestedConnectivity },
+  ]
+  const matchedFields = ['модель']
+  for (const stage of stages) {
+    if (!stage.value) continue
+    const before = candidates
+    candidates = candidates.filter(stage.test)
+    if (!candidates.length) return { status: 'not_found', reason: `Не совпало поле «${stage.label}»: в найденной модели нет такой конфигурации. (field: ${stage.label})`, candidates: topCandidates(before, item, model.key) }
+    matchedFields.push(stage.label)
   }
-  if (aliasCandidates.length) return { status: 'ambiguous', reason: 'Цвет требует ручного подтверждения.', candidates: aliasCandidates }
-  if (!relevant.length) return { status: 'not_found', reason: 'Модель найдена, но точной конфигурации не обнаружено.', candidates: [] }
-  if (relevant.length > 1) return { status: 'ambiguous', reason: 'Найдено несколько подходящих конфигураций.', candidates: relevant }
-  return { status: 'matched', reason: 'Найдено одно точное совпадение.', candidates: relevant, selected: relevant[0] }
+  const relevant = topCandidates(candidates, item, model.key)
+  const reviewNote = (item.notes || []).find((note) => /(?:актив|уценк|мятая коробка|\bob\b)/iu.test(note))
+  if (reviewNote && relevant.length) return { status: 'manual_review', reason: `Пометка «${reviewNote}» требует ручной проверки.`, candidates: relevant }
+  if (!relevant.length) return { status: 'not_found', reason: 'Не найдено ни одного совместимого варианта.', candidates: [] }
+  const explained = relevant.map((candidate) => ({ ...candidate, reason: `Совпало: ${matchedFields.join(', ')}.` }))
+  if (explained.length > 1) return { status: 'ambiguous', reason: 'Осталось несколько совместимых конфигураций; автоматический выбор запрещён.', candidates: explained }
+  return { status: 'matched', reason: 'Найдено ровно одно совместимое совпадение.', candidates: explained, selected: explained[0] }
 }

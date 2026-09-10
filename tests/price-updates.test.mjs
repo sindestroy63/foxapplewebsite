@@ -6,7 +6,7 @@ import { cardPrice } from '../src/lib/pricing.ts'
 import { prepareProductPriceUpdate } from '../src/payload/price-updates/apply.ts'
 import { aiPriceUpdateSchema, normalizeAIPriceUpdateResponse } from '../src/payload/price-updates/ai-response.ts'
 import { buildPreviewPriceInput, candidateByKey, canManuallyConfirmMissingAttributes, matchCatalogItem } from '../src/payload/price-updates/match.ts'
-import { duplicateSkus, parsePriceUpdateInput } from '../src/payload/price-updates/parse.ts'
+import { duplicateSkus, parseFreeformPriceList, parsePriceUpdateInput } from '../src/payload/price-updates/parse.ts'
 import { classifyVariantForNormalization } from '../src/payload/catalog-normalization/dry-run.ts'
 import {
   assertNoForbiddenChanges,
@@ -281,6 +281,13 @@ test('parses supported separators, spaces and ruble sign', () => {
   ])
 })
 
+test('legacy SKU price input also accepts thousands points without accepting decimals', () => {
+  const lines = parsePriceUpdateInput('SKU-POINT 94.800 ₽\nSKU-MILLION: 1.000.000\nSKU-DECIMAL 94.80', normalizeSku)
+  assert.deepEqual(lines.map(({ sku, newCashPrice, error }) => [sku, newCashPrice, Boolean(error)]), [
+    ['SKU-POINT', 94800, false], ['SKU-MILLION', 1000000, false], ['SKU-DECIMAL', undefined, true],
+  ])
+})
+
 test('rejects invalid and out-of-range prices', () => {
   const lines = parsePriceUpdateInput('SKU-A 0\nSKU-B 10000001\nSKU-C abc', normalizeSku)
   assert.equal(lines.every((line) => Boolean(line.error)), true)
@@ -439,10 +446,10 @@ test('region alone never produces unsupported_region', () => {
   assert.equal(items.some((item) => matchCatalogItem(item, catalog).status === 'unsupported_region'), false)
 })
 
-test('does not use a section heading to resolve an incomplete 17 Max model', () => {
+test('resolves the 17 Max alias to the exact Pro Max product', () => {
   const withHeading = aiItem({ modelText: '17 Max', contextHeading: '17 Pro Max', storage: '256GB', color: 'Silver', sim: 'eSIM' })
-  assert.equal(matchCatalogItem(withHeading, catalog).status, 'ambiguous')
-  assert.equal(matchCatalogItem({ ...withHeading, contextHeading: '' }, catalog).status, 'ambiguous')
+  assert.equal(matchCatalogItem(withHeading, catalog).selected?.productName, 'iPhone 17 Pro Max')
+  assert.equal(matchCatalogItem({ ...withHeading, contextHeading: '' }, catalog).selected?.productName, 'iPhone 17 Pro Max')
 })
 
 test('finds the exact iPhone 17 Pro Max model without a heading', () => {
@@ -506,11 +513,11 @@ test('PlayStation revision keeps the resolved base SKU for automatic matching', 
   }
 })
 
-test('requires manual choice for Blue and Orange aliases', () => {
+test('uses contextual Blue and Orange aliases for Pro Max colors', () => {
   for (const color of ['Blue', 'Orange']) {
     const result = matchCatalogItem(aiItem({ modelText: '17 Max', contextHeading: '17 Pro Max', storage: '256GB', color, sim: 'eSIM' }), catalog)
-    assert.equal(result.status, 'ambiguous')
-    assert.ok(result.candidates.length >= 1)
+    assert.equal(result.status, 'matched')
+    assert.equal(result.candidates.length, 1)
   }
 })
 
@@ -533,6 +540,482 @@ test('matches Samsung aliases before searching a variant and keeps absent S25 no
   assert.equal(matchCatalogItem(aiItem({ modelText: 'S26 Ultra', storage: '256GB', ram: '12', color: 'Black' }), catalog).status, 'matched')
   assert.equal(matchCatalogItem(aiItem({ modelText: 'Galaxy S26 Ultra', storage: '256GB', ram: '12', color: 'Black' }), catalog).status, 'matched')
   assert.equal(matchCatalogItem(aiItem({ modelText: 'S25 Ultra' }), catalog).status, 'not_found')
+})
+
+test('freeform parser skips headings and extracts price, memory, SIM and regions', () => {
+  const parsed = parseFreeformPriceList([
+    'AirPods:',
+    'AirPods 4 ANC India  13 300 ₽',
+    'Samsung:',
+    'Samsung S26 Ultra 12 / 256 GB Violet  77 300 руб',
+    '17:',
+    '17 256ГБ Lavender 1 SIM + eSIM  76 000',
+    '17 Pro Max:',
+    '17 Max 512GB Blue eSim  122000',
+  ].join('\n'))
+  assert.equal(parsed.lines.length, 4)
+  assert.equal(parsed.items.length, 4)
+  assert.deepEqual(parsed.items.map(({ modelText, price, storage, ram, color, sim, region }) => ({ modelText, price, storage, ram, color, sim, region })), [
+    { modelText: 'AirPods 4 ANC', price: 13_300, storage: null, ram: null, color: null, sim: null, region: 'India' },
+    { modelText: 'Samsung S26 Ultra', price: 77_300, storage: '256GB', ram: '12GB', color: 'Violet', sim: null, region: '' },
+    { modelText: '17', price: 76_000, storage: '256GB', ram: null, color: 'Lavender', sim: 'SIM + eSIM', region: '' },
+    { modelText: '17 Max', price: 122_000, storage: '512GB', ram: null, color: 'Blue', sim: 'eSIM', region: '' },
+  ])
+})
+
+test('uses a group heading when a configuration line has no model text', () => {
+  const parsed = parseFreeformPriceList([
+    '17 Pro Max:',
+    '256GB Blue eSIM 122000',
+  ].join('\n'))
+  assert.equal(parsed.items[0].modelText, '')
+  const result = matchCatalogItem(parsed.items[0], catalog)
+  assert.equal(result.status, 'matched')
+  assert.equal(result.selected?.productName, 'iPhone 17 Pro Max')
+})
+
+test('freeform parser recognizes all supported price spellings and flags', () => {
+  const parsed = parseFreeformPriceList([
+    'AirPods 4 9800',
+    'AirPods 4 9 800',
+    'AirPods 4 9800 ₽',
+    'AirPods 4 9\u00a0800 руб',
+    'AirPods 4 🇯🇵 9800',
+  ].join('\n'))
+  assert.deepEqual(parsed.items.map((item) => item.price), [9800, 9800, 9800, 9800, 9800])
+  assert.equal(parsed.items.at(-1).region, 'Japan')
+})
+
+test('freeform parser normalizes the extended region dictionary without leaking tokens into models', () => {
+  const parsed = parseFreeformPriceList([
+    'Air 256GB Sky Blue — 9800 🇺🇸 ESIM',
+    'Air 256GB Sky Blue — 9800 EU ESIM',
+    'Air 256GB Sky Blue — 9800 China ESIM',
+    'Air 256GB Sky Blue — 9800 UAE ESIM',
+    'Air 256GB Sky Blue — 9800 🇰🇷 ESIM',
+  ].join('\n'))
+  assert.deepEqual(parsed.items.map(({ modelText, region, sim }) => ({ modelText, region, sim })), [
+    { modelText: 'Air', region: 'United States', sim: 'eSIM' },
+    { modelText: 'Air', region: 'Europe', sim: 'eSIM' },
+    { modelText: 'Air', region: 'China', sim: 'eSIM' },
+    { modelText: 'Air', region: 'United Arab Emirates', sim: 'eSIM' },
+    { modelText: 'Air', region: 'South Korea', sim: 'eSIM' },
+  ])
+})
+
+test('SIM forms remain distinct configurations', () => {
+  const simCatalog = [{ id: 1, name: 'iPhone 17 Pro Max', model: 'iPhone 17 Pro Max', variants: [
+    { id: 'esim', sku: 'ESIM', storage: '256GB', color: 'Deep Blue', sim: 'eSIM' },
+    { id: 'combo', sku: 'COMBO', storage: '256GB', color: 'Deep Blue', sim: 'SIM + eSIM' },
+  ] }]
+  const esim = matchCatalogItem(aiItem({ modelText: '17 Max', storage: '256GB', color: 'Blue', sim: 'eSIM' }), simCatalog)
+  const combo = matchCatalogItem(aiItem({ modelText: '17 Max', storage: '256GB', color: 'Blue', sim: '1sim esim' }), simCatalog)
+  assert.equal(esim.selected?.sku, 'ESIM')
+  assert.equal(combo.selected?.sku, 'COMBO')
+})
+
+test('full regression price list produces a deterministic matching report', () => {
+  const fixture = [
+    'AirPods:',
+    'AirPods 4 ANC India  13300',
+    'AirPods 4 Hong Kong  9800',
+    'AirPods Pro 3  17700',
+    'Samsung:',
+    'Samsung S25 Ultra 12/256GB Black  67000',
+    'Samsung S25 Ultra 12/256GB White Silver  65000',
+    'Samsung S26 12/256GB Violet  62000',
+    'Samsung S26 Ultra 12/256GB Violet  77300',
+    'Samsung S26 Ultra 12/256GB Black  77300',
+    'Samsung S26 Ultra 12/256GB Blue  77200',
+    '17:',
+    '17 256GB Lavender 1Sim+eSim  76000',
+    '17 256GB Sage 1Sim+eSim  74500',
+    '17 256GB Black 1Sim+eSim  75500',
+    '17 256GB Mist Blue 1Sim+eSim  75000',
+    '17 256GB White 1Sim+eSim  74500',
+    '17 Pro:',
+    '17 Pro 256GB Blue eSim  98000',
+    '17 Pro 256GB Orange eSim  95500',
+    '17 Pro 256GB Silver eSim  98500',
+    '17 Pro 256GB Orange 1Sim+eSim  99500',
+    '17 Pro 256GB Blue 1Sim+eSim  101500',
+    '17 Pro 256GB Silver 1Sim+eSim  103000',
+    '17 Pro Max:',
+    '17 Max 256GB Blue eSim  105500',
+    '17 Max 256GB Orange eSim  105000',
+    '17 Max 256GB Silver eSim  105500',
+    '17 Max 256GB Blue 1Sim+eSim  111500',
+    '17 Max 256GB Orange 1Sim+eSim  110500',
+    '17 Max 256GB Silver 1Sim+eSim  113000',
+    '17 Max 512GB Blue eSim  122000',
+    '17 Max 512GB Orange eSim  119500',
+    '17 Max 512GB Silver eSim  124000',
+    '17 Max 512GB Blue 1Sim+eSim  130000',
+    '17 Max 512GB Orange 1Sim+eSim  129000',
+    '17 Max 512GB Silver 1Sim+eSim  134000',
+  ].join('\n')
+  const variants = (prefix, storage, colors, sims) => colors.flatMap(([input, catalogColor]) => sims.map((sim) => ({
+    id: `${prefix}-${storage}-${input}-${sim}`,
+    sku: `${prefix}-${storage}-${input}-${sim}`,
+    storage,
+    color: catalogColor,
+    sim,
+  })))
+  const fullCatalog = [
+    { id: 1, name: 'AirPods 4 с шумоподавлением', model: 'AirPods 4 ANC', sku: 'AIR-ANC', variants: [] },
+    { id: 2, name: 'AirPods 4', model: 'AirPods 4', sku: 'AIR-4', variants: [] },
+    { id: 3, name: 'AirPods Pro 3', model: 'AirPods Pro 3', sku: 'AIR-PRO-3', variants: [] },
+    { id: 4, name: 'Samsung Galaxy S26', model: 'Samsung Galaxy S26', variants: [{ id: 's26', sku: 'S26', storage: '256GB', ram: '12GB', color: 'Cobalt Violet' }] },
+    { id: 5, name: 'Samsung Galaxy S26 Ultra', model: 'Samsung Galaxy S26 Ultra', variants: [['Violet', 'Cobalt Violet'], ['Black', 'Black'], ['Blue', 'Sky Blue']].map(([id, color]) => ({ id, sku: `S26U-${id}`, storage: '256GB', ram: '12GB', color })) },
+    { id: 6, name: 'iPhone 17', model: 'iPhone 17', variants: variants('17', '256GB', [['Lavender', 'Lavender'], ['Sage', 'Sage'], ['Black', 'Black'], ['Mist Blue', 'Mist Blue'], ['White', 'White']], ['SIM + eSIM']) },
+    { id: 7, name: 'iPhone 17 Pro', model: 'iPhone 17 Pro', variants: variants('17P', '256GB', [['Blue', 'Deep Blue'], ['Orange', 'Cosmic Orange'], ['Silver', 'Silver']], ['eSIM', 'SIM + eSIM']) },
+    { id: 8, name: 'iPhone 17 Pro Max', model: 'iPhone 17 Pro Max', variants: [...variants('17PM', '256GB', [['Blue', 'Deep Blue'], ['Orange', 'Cosmic Orange'], ['Silver', 'Silver']], ['eSIM', 'SIM + eSIM']), ...variants('17PM', '512GB', [['Blue', 'Deep Blue'], ['Orange', 'Cosmic Orange'], ['Silver', 'Silver']], ['eSIM', 'SIM + eSIM'])] },
+  ]
+  const items = parseFreeformPriceList(fixture).items
+  const report = items.map((item) => ({ item, result: matchCatalogItem(item, fullCatalog) }))
+  assert.equal(report.length, 32)
+  assert.equal(report.filter(({ result }) => result.status === 'matched').length, 30)
+  assert.equal(report.filter(({ result }) => result.status === 'ambiguous').length, 0)
+  assert.equal(report.filter(({ result }) => result.status === 'not_found').length, 2)
+  assert.deepEqual(report.filter(({ result }) => result.status === 'not_found').map(({ item, result }) => [item.modelText, result.reason.includes('модел')]), [
+    ['Samsung S25 Ultra', true], ['Samsung S25 Ultra', true],
+  ])
+})
+
+test('second regression fixture matches every iPhone 17 Pro and Pro Max price to one SKU', () => {
+  const fixture = `iPhone 17 Pro
+
+17 Pro 256Gb Cosmic Orange (eSIM) — 94.800
+17 Pro 256Gb Deep Blue (eSIM) — 96.200
+17 Pro 256Gb Silver (eSIM) — 97.300
+
+17 Pro 512Gb Cosmic Orange (eSIM) — 112.700
+17 Pro 512Gb Deep Blue (eSIM) — 116.000
+17 Pro 512Gb Silver (eSIM) — 112.700
+
+17 Pro 1Tb Cosmic Orange (eSIM) — 122.500
+17 Pro 1Tb Deep Blue (eSIM) — 123.500
+17 Pro 1Tb Silver (eSIM) — 128.900
+
+17 Pro 256Gb Cosmic Orange (1SIM) — 99.300
+17 Pro 256Gb Deep Blue (1SIM) — 100.200
+17 Pro 256Gb Silver (1SIM) — 102.500
+
+17 Pro 512Gb Cosmic Orange (1SIM) — 119.000
+17 Pro 512Gb Deep Blue (1SIM) — 122.300
+17 Pro 512Gb Silver (1SIM) — 125.000
+
+17 Pro 1Tb Cosmic Orange (1SIM) — 133.500
+17 Pro 1Tb Deep Blue (1SIM) — 138.500
+17 Pro 1Tb Silver (1SIM) — 140.400
+
+iPhone 17 Pro Max
+
+17 Pro Max 256Gb Cosmic Orange (eSIM) — 104.500
+17 Pro Max 256Gb Deep Blue (eSIM) — 104.400
+17 Pro Max 256Gb Silver (eSIM) — 104.500
+
+17 Pro Max 512Gb Cosmic Orange (eSIM) — 119.200
+17 Pro Max 512Gb Deep Blue (eSIM) — 119.300
+17 Pro Max 512Gb Silver (eSIM) — 120.800
+
+17 Pro Max 1Tb Cosmic Orange (eSIM) — 136.000
+17 Pro Max 1Tb Deep Blue (eSIM) — 134.500
+17 Pro Max 1Tb Silver (eSIM) — 139.100
+
+17 Pro Max 2Tb Cosmic Orange (eSIM) — 148.800
+17 Pro Max 2Tb Deep Blue (eSIM) — 149.400
+17 Pro Max 2Tb Silver (eSIM) — 163.600
+
+17 Pro Max 256Gb Cosmic Orange (1SIM) — 109.300
+17 Pro Max 256Gb Deep Blue (1SIM) — 109.900
+17 Pro Max 256Gb Silver (1SIM) — 112.200
+
+17 Pro Max 512Gb Cosmic Orange (1SIM) — 127.300
+17 Pro Max 512Gb Deep Blue (1SIM) — 128.800
+17 Pro Max 512Gb Silver (1SIM) — 133.700
+
+17 Pro Max 1Tb Cosmic Orange (1SIM) — 153.600
+17 Pro Max 1Tb Deep Blue (1SIM) — 150.200
+
+17 Pro Max 2Tb Cosmic Orange (1SIM) — 166.900
+17 Pro Max 2Tb Deep Blue (1SIM) — 170.500
+17 Pro Max 2Tb Silver (1SIM) — 173.400`
+  const makeVariants = (prefix, storages) => storages.flatMap((storage) => [
+    ['Cosmic Orange', 'orange'], ['Deep Blue', 'blue'], ['Silver', 'silver'],
+  ].flatMap(([color, colorKey]) => ['eSIM', 'SIM + eSIM'].map((sim) => ({
+    id: `${prefix}-${storage}-${colorKey}-${sim}`,
+    sku: `${prefix}-${storage}-${colorKey}-${sim === 'eSIM' ? 'ESIM' : 'SIM-ESIM'}`,
+    storage, color, sim,
+  }))))
+  const fixtureCatalog = [
+    { id: 101, name: 'iPhone 17 Pro', model: 'iPhone 17 Pro', variants: makeVariants('17P', ['256GB', '512GB', '1TB']) },
+    { id: 102, name: 'iPhone 17 Pro Max', model: 'iPhone 17 Pro Max', variants: makeVariants('17PM', ['256GB', '512GB', '1TB', '2TB']) },
+  ]
+  const parsed = parseFreeformPriceList(fixture)
+  const report = parsed.items.map((item) => ({ item, result: matchCatalogItem(item, fixtureCatalog) }))
+  assert.equal(parsed.items.length, 41)
+  assert.equal(parsed.lines.length, 41)
+  assert.equal(report.filter(({ result }) => result.status === 'matched').length, 41)
+  assert.equal(report.filter(({ result }) => result.status === 'ambiguous').length, 0)
+  assert.equal(report.filter(({ result }) => result.status === 'not_found').length, 0)
+  for (const { item, result } of report) {
+    assert.equal(result.selected?.productName, item.modelText.includes('Max') ? 'iPhone 17 Pro Max' : 'iPhone 17 Pro')
+    assert.equal(result.selected?.storage, item.storage)
+    assert.equal(result.selected?.color, item.color === 'Cosmic Orange' || item.color === 'Deep Blue' ? item.color : 'Silver')
+    assert.equal(result.selected?.sim, item.sim)
+    const colorKey = item.color === 'Cosmic Orange' ? 'orange' : item.color === 'Deep Blue' ? 'blue' : 'silver'
+    assert.equal(result.selected?.sku, `${item.modelText.includes('Max') ? '17PM' : '17P'}-${item.storage}-${colorKey}-${item.sim === 'eSIM' ? 'ESIM' : 'SIM-ESIM'}`)
+  }
+})
+
+test('third regression fixture handles money before SIM or region and keeps headings out of import results', () => {
+  const fixture = `iPhone 17e
+Japan 17e 256GB White ESIM — 56.300
+17e 256GB Black (1SIM) — 56.300 Kuwait
+17e 512GB Pink — 104.200 ESIM
+
+iPhone Air
+Air 256GB Sky Blue — 73.600 ESIM
+Air 256GB Light Gold — 74.600 (eSIM) Europe
+Air 256GB Cloud White — 75.600 ESIM United States
+Air 1TB Space Black : 1.000.000 ESIM
+
+iPhone 17
+17 256GB White 1SIM — 60.000 USA
+17 256GB Black — 60.100 SIM + ESIM
+17 256GB Mist Blue Europe SIM+ESIM — 60.200
+17 256GB Sage (1SIM) — 60.300 South Korea
+17 256GB Lavender — 60.400 1SIM China
+
+iPhone 17 Pro
+17 Pro 256GB Cosmic Orange — 94.800 (eSIM)
+17 Pro 256GB Deep Blue — 96.200 ESIM
+17 Pro 256GB Silver — 97.300 (1SIM)
+
+iPhone 17 Pro Max
+17 Max 2TB Cosmic Orange — 148.800 ESIM
+17 Pro Max 2TB Deep Blue — 149.400 SIM + ESIM
+17 Pro Max 2TB Silver — 163.600 (1SIM)
+
+iPhone 17
+17e 256GB White
+17 Pro Max 2TB Silver
+iPhone 17`
+  const makeVariant = (id, storage, color, sim, region) => ({ id, sku: `SKU-${id}`, storage, color, sim, ...(region ? { region } : {}) })
+  const fixtureCatalog = [
+    { id: 201, name: 'iPhone 17e', model: 'iPhone 17e', variants: [
+      makeVariant('17E-WHITE-ESIM-JP', '256GB', 'White', 'eSIM', 'Japan'),
+      makeVariant('17E-BLACK-COMBO-KW', '256GB', 'Black', 'SIM + eSIM', 'Kuwait'),
+      makeVariant('17E-SOFT-PINK-ESIM', '512GB', 'Soft Pink', 'eSIM'),
+    ] },
+    { id: 202, name: 'iPhone Air', model: 'iPhone Air', variants: [
+      makeVariant('AIR-SKY', '256GB', 'Sky Blue', 'eSIM'),
+      makeVariant('AIR-GOLD', '256GB', 'Light Gold', 'eSIM', 'Europe'),
+      makeVariant('AIR-CLOUD', '256GB', 'Cloud White', 'eSIM', 'United States'),
+      makeVariant('AIR-BLACK-1TB', '1TB', 'Space Black', 'eSIM'),
+    ] },
+    { id: 203, name: 'iPhone 17', model: 'iPhone 17', variants: [
+      makeVariant('17-WHITE', '256GB', 'White', 'SIM + eSIM', 'United States'),
+      makeVariant('17-BLACK', '256GB', 'Black', 'SIM + eSIM'),
+      makeVariant('17-MIST', '256GB', 'Mist Blue', 'SIM + eSIM', 'Europe'),
+      makeVariant('17-SAGE', '256GB', 'Sage', 'SIM + eSIM', 'South Korea'),
+      makeVariant('17-LAV', '256GB', 'Lavender', 'SIM + eSIM', 'China'),
+    ] },
+    { id: 204, name: 'iPhone 17 Pro', model: 'iPhone 17 Pro', variants: [
+      makeVariant('17P-ORANGE', '256GB', 'Cosmic Orange', 'eSIM'),
+      makeVariant('17P-BLUE', '256GB', 'Deep Blue', 'eSIM'),
+      makeVariant('17P-SILVER', '256GB', 'Silver', 'SIM + eSIM'),
+    ] },
+    { id: 205, name: 'iPhone 17 Pro Max', model: 'iPhone 17 Pro Max', variants: [
+      makeVariant('17PM-ORANGE', '2TB', 'Cosmic Orange', 'eSIM'),
+      makeVariant('17PM-BLUE', '2TB', 'Deep Blue', 'SIM + eSIM'),
+      makeVariant('17PM-SILVER', '2TB', 'Silver', 'SIM + eSIM'),
+    ] },
+  ]
+  const parsed = parseFreeformPriceList(fixture)
+  assert.equal(parsed.items.length, 18)
+  assert.equal(parsed.lines.length, 20)
+  assert.equal(parsed.errors.length, 2)
+  assert.equal(parsed.items.some((item) => item.modelText === 'iPhone'), false)
+  assert.deepEqual(parsed.items.map(({ modelText, storage, color, sim, region, price }) => ({ modelText, storage, color, sim, region, price })), [
+    { modelText: '17e', storage: '256GB', color: 'White', sim: 'eSIM', region: 'Japan', price: 56300 },
+    { modelText: '17e', storage: '256GB', color: 'Black', sim: 'SIM + eSIM', region: 'Kuwait', price: 56300 },
+    { modelText: '17e', storage: '512GB', color: 'Pink', sim: 'eSIM', region: '', price: 104200 },
+    { modelText: 'Air', storage: '256GB', color: 'Sky Blue', sim: 'eSIM', region: '', price: 73600 },
+    { modelText: 'Air', storage: '256GB', color: 'Light Gold', sim: 'eSIM', region: 'Europe', price: 74600 },
+    { modelText: 'Air', storage: '256GB', color: 'Cloud White', sim: 'eSIM', region: 'United States', price: 75600 },
+    { modelText: 'Air', storage: '1TB', color: 'Space Black', sim: 'eSIM', region: '', price: 1000000 },
+    { modelText: '17', storage: '256GB', color: 'White', sim: 'SIM + eSIM', region: 'United States', price: 60000 },
+    { modelText: '17', storage: '256GB', color: 'Black', sim: 'SIM + eSIM', region: '', price: 60100 },
+    { modelText: '17', storage: '256GB', color: 'Mist Blue', sim: 'SIM + eSIM', region: 'Europe', price: 60200 },
+    { modelText: '17', storage: '256GB', color: 'Sage', sim: 'SIM + eSIM', region: 'South Korea', price: 60300 },
+    { modelText: '17', storage: '256GB', color: 'Lavender', sim: 'SIM + eSIM', region: 'China', price: 60400 },
+    { modelText: '17 Pro', storage: '256GB', color: 'Cosmic Orange', sim: 'eSIM', region: '', price: 94800 },
+    { modelText: '17 Pro', storage: '256GB', color: 'Deep Blue', sim: 'eSIM', region: '', price: 96200 },
+    { modelText: '17 Pro', storage: '256GB', color: 'Silver', sim: 'SIM + eSIM', region: '', price: 97300 },
+    { modelText: '17 Max', storage: '2TB', color: 'Cosmic Orange', sim: 'eSIM', region: '', price: 148800 },
+    { modelText: '17 Pro Max', storage: '2TB', color: 'Deep Blue', sim: 'SIM + eSIM', region: '', price: 149400 },
+    { modelText: '17 Pro Max', storage: '2TB', color: 'Silver', sim: 'SIM + eSIM', region: '', price: 163600 },
+  ])
+  const report = parsed.items.map((item) => ({ item, result: matchCatalogItem(item, fixtureCatalog) }))
+  assert.equal(report.filter(({ result }) => result.status === 'matched').length, 18)
+  assert.equal(report.filter(({ result }) => result.status === 'ambiguous').length, 0)
+  assert.equal(report.filter(({ result }) => result.status === 'not_found').length, 0)
+  for (const { item, result } of report) assert.equal(result.selected?.sku.startsWith('SKU-'), true)
+  assert.equal(matchCatalogItem(aiItem({ modelText: '17', storage: '256GB', color: 'White', sim: 'SIM + eSIM' }), fixtureCatalog).selected?.productName, 'iPhone 17')
+})
+
+test('short storage and Active are removed before deterministic model matching', () => {
+  const fixture = `17 Pro Max 256 Silver (1Sim+eSim) 111700
+17 Pro Max 256 Blue (1Sim+eSim) 110500
+17 Pro Max 256 Orange (1Sim+eSim) 110400
+17 Pro Max 512 Silver (1Sim+eSim) 132705
+17 Pro Max 512 Blue (1Sim+eSim) 129700
+17 Pro Max 512 Orange (1Sim+eSim) 128400
+17 Pro Max 2TB Orange (eSim) Актив 142700
+17 Pro 512 Blue (eSim) Актив 110700
+17 512 Black (eSim) Актив 79700
+iPad 11 128 Silver Wi-Fi 39400
+Air 13 MDHE4 Midnight (M5 16/512) 120800`
+  const variants = (prefix, storages, colors, sims) => storages.flatMap((storage) => colors.flatMap(([input, color]) => sims.map((sim) => ({
+    id: `${prefix}-${storage}-${input}-${sim}`,
+    sku: `${prefix}-${storage}-${input}-${sim}`,
+    storage, color, sim,
+  }))))
+  const fixtureCatalog = [
+    { id: 301, name: 'iPhone 17 Pro Max', model: 'iPhone 17 Pro Max', productGroup: 'smartphones', variants: variants('17PM', ['256GB', '512GB', '1TB', '2TB'], [['Silver', 'Silver'], ['Blue', 'Deep Blue'], ['Orange', 'Cosmic Orange']], ['eSIM', 'SIM + eSIM']) },
+    { id: 302, name: 'iPhone 17 Pro', model: 'iPhone 17 Pro', productGroup: 'smartphones', variants: variants('17P', ['512GB'], [['Blue', 'Deep Blue']], ['eSIM']) },
+    { id: 303, name: 'iPhone 17', model: 'iPhone 17', productGroup: 'smartphones', variants: variants('17', ['512GB'], [['Black', 'Black']], ['eSIM']) },
+    { id: 304, name: 'iPad', model: 'iPad', productGroup: 'tablets', variants: [{ id: 'ipad', sku: 'IPAD-128-SILVER', storage: '128GB', color: 'Silver', screenSize: '11″', connectivity: 'Wi-Fi' }] },
+    { id: 305, name: 'MacBook Air 13″ M5', model: 'MacBook Air 13″ M5', productGroup: 'laptops', variants: [{ id: 'mac', sku: 'MAC-AIR-MDHE4', manufacturerModelNumber: 'MDHE4', storage: '512GB', ram: '16GB', color: 'Midnight', screenSize: '13.6″', chip: 'M5' }] },
+  ]
+  const parsed = parseFreeformPriceList(fixture)
+  assert.equal(parsed.items.length, 11)
+  assert.equal(parsed.errors.length, 0)
+  assert.deepEqual(parsed.items.map(({ modelText, storage, ram, color, sim, active, price }) => ({ modelText, storage, ram, color, sim, active, price })), [
+    { modelText: '17 Pro Max', storage: '256GB', ram: null, color: 'Silver', sim: 'SIM + eSIM', active: false, price: 111700 },
+    { modelText: '17 Pro Max', storage: '256GB', ram: null, color: 'Blue', sim: 'SIM + eSIM', active: false, price: 110500 },
+    { modelText: '17 Pro Max', storage: '256GB', ram: null, color: 'Orange', sim: 'SIM + eSIM', active: false, price: 110400 },
+    { modelText: '17 Pro Max', storage: '512GB', ram: null, color: 'Silver', sim: 'SIM + eSIM', active: false, price: 132705 },
+    { modelText: '17 Pro Max', storage: '512GB', ram: null, color: 'Blue', sim: 'SIM + eSIM', active: false, price: 129700 },
+    { modelText: '17 Pro Max', storage: '512GB', ram: null, color: 'Orange', sim: 'SIM + eSIM', active: false, price: 128400 },
+    { modelText: '17 Pro Max', storage: '2TB', ram: null, color: 'Orange', sim: 'eSIM', active: true, price: 142700 },
+    { modelText: '17 Pro', storage: '512GB', ram: null, color: 'Blue', sim: 'eSIM', active: true, price: 110700 },
+    { modelText: '17', storage: '512GB', ram: null, color: 'Black', sim: 'eSIM', active: true, price: 79700 },
+    { modelText: 'iPad', storage: '128GB', ram: null, color: 'Silver', sim: null, active: false, price: 39400 },
+    { modelText: 'MacBook Air', storage: '512GB', ram: '16GB', color: 'Midnight', sim: null, active: false, price: 120800 },
+  ])
+  for (const item of parsed.items) {
+    assert.doesNotMatch(item.modelText, /(?:\b128\b|\b256\b|\b512\b|Актив)/iu)
+  }
+  const report = parsed.items.map((item) => ({ item, result: matchCatalogItem(item, fixtureCatalog) }))
+  assert.equal(report.filter(({ result }) => result.status === 'matched').length, 11, JSON.stringify(report.map(({ item, result }) => ({ model: item.modelText, status: result.status, reason: result.reason }))))
+  assert.equal(report.filter(({ result }) => result.status === 'ambiguous').length, 0)
+  assert.equal(report.filter(({ result }) => result.status === 'not_found').length, 0)
+  assert.equal(new Set(report.map(({ result }) => result.selected?.sku)).size, 11)
+  assert.equal(report[7].result.selected?.productName, 'iPhone 17 Pro')
+  assert.equal(report.slice(0, 7).every(({ result }) => result.selected?.productName === 'iPhone 17 Pro Max'), true)
+  assert.equal(matchCatalogItem(aiItem({ modelText: '17 Pro Max', storage: '1TB', color: 'Silver', sim: 'SIM + eSIM' }), fixtureCatalog).status, 'matched')
+})
+
+test('iPhone Air color aliases stay model-scoped and match exact catalog colors', () => {
+  const fixture = `17 Air 256 Black (eSim) 74000
+17 Air 256 White (eSim) 74700
+17 Air 256 Gold (eSim) 72600
+17 Air 256 Blue (eSim) 72700
+17 Air 512 Black (eSim) 80900
+17 Air 512 White (eSim) 83200
+17 Air 1TB White (eSim) 89900
+17 Air 1TB Blue (eSim) 89900`
+  const colors = [['Black', 'Space Black'], ['White', 'Cloud White'], ['Gold', 'Light Gold'], ['Blue', 'Sky Blue']]
+  const airVariants = ['256GB', '512GB', '1TB'].flatMap((storage) => colors.map(([input, color]) => ({
+    id: `${storage}-${input}`,
+    sku: `AIR-${storage}-${input.toUpperCase()}`,
+    storage,
+    color,
+    sim: 'eSIM',
+  })))
+  const fixtureCatalog = [
+    { id: 401, name: 'iPhone Air', model: 'iPhone Air', variants: airVariants },
+    { id: 402, name: 'iPhone 17', model: 'iPhone 17', variants: [{ id: '17-black', sku: '17-BLACK', storage: '512GB', color: 'Black', sim: 'eSIM' }] },
+    { id: 403, name: 'iPhone 17 Pro', model: 'iPhone 17 Pro', variants: [{ id: '17p-blue', sku: '17P-DEEP-BLUE', storage: '256GB', color: 'Deep Blue', sim: 'eSIM' }] },
+    { id: 404, name: 'AirPods 4', model: 'AirPods 4', sku: 'AIRPODS-4', variants: [] },
+  ]
+  const parsed = parseFreeformPriceList(fixture)
+  const report = parsed.items.map((item) => ({ item, result: matchCatalogItem(item, fixtureCatalog) }))
+  assert.equal(parsed.items.length, 8)
+  assert.equal(parsed.errors.length, 0)
+  assert.equal(report.every(({ result }) => result.status === 'matched'), true)
+  assert.deepEqual(report.map(({ item, result }) => ({
+    model: result.selected?.productName,
+    storage: item.storage,
+    inputColor: item.color,
+    catalogColor: result.selected?.color,
+    sim: item.sim,
+    price: item.price,
+    status: result.status,
+    sku: result.selected?.sku,
+  })), [
+    { model: 'iPhone Air', storage: '256GB', inputColor: 'Black', catalogColor: 'Space Black', sim: 'eSIM', price: 74000, status: 'matched', sku: 'AIR-256GB-BLACK' },
+    { model: 'iPhone Air', storage: '256GB', inputColor: 'White', catalogColor: 'Cloud White', sim: 'eSIM', price: 74700, status: 'matched', sku: 'AIR-256GB-WHITE' },
+    { model: 'iPhone Air', storage: '256GB', inputColor: 'Gold', catalogColor: 'Light Gold', sim: 'eSIM', price: 72600, status: 'matched', sku: 'AIR-256GB-GOLD' },
+    { model: 'iPhone Air', storage: '256GB', inputColor: 'Blue', catalogColor: 'Sky Blue', sim: 'eSIM', price: 72700, status: 'matched', sku: 'AIR-256GB-BLUE' },
+    { model: 'iPhone Air', storage: '512GB', inputColor: 'Black', catalogColor: 'Space Black', sim: 'eSIM', price: 80900, status: 'matched', sku: 'AIR-512GB-BLACK' },
+    { model: 'iPhone Air', storage: '512GB', inputColor: 'White', catalogColor: 'Cloud White', sim: 'eSIM', price: 83200, status: 'matched', sku: 'AIR-512GB-WHITE' },
+    { model: 'iPhone Air', storage: '1TB', inputColor: 'White', catalogColor: 'Cloud White', sim: 'eSIM', price: 89900, status: 'matched', sku: 'AIR-1TB-WHITE' },
+    { model: 'iPhone Air', storage: '1TB', inputColor: 'Blue', catalogColor: 'Sky Blue', sim: 'eSIM', price: 89900, status: 'matched', sku: 'AIR-1TB-BLUE' },
+  ])
+  assert.equal(matchCatalogItem(aiItem({ modelText: '17', storage: '512GB', color: 'Black', sim: 'eSIM' }), fixtureCatalog).selected?.color, 'Black')
+  assert.equal(matchCatalogItem(aiItem({ modelText: '17 Pro', storage: '256GB', color: 'Blue', sim: 'eSIM' }), fixtureCatalog).selected?.color, 'Deep Blue')
+  assert.equal(matchCatalogItem(aiItem({ modelText: 'AirPods 4' }), fixtureCatalog).selected?.sku, 'AIRPODS-4')
+})
+
+test('a standalone price on the next non-empty line is joined only to a configured product row', () => {
+  const fixture = `iPad
+
+iPad 11 128 Silver Wi-Fi
+39400
+iPad 11 128 Blue Wi-Fi
+39 400
+iPad 11 128 Pink Wi-Fi
+39.900 ₽
+iPad 11 128 Yellow Wi-Fi
+38 200 руб`
+  const fixtureCatalog = [{ id: 501, name: 'iPad', model: 'iPad', productGroup: 'tablets', variants: [
+    { id: 'silver', sku: 'IPAD-SILVER', storage: '128GB', color: 'Silver', screenSize: '11″', connectivity: 'Wi-Fi' },
+    { id: 'blue', sku: 'IPAD-BLUE', storage: '128GB', color: 'Blue', screenSize: '11″', connectivity: 'Wi-Fi' },
+    { id: 'pink', sku: 'IPAD-PINK', storage: '128GB', color: 'Pink', screenSize: '11″', connectivity: 'Wi-Fi' },
+    { id: 'yellow', sku: 'IPAD-YELLOW', storage: '128GB', color: 'Yellow', screenSize: '11″', connectivity: 'Wi-Fi' },
+  ] }]
+  const parsed = parseFreeformPriceList(fixture)
+  const report = parsed.items.map((item) => ({ item, result: matchCatalogItem(item, fixtureCatalog) }))
+  assert.equal(parsed.lines.length, 4)
+  assert.equal(parsed.items.length, 4)
+  assert.equal(parsed.errors.length, 0)
+  assert.deepEqual(parsed.lines.map((line) => line.lineNumber), [3, 5, 7, 9])
+  assert.deepEqual(report.map(({ item, result }) => ({ model: item.modelText, storage: item.storage, color: item.color, connectivity: item.connectivity, price: item.price, status: result.status, sku: result.selected?.sku })), [
+    { model: 'iPad', storage: '128GB', color: 'Silver', connectivity: 'Wi-Fi', price: 39400, status: 'matched', sku: 'IPAD-SILVER' },
+    { model: 'iPad', storage: '128GB', color: 'Blue', connectivity: 'Wi-Fi', price: 39400, status: 'matched', sku: 'IPAD-BLUE' },
+    { model: 'iPad', storage: '128GB', color: 'Pink', connectivity: 'Wi-Fi', price: 39900, status: 'matched', sku: 'IPAD-PINK' },
+    { model: 'iPad', storage: '128GB', color: 'Yellow', connectivity: 'Wi-Fi', price: 38200, status: 'matched', sku: 'IPAD-YELLOW' },
+  ])
+  const withoutYellow = [{ ...fixtureCatalog[0], variants: fixtureCatalog[0].variants.filter((variant) => variant.color !== 'Yellow') }]
+  const missing = matchCatalogItem(parsed.items[3], withoutYellow)
+  assert.equal(missing.status, 'not_found')
+  assert.match(missing.reason, /цвет/u)
+  const guarded = parseFreeformPriceList('iPhone 17\n39400\nWatch\n2025\niPad 11 128 Silver Wi-Fi 39400')
+  assert.equal(guarded.items.length, 1)
+  assert.equal(guarded.items[0].price, 39400)
+  assert.equal(guarded.errors.length, 2)
+})
+
+test('unresolved rows never enter the verified price preview', () => {
+  const pending = [
+    { id: 1, resolution: 'pending', matchStatus: 'not_found', price: 10, candidates: [] },
+    { id: 2, resolution: 'pending', matchStatus: 'ambiguous', price: 20, candidates: [{ key: 'a', productId: 1, productName: 'P', matchType: 'variant', variantId: 'a', sku: 'A' }, { key: 'b', productId: 1, productName: 'P', matchType: 'variant', variantId: 'b', sku: 'B' }] },
+  ]
+  assert.deepEqual(buildVerifiedPreviewRows(pending, []), [])
 })
 
 test('does not apply iPhone color aliases to other product models', () => {

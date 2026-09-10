@@ -284,8 +284,12 @@ export interface Product {
   /**
    * Необязательное техническое поле; существующие товары не изменяются автоматически.
    */
-  condition?: 'new' | 'used' | null;
+  condition?: ('new' | 'used') | null;
   brand?: string | null;
+  deviceType?: ('phone' | 'tablet' | 'laptop' | 'smartwatch' | 'headphones' | 'game-console' | 'hair-dryer' | 'vacuum-cleaner' | 'accessory' | 'other') | null;
+  /**
+   * Выберите тип до добавления вариантов.
+   */
   productType?: string | null;
   productLine?: string | null;
   /**
@@ -367,17 +371,17 @@ export interface Product {
          */
         color?: (number | null) | Color;
         /**
-         * Выберите накопитель из справочника (128GB, 256GB, 1TB…)
+         * Выберите накопитель из справочника (128GB, 256GB, 512GB, 1TB, 2TB)
          */
         storage?: (number | null) | StorageOption;
         /**
-         * Выберите из справочника SIM-вариантов
+         * Выберите eSIM или SIM + eSIM из справочника
          */
         sim?: (number | null) | SimOption;
         chip?: string | null;
         ram?: string | null;
         /**
-         * Заполняется после миграции; старое поле ram сохраняется.
+         * Выберите RAM для Mac; старое текстовое поле сохраняется.
          */
         ramOption?: (number | null) | RamOption;
         /**
@@ -385,16 +389,23 @@ export interface Product {
          */
         size?: string | null;
         /**
-         * Есть Touch ID
+         * Размер корпуса Apple Watch из справочника.
+         */
+        sizeOption?: (number | null) | VariantSizeOption;
+        /**
+         * Показывается для конфигураций Mac и сохранённых значений.
          */
         hasTouchId?: boolean | null;
         screenSize?: string | null;
         screenSizeOption?: (number | null) | ScreenSizeOption;
         connectivity?: string | null;
+        /**
+         * Для iPad выберите Wi-Fi/LTE, для AirPods — USB-C/Lightning, если значение есть в справочнике.
+         */
         connectivityOption?: (number | null) | ConnectivityOption;
         generation?: string | null;
         /**
-         * Например: 1 шт или 4 шт. Не используйте generation для комплектации.
+         * Существующая комплектация или описание ремешка. Не используйте generation для комплектации.
          */
         packageLabel?: string | null;
         price: number;
@@ -1049,6 +1060,7 @@ export interface ProductsSelect<T extends boolean = true> {
   productGroup?: T;
   condition?: T;
   brand?: T;
+  deviceType?: T;
   productType?: T;
   productLine?: T;
   sku?: T;
@@ -1086,6 +1098,7 @@ export interface ProductsSelect<T extends boolean = true> {
         ram?: T;
         ramOption?: T;
         size?: T;
+        sizeOption?: T;
         hasTouchId?: T;
         screenSize?: T;
         screenSizeOption?: T;
