@@ -15,6 +15,7 @@ export const BrandCatalogNavigation: GlobalConfig = {
     { name: 'filter', type: 'json' },
     { name: 'sortOrder', type: 'number', defaultValue: 100 },
     { name: 'isVisible', type: 'checkbox', defaultValue: true },
+    { name: 'isNew', type: 'checkbox', defaultValue: false },
     cover,
     { name: 'children', type: 'array', fields: [
       { name: 'title', type: 'text', required: true },
@@ -23,6 +24,7 @@ export const BrandCatalogNavigation: GlobalConfig = {
       { name: 'filter', type: 'json' },
       { name: 'sortOrder', type: 'number', defaultValue: 100 },
       { name: 'isVisible', type: 'checkbox', defaultValue: true },
+      { name: 'isNew', type: 'checkbox', defaultValue: false },
       cover,
     ] },
   ] }],

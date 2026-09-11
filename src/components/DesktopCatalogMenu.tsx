@@ -102,8 +102,8 @@ export function DesktopCatalogMenu({ nodes, trailingLink, brandMenu }: { nodes: 
   </div>
 
   return <div ref={rootRef} className={`desktop-catalog-nav desktop-catalog-nav--${direction}`} onPointerEnter={cancelClose} onPointerLeave={(event) => { const next = event.relatedTarget as Node | null; if (!next || (!rootRef.current?.contains(next) && !flyoutRef.current?.contains(next))) scheduleClose() }} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); closeMenu() } }}>
-    <div className="desktop-catalog-groups">{brandMenu ? brandMenu.map((brand) => brand.key === 'trade-in'
-      ? <Link key={brand.label} href={brand.href} className="nav-dropdown-trigger">{brand.label}</Link>
+    <div className="desktop-catalog-groups">{brandMenu ? brandMenu.filter((brand) => brand.isVisible !== false).map((brand) => brand.key === 'trade-in'
+      ? <Link key={brand.label} href={brand.href} className="nav-dropdown-trigger">{brand.label}{brand.isNew && <small className="nav-new-badge">Новинка</small>}</Link>
       : <div key={brand.label} className="nav-dropdown"><span className="nav-dropdown-trigger">{brand.label}{brand.items.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</span>{brand.items.length > 0 && <div className="nav-dropdown-menu">{brand.items.map((item) => <Link key={item.href + item.label} href={item.href}>{item.label}</Link>)}</div>}</div>) : groups.map((group) => <span key={group.id} data-group-id={group.id} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</span>)}{trailingLink && <Link href={trailingLink.href} className="nav-dropdown-trigger">{trailingLink.label}</Link>}</div>
     {typeof document !== 'undefined' && flyout ? createPortal(flyout, document.body) : null}
   </div>

@@ -389,16 +389,16 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
     const source = Array.isArray(value.groups) && value.groups.length >= 6 ? value.groups : DEFAULT_BRAND_CATALOG_MENU
     const menu = visibleBrandMenu(source.map((group: any) => ({
       label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
-      coverImage: group.coverImage || null, isVisible: group.isVisible !== false, sortOrder: Number(group.sortOrder ?? 0),
+      coverImage: group.coverImage || null, isVisible: group.isVisible !== false, isNew: group.isNew === true, sortOrder: Number(group.sortOrder ?? 0),
       items: Array.isArray(group.children) ? group.children.map((child: any) => ({
         label: String(child.title ?? child.label), key: String(child.key), href: resolveBrandHref(String(child.key), child.href, child.filter), filter: child.filter || undefined,
-        coverImage: child.coverImage || null, isVisible: child.isVisible !== false, sortOrder: Number(child.sortOrder ?? 0),
+        coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),
       })) : [],
     })) as BrandMenu[])
     return menu.map((group) => ({
       title: group.label, key: group.key, href: group.href, filter: group.filter, coverImage: group.coverImage,
-      isVisible: group.isVisible, sortOrder: group.sortOrder,
-      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, sortOrder: child.sortOrder })),
+      isVisible: group.isVisible, isNew: group.isNew, sortOrder: group.sortOrder,
+      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder })),
     }))
   } catch {
     return DEFAULT_BRAND_CATALOG_MENU.map((group) => ({

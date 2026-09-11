@@ -12,7 +12,10 @@ type Item = {
   isVisible?: boolean;
   coverImage?: { id?: number; url?: string; filename?: string } | number | null;
   children?: Item[];
+  isNew?: boolean;
+  products?: ProductItem[];
 };
+type ProductItem = { id: string | number; name: string; slug?: string; isNew?: boolean; isAvailable?: boolean; sortOrder?: number; images?: { url?: string }[] | null };
 type Media = { id: number; filename?: string; url?: string };
 type Editor = { item: Item; parent?: string; isNew?: boolean };
 
@@ -36,11 +39,19 @@ export default function CatalogNavigationView() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [productDrafts, setProductDrafts] = useState<Record<string, { isNew: boolean; sortOrder: number }>>({});
+  const [productOpen, setProductOpen] = useState<Record<string, boolean>>({});
+  const requestError = async (response: Response, fallback: string) => {
+    const data = await response.json().catch(() => ({}));
+    const message = response.status === 401 ? 'Сессия истекла. Войдите в админку заново.' : response.status === 403 ? 'Недостаточно прав для изменения навигации.' : String(data.error || data.reason || fallback);
+    if (process.env.NODE_ENV !== 'production') console.warn('[catalog-navigation]', response.url, response.status, message);
+    return message;
+  };
 
   useEffect(() => {
     fetch("/api/brand-catalog-navigation")
       .then(async (r) => {
-        if (!r.ok) throw new Error("Не удалось загрузить навигацию");
+        if (!r.ok) throw new Error(await requestError(r, "Не удалось загрузить навигацию"));
         const d = await r.json();
         setGroups(d.groups || []);
       })
@@ -134,13 +145,15 @@ export default function CatalogNavigationView() {
     setError("");
     try {
       const payload = {
+        productUpdates: Object.entries(productDrafts).map(([key, value]) => { const [childKey, id] = key.split(':'); return { childKey, id, ...value }; }),
         groups: groups.map((group, groupIndex) => ({
           title: String(group.title),
           key: String(group.key),
           href: group.href || null,
           filter: group.filter ?? null,
           sortOrder: groupIndex,
-          isVisible: group.isVisible !== false,
+            isVisible: group.isVisible !== false,
+            isNew: group.isNew === true,
           coverImage: coverId(group) || null,
           children: (group.children || []).map((child, childIndex) => ({
             title: String(child.title),
@@ -149,6 +162,7 @@ export default function CatalogNavigationView() {
             filter: child.filter ?? null,
             sortOrder: childIndex,
             isVisible: child.isVisible !== false,
+            isNew: child.isNew === true,
             coverImage: coverId(child) || null,
           })),
         })),
@@ -160,15 +174,18 @@ export default function CatalogNavigationView() {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        setError(
-          [data.error, data.field, data.reason].filter(Boolean).join(": ") ||
-            "Не удалось сохранить",
-        );
+        setError([data.error, data.field, data.reason].filter(Boolean).join(": ") || await requestError(r, "Не удалось сохранить"));
         return;
       }
-      setGroups(data.groups || groups);
+      const refreshed = await fetch("/api/brand-catalog-navigation");
+      const refreshedData = await refreshed.json().catch(() => ({}));
+      setGroups(refreshedData.groups || data.groups || groups);
       setDirty(false);
       setStatus("Изменения сохранены");
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Не удалось сохранить изменения';
+      if (process.env.NODE_ENV !== 'production') console.warn('[catalog-navigation] PUT failed', message);
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -232,6 +249,9 @@ export default function CatalogNavigationView() {
               }
             />{" "}
             Видим
+          </label>
+          <label className="brand-switch">
+            <input type="checkbox" checked={item.isNew === true} onChange={(e) => update(item.key, { isNew: e.target.checked }, parent)} /> Новинка
           </label>
           <div className="action-menu-wrap">
             <button
@@ -312,6 +332,29 @@ export default function CatalogNavigationView() {
           </div>
         </div>
         {cover(item, parent)}
+        {parent && item.products && item.products.length > 0 && <div className="catalog-product-list">
+          <button type="button" className="catalog-product-toggle" onClick={() => setProductOpen((state) => ({ ...state, [item.key]: state[item.key] === false }))}>{productOpen[item.key] === false ? 'Показать товары' : `Товары (${item.products.length})`}</button>
+          {productOpen[item.key] !== false && [...item.products].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.id).localeCompare(String(b.id))).map((product, productIndex, sortedProducts) => {
+            const draftKey = `${item.key}:${product.id}`;
+            const draft = productDrafts[draftKey] || { isNew: product.isNew === true, sortOrder: product.sortOrder || 0 };
+            const moveProduct = (direction: -1 | 1) => {
+              const sorted = [...item.products!].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.id).localeCompare(String(b.id)));
+              const index = sorted.findIndex((entry) => String(entry.id) === String(product.id));
+              const target = index + direction;
+              if (target < 0 || target >= sorted.length) return;
+              const other = sorted[target];
+              setProductDrafts((all) => ({ ...all, [`${item.key}:${product.id}`]: { ...draft, sortOrder: other.sortOrder || 0 }, [`${item.key}:${other.id}`]: { isNew: other.isNew === true, sortOrder: product.sortOrder || 0 } }));
+              setDirty(true);
+            };
+            return <div className="catalog-product-row" key={product.id}>
+              {product.images?.[0]?.url ? <img src={product.images[0].url} alt="" className="catalog-product-image" /> : null}<span>{product.name}</span>
+              {!product.isAvailable && <small>Скрыт</small>}
+              <label className="brand-switch"><input type="checkbox" checked={draft.isNew} onChange={(e) => { setProductDrafts((all) => ({ ...all, [draftKey]: { ...draft, isNew: e.target.checked } })); setDirty(true); }} /> Новинка</label>
+              <button type="button" disabled={productIndex === 0} onClick={() => moveProduct(-1)}>Вверх</button>
+              <button type="button" disabled={productIndex === item.products!.length - 1} onClick={() => moveProduct(1)}>Вниз</button>
+            </div>;
+          })}
+        </div>}
       </article>
     );
   };

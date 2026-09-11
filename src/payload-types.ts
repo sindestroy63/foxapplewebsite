@@ -404,6 +404,8 @@ export interface Product {
          */
         connectivityOption?: (number | null) | ConnectivityOption;
         generation?: string | null;
+        material?: string | null;
+        strapSize?: string | null;
         /**
          * Существующая комплектация или описание ремешка. Не используйте generation для комплектации.
          */

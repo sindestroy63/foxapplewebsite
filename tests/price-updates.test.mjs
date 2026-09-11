@@ -323,6 +323,20 @@ test('variant update changes its price and recalculates root minimum', () => {
   ])
 })
 
+test('variant price update preserves every non-price characteristic', () => {
+  const variant = {
+    id: 'v1', sku: 'WATCH-42-BLACK', price: 90, color: { value: 'black' },
+    storage: '256GB', sim: 'SIM_ESIM', ram: '16GB', chip: 'M5', size: '42mm',
+    screenSize: '11"', connectivity: 'Wi-Fi + Cellular', generation: 'Series 12',
+    material: 'Aluminium', strapSize: 'S/M', packageLabel: 'Sport Band', images: [7],
+  }
+  const result = prepareProductPriceUpdate({ price: 90, variants: [variant] }, {
+    matchType: 'variant', sku: variant.sku, variantId: variant.id, oldCashPrice: 90, newCashPrice: 120,
+  })
+  assert.equal(result.conflict, false)
+  assert.deepEqual(result.data.variants?.[0], { ...variant, price: 120 })
+})
+
 test('detects a stale preview conflict', () => {
   const result = prepareProductPriceUpdate(
     { price: 105 },

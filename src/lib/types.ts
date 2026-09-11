@@ -71,6 +71,8 @@ export type ProductVariant = {
   connectivity?: string
   generation?: string
   packageLabel?: string
+  material?: string
+  strapSize?: string
   price: number
   oldPrice?: number
   status?: ProductStatus
@@ -93,6 +95,7 @@ export type Product = {
   brand?: string
   productType?: string
   productLine?: string
+  deviceType?: string
   sku?: string
   badge?: string
   memory?: string
@@ -108,6 +111,13 @@ export type Product = {
   isFeatured?: boolean
   isNew?: boolean
   sortOrder?: number
+  chip?: string
+  ram?: string
+  screenSize?: string
+  connectivity?: string
+  generation?: string
+  packageLabel?: string
+  hasTouchId?: boolean | null
   shortDescription?: string
   description?: unknown
   images?: Array<Media | string | number>

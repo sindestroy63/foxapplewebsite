@@ -10,6 +10,7 @@ export type BrandMenuItem = {
   filter?: Record<string, string>
   coverImage?: Media | null
   isVisible?: boolean
+  isNew?: boolean
   sortOrder?: number
 }
 
@@ -20,6 +21,7 @@ export type BrandMenu = {
   filter?: Record<string, string>
   coverImage?: Media | null
   isVisible?: boolean
+  isNew?: boolean
   sortOrder?: number
   items: BrandMenuItem[]
 }

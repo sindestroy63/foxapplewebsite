@@ -4,6 +4,16 @@ import { catalogPlacementFilter, catalogPlacementHref, getCatalogPlacementByChil
 
 type InputItem = Record<string, unknown>;
 
+type NavigationProduct = {
+  id: number | string;
+  name: string;
+  slug?: string;
+  isNew?: boolean;
+  isAvailable?: boolean;
+  sortOrder?: number;
+  images?: unknown;
+};
+
 const child = (title: string, key: string, href?: string, visible = true) => {
   const placement = getCatalogPlacementByChildKey(key);
   const resolvedHref = href || (placement ? catalogPlacementHref(placement) : undefined);
@@ -14,6 +24,7 @@ const child = (title: string, key: string, href?: string, visible = true) => {
   filter: placement ? catalogPlacementFilter(placement) : resolvedHref ? Object.fromEntries(new URL(resolvedHref, "http://local").searchParams) : null,
   sortOrder: 0,
   isVisible: visible,
+  isNew: false,
   coverImage: null,
   });
 };
@@ -141,6 +152,8 @@ const normalizeItem = (value: unknown, field: string, index: number) => {
     throw new StructureError(`${field}.sortOrder`, "must be a number");
   if (item.isVisible != null && typeof item.isVisible !== "boolean")
     throw new StructureError(`${field}.isVisible`, "must be a boolean");
+  if (item.isNew != null && typeof item.isNew !== "boolean")
+    throw new StructureError(`${field}.isNew`, "must be a boolean");
   const rawCover =
     item.coverImage && typeof item.coverImage === "object"
       ? (item.coverImage as InputItem).id
@@ -159,6 +172,7 @@ const normalizeItem = (value: unknown, field: string, index: number) => {
     filter: jsonFilter(item.filter, `${field}.filter`),
     sortOrder,
     isVisible: item.isVisible !== false,
+    isNew: item.isNew === true,
     coverImage,
   };
 };
@@ -205,13 +219,14 @@ const payloadSummary = (groups: unknown) => Array.isArray(groups)
         key: value.key,
         sortOrder: value.sortOrder,
         isVisible: value.isVisible,
+        isNew: value.isNew,
         coverImage: value.coverImage && typeof value.coverImage === "object"
           ? (value.coverImage as InputItem).id
           : value.coverImage,
         children: Array.isArray(value.children)
           ? value.children.map((child) => {
               const item = child && typeof child === "object" ? child as InputItem : {};
-              return { title: item.title, key: item.key, sortOrder: item.sortOrder, isVisible: item.isVisible, coverImage: item.coverImage && typeof item.coverImage === "object" ? (item.coverImage as InputItem).id : item.coverImage };
+              return { title: item.title, key: item.key, sortOrder: item.sortOrder, isVisible: item.isVisible, isNew: item.isNew, coverImage: item.coverImage && typeof item.coverImage === "object" ? (item.coverImage as InputItem).id : item.coverImage };
             })
           : typeof value.children,
       };
@@ -248,11 +263,27 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
           ? value.groups
           : defaults;
       try {
-        return Response.json({
-          groups: normalizeBrandCatalogGroups(raw).sort(
+        const groups = normalizeBrandCatalogGroups(raw).sort(
             (a, b) => a.sortOrder - b.sortOrder,
-          ),
-        });
+          );
+        const productsResult = await req.payload.find({ collection: 'products', depth: 0, limit: 1000, pagination: false, req });
+        const products = productsResult.docs as Record<string, any>[];
+        const matches = (product: Record<string, any>, filter: any) => {
+          if (!filter || typeof filter !== 'object') return false;
+          if (filter.group && product.productGroup !== filter.group) return false;
+          if (filter.brand && product.brand !== filter.brand) return false;
+          if (filter.line && product.productLine !== filter.line) return false;
+          if (filter.q && !String(product.name || '').toLowerCase().includes(String(filter.q).toLowerCase())) return false;
+          if (filter.appleAccessories && !(product.productGroup === 'other' && product.brand === 'Apple')) return false;
+          return true;
+        };
+        return Response.json({ groups: groups.map((group) => ({
+          ...group,
+          children: group.children.map((child) => ({
+            ...child,
+            products: products.filter((product) => matches(product, child.filter)).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.id).localeCompare(String(b.id))).map((product): NavigationProduct => ({ id: product.id, name: product.name, slug: product.slug, isNew: product.isNew === true, isAvailable: product.isAvailable !== false, sortOrder: Number(product.sortOrder) || 0, images: product.images })),
+          })),
+        })) });
       } catch (error) {
         return errorResponse(error);
       }
@@ -300,6 +331,17 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
                 );
               }
             }
+        const productUpdates = Array.isArray(body?.productUpdates) ? body!.productUpdates as Array<Record<string, unknown>> : [];
+        const allProducts = await req.payload.find({ collection: 'products', depth: 0, limit: 1000, pagination: false, req });
+        const productById = new Map((allProducts.docs as any[]).map((product) => [String(product.id), product]));
+        const childByKey = new Map(groups.flatMap((group) => group.children.map((child) => [child.key, child] as const)));
+        for (const update of productUpdates) {
+          const id = String(update.id ?? '');
+          const childKey = String(update.childKey ?? '');
+          const product = productById.get(id);
+          const child = childByKey.get(childKey);
+          if (!product || !child || !matchesProductFilter(product, child.filter)) throw new StructureError('productUpdates', 'product does not belong to the selected subcategory');
+        }
         field = "updateGlobal";
         const saved = await req.payload.updateGlobal({
           slug: "brand-catalog-navigation",
@@ -308,6 +350,13 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
           req,
         });
         field = "response.groups";
+        for (const update of productUpdates) {
+          const product = productById.get(String(update.id ?? ''))!;
+          const data: Record<string, unknown> = {};
+          if (typeof update.isNew === 'boolean') data.isNew = update.isNew;
+          if (Number.isFinite(Number(update.sortOrder))) data.sortOrder = Number(update.sortOrder);
+          if (Object.keys(data).length) await req.payload.update({ collection: 'products', id: product.id, data, depth: 0, req });
+        }
         return Response.json({
           groups: normalizeBrandCatalogGroups(
             (saved as unknown as InputItem).groups,
@@ -319,3 +368,13 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
     },
   },
 ];
+
+function matchesProductFilter(product: Record<string, any>, filter: any): boolean {
+  if (!filter || typeof filter !== 'object') return false;
+  if (filter.group && product.productGroup !== filter.group) return false;
+  if (filter.brand && product.brand !== filter.brand) return false;
+  if (filter.line && product.productLine !== filter.line) return false;
+  if (filter.q && !String(product.name || '').toLowerCase().includes(String(filter.q).toLowerCase())) return false;
+  if (filter.appleAccessories && !(product.productGroup === 'other' && product.brand === 'Apple')) return false;
+  return true;
+}

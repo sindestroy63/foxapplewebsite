@@ -27,6 +27,15 @@ test('brand menu links use real catalog filters and no navigation writes', () =>
   assert.doesNotMatch(menu, /navigation\.create|INSERT INTO|UPDATE products/i)
 })
 
+test('brand navigation preserves new flags through the header menu', () => {
+  const header = fs.readFileSync('src/components/Header.tsx', 'utf8')
+  const desktop = fs.readFileSync('src/components/DesktopCatalogMenu.tsx', 'utf8')
+  assert.match(header, /isNew: group\.isNew/)
+  assert.match(header, /isNew: child\.isNew/)
+  assert.match(desktop, /brandMenu\.filter\(\(brand\) => brand\.isVisible !== false\)/)
+  assert.match(desktop, /brand\.isNew && <small className="nav-new-badge">/)
+})
+
 test('Other excludes generic headphones and Apple accessories use a dedicated read filter', () => {
   const other = menu.slice(menu.indexOf("label: 'ДРУГОЕ'"))
   assert.doesNotMatch(other, /label: 'Наушники'/)

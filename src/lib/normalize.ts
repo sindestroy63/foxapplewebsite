@@ -6,11 +6,29 @@ function nc(r: any): VariantColor | undefined {
   return undefined
 }
 
+function relationText(value: any, keys: string[] = ['value', 'label', 'key']): string | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  for (const key of keys) {
+    if (typeof value[key] === 'string' && value[key].trim()) return value[key].trim()
+  }
+  return undefined
+}
+
 function nv(v: Record<string, any>): ProductVariant {
   const storage = v.storage?.value
-  let simType = v.simType
-  if (v.sim?.value) simType = v.sim.value
-  return { id: v.id, sku: v.sku, color: nc(v.color), memory: storage, simType, size: v.size, hasTouchId: v.hasTouchId, storage, sim: v.sim?.value, chip: v.chip, ram: v.ram, screenSize: v.screenSize, connectivity: v.connectivity, generation: v.generation, packageLabel: v.packageLabel, price: v.price, oldPrice: v.oldPrice, status: v.status, isAvailable: v.isAvailable, images: v.images }
+  const simType = v.sim?.value || v.simType
+  const ram = relationText(v.ramOption) || v.ram
+  const size = relationText(v.sizeOption) || v.size
+  const screenSize = relationText(v.screenSizeOption) || v.screenSize
+  const connectivity = relationText(v.connectivityOption) || v.connectivity
+  return {
+    id: v.id, sku: v.sku, color: nc(v.color), memory: storage, simType,
+    size, hasTouchId: v.hasTouchId, storage, sim: v.sim?.value,
+    chip: v.chip, ram, screenSize, connectivity, generation: v.generation,
+    packageLabel: v.packageLabel, material: v.material, strapSize: v.strapSize,
+    price: v.price, oldPrice: v.oldPrice,
+    status: v.status, isAvailable: v.isAvailable, images: v.images,
+  }
 }
 
 function nci(ci: Record<string, any>): ColorImageGroup {

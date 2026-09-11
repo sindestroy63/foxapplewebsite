@@ -7,6 +7,7 @@ import { validateNewVariantConfigurations } from '../src/payload/products/varian
 import { ensureVariantSkus } from '../src/payload/utils/sku.ts'
 import { matchCatalogItem } from '../src/payload/price-updates/match.ts'
 import { parseFreeformPriceList } from '../src/payload/price-updates/parse.ts'
+import { normalizeProduct } from '../src/lib/normalize.ts'
 
 const products = fs.readFileSync('src/payload/collections/Products.ts', 'utf8')
 const metadata = fs.readFileSync('src/app/(frontend)/catalog/[categorySlug]/[productSlug]/page.tsx', 'utf8')
@@ -17,6 +18,40 @@ const slugField = fs.readFileSync('src/payload/components/admin/ProductSlugField
 const productTypeField = fs.readFileSync('src/payload/components/admin/ProductTypeField.tsx', 'utf8')
 const priceEndpoints = fs.readFileSync('src/payload/price-updates/endpoints.ts', 'utf8')
 const productTypeMigration = fs.readFileSync('src/migrations/20260910_120000_backfill_product_type.ts', 'utf8')
+const detail = fs.readFileSync('src/components/ProductDetailClient.tsx', 'utf8')
+const materialMigration = fs.readFileSync('src/migrations/20260911_090000_variant_material_strap_size.ts', 'utf8')
+
+test('watch material and strap size are persisted as nullable variant fields', () => {
+  assert.match(products, /name: 'material'/)
+  assert.match(products, /name: 'strapSize'/)
+  assert.match(materialMigration, /ADD COLUMN IF NOT EXISTS "material" varchar NULL/)
+  assert.match(materialMigration, /ADD COLUMN IF NOT EXISTS "strap_size" varchar NULL/)
+  assert.match(materialMigration, /DROP COLUMN IF EXISTS "material"/)
+  assert.match(materialMigration, /DROP COLUMN IF EXISTS "strap_size"/)
+})
+
+test('normalized API variants retain relationship-backed characteristics', () => {
+  const product = normalizeProduct({
+    id: 1, name: 'Watch', slug: 'watch', price: 100,
+    variants: [{ id: 'v1', price: 100, color: { value: 'black', englishLabel: 'Black' },
+      sizeOption: { key: '42mm', label: '42 мм' },
+      connectivityOption: { key: 'cellular', label: 'Wi-Fi + Cellular' },
+      generation: 'Series 12', packageLabel: 'Sport Band',
+    }],
+  })
+  assert.equal(product.variants?.[0]?.size, '42 мм')
+  assert.equal(product.variants?.[0]?.connectivity, 'Wi-Fi + Cellular')
+  assert.equal(product.variants?.[0]?.generation, 'Series 12')
+  assert.equal(product.variants?.[0]?.packageLabel, 'Sport Band')
+})
+
+test('product detail renders selected variant characteristics and omits empty fields', () => {
+  assert.match(detail, /product-variant-specs/)
+  assert.match(detail, /activeVariant\?\.size/)
+  assert.match(detail, /activeVariant\?\.connectivity/)
+  assert.match(detail, /activeVariant\?\.generation/)
+  assert.match(detail, /activeVariant\?\.packageLabel/)
+})
 
 test('Product identifiers and SEO inputs are protected in CMS', () => {
   assert.match(products, /name: 'sku'[\s\S]*?access: \{ update: \(\) => false \}/)

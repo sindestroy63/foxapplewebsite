@@ -43,3 +43,11 @@
 @media (max-width:760px) { .catalog-navigation-admin { padding:1rem; }.catalog-editor-header { display:block; }.catalog-editor-toolbar { margin-top:1rem; }.brand-item-head { display:grid; }.brand-cover { align-items:flex-start; }.brand-cover-preview { width:96px; height:64px; flex:0 0 auto; }.catalog-modal-backdrop { place-items:start center; padding:.5rem; }.catalog-modal { max-height:calc(100vh - 1rem); } }
 .action-menu-wrap { position:relative; margin-left:auto; }.action-menu-trigger { width:36px; height:36px; border:1px solid var(--theme-elevation-300); border-radius:4px; background:transparent; font-size:1.35rem; cursor:pointer; }.action-menu { position:absolute; z-index:5; top:calc(100% + 4px); right:0; display:grid; min-width:190px; gap:2px; padding:.35rem; border:1px solid var(--theme-elevation-300); border-radius:5px; background:var(--theme-elevation-0); box-shadow:0 8px 24px rgb(0 0 0 / 18%); }.action-menu button { padding:.5rem .6rem; border:0; background:transparent; color:var(--theme-text); text-align:left; cursor:pointer; }.action-menu button:hover { background:var(--theme-elevation-100); }.action-menu button:disabled { opacity:.45; cursor:not-allowed; }.action-menu .danger { color:#b42318; }.brand-count { color:var(--theme-elevation-600); font-size:.8rem; }.brand-cover { margin-top:.25rem; }
 @media (max-width:760px) { .action-menu { right:0; max-width:calc(100vw - 2rem); min-width:180px; }.brand-item-head { grid-template-columns:minmax(0,1fr) auto auto; } }
+
+.catalog-product-list { display:grid; gap:.4rem; margin-left:1.25rem; padding:.6rem .75rem; border-left:2px solid var(--theme-elevation-200); }
+.catalog-product-toggle { justify-self:start; border:0; background:transparent; color:var(--theme-text); font-weight:600; cursor:pointer; padding:.2rem 0; }
+.catalog-product-row { display:flex; align-items:center; gap:.55rem; padding:.35rem 0; font-size:.88rem; }
+.catalog-product-row > span { flex:1; min-width:0; }
+.catalog-product-row small { color:var(--theme-elevation-600); }
+.catalog-product-row button { padding:.25rem .45rem; border:1px solid var(--theme-elevation-300); border-radius:3px; background:transparent; cursor:pointer; }
+.catalog-product-image { width:32px; height:32px; object-fit:cover; border-radius:4px; flex:0 0 auto; }

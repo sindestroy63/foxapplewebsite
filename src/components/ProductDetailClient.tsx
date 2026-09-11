@@ -106,6 +106,10 @@ function displayLabel(key: StringKey, value: string): string {
   return value
 }
 
+function firstText(...values: unknown[]): string | undefined {
+  return values.find((value): value is string => typeof value === 'string' && value.trim().length > 0)?.trim()
+}
+
 function ColorDot({ hex, hex2 }: { hex?: string; hex2?: string }) {
   if (!hex) return null
   const style: React.CSSProperties = hex2
@@ -164,6 +168,21 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   const displayOldPrice = cardPrice(displayPrice)
   const displayStatus = activeVariant?.status ?? product.status
   const tone = statusTone(displayStatus)
+
+  const specs = [
+    ['Память', firstText(activeVariant?.storage, activeVariant?.memory, product.memory)],
+    ['Тип SIM', firstText(activeVariant?.simType, product.simType) ? displayLabel('simType', firstText(activeVariant?.simType, product.simType)!) : undefined],
+    ['Цвет', firstText(activeVariant?.color?.englishLabel, activeVariant?.color?.value, product.color)],
+    ['Оперативная память', firstText(activeVariant?.ram, product.ram)],
+    ['Чип', firstText(activeVariant?.chip, product.chip)],
+    ['Диагональ', firstText(activeVariant?.screenSize, product.screenSize)],
+    ['Подключение', firstText(activeVariant?.connectivity, product.connectivity)],
+    ['Размер корпуса', firstText(activeVariant?.size, product.size)],
+    ['Поколение / модель', firstText(activeVariant?.generation, product.generation)],
+    ['Материал', firstText(activeVariant?.material)],
+    ['Ремешок', firstText(activeVariant?.strapSize)],
+    ['Комплектация', firstText(activeVariant?.packageLabel, product.packageLabel)],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]))
 
   const colorGroupImages = useMemo(() => {
     if (!selectedColor || !product.colorImages?.length) return []
@@ -263,12 +282,9 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
           </div>
         )}
 
-        {!hasVariants && (product.color || product.memory) && (
-          <dl className="spec-list-inline">
-            {product.memory && <><dt>Память</dt><dd>{product.memory}</dd></>}
-            {product.color && <><dt>Цвет</dt><dd>{product.color}</dd></>}
-            {product.simType && <><dt>Подключение</dt><dd>{SIM_LABELS[product.simType] || product.simType}</dd></>}
-            {product.size && <><dt>Размер</dt><dd>{product.size}</dd></>}
+        {specs.length > 0 && (
+          <dl className="spec-list-inline product-variant-specs">
+            {specs.map(([label, value]) => <><dt key={`${label}-label`}>{label}</dt><dd key={`${label}-value`}>{value}</dd></>)}
           </dl>
         )}
 

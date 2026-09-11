@@ -1,23 +1,13 @@
 export const DEVICE_TYPE_OPTIONS = [
-  { label: 'Телефон', value: 'phone' },
-  { label: 'Планшет', value: 'tablet' },
-  { label: 'Ноутбук', value: 'laptop' },
-  { label: 'Умные часы', value: 'smartwatch' },
-  { label: 'Наушники', value: 'headphones' },
-  { label: 'Игровая приставка', value: 'game-console' },
-  { label: 'Фен', value: 'hair-dryer' },
-  { label: 'Пылесос', value: 'vacuum-cleaner' },
-  { label: 'Аксессуар', value: 'accessory' },
-  { label: 'Другое', value: 'other' },
+  { label: 'Телефон', value: 'phone' }, { label: 'Планшет', value: 'tablet' },
+  { label: 'Ноутбук', value: 'laptop' }, { label: 'Умные часы', value: 'smartwatch' },
+  { label: 'Наушники', value: 'headphones' }, { label: 'Игровая приставка', value: 'game-console' },
+  { label: 'Фен', value: 'hair-dryer' }, { label: 'Пылесос', value: 'vacuum-cleaner' },
+  { label: 'Аксессуар', value: 'accessory' }, { label: 'Другое', value: 'other' },
 ] as const
-
 export type DeviceType = typeof DEVICE_TYPE_OPTIONS[number]['value']
 const DEVICE_TYPES = new Set<string>(DEVICE_TYPE_OPTIONS.map((option) => option.value))
-
-export function isManagedDeviceType(value: unknown): value is DeviceType {
-  return typeof value === 'string' && DEVICE_TYPES.has(value)
-}
-
+export function isManagedDeviceType(value: unknown): value is DeviceType { return typeof value === 'string' && DEVICE_TYPES.has(value) }
 export function resolveDeviceType(data: Record<string, unknown> | null | undefined): DeviceType {
   if (isManagedDeviceType(data?.deviceType)) return data.deviceType
   const legacy = String(data?.productType || '').toLowerCase()
@@ -40,9 +30,6 @@ export function resolveDeviceType(data: Record<string, unknown> | null | undefin
   if (group === 'accessories') return 'accessory'
   return 'other'
 }
-
 export function deviceTypeCondition(types: DeviceType[], existingField?: string) {
-  return (data: Record<string, unknown>, siblingData?: Record<string, unknown>) => (
-    types.includes(resolveDeviceType(data)) || Boolean(existingField && siblingData?.[existingField])
-  )
+  return (data: Record<string, unknown>, siblingData?: Record<string, unknown>) => types.includes(resolveDeviceType(data)) || Boolean(existingField && siblingData?.[existingField])
 }
