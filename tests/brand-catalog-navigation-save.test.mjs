@@ -38,7 +38,7 @@ test('save payload keeps strings, booleans, children and nullable cover IDs', ()
 
 test('navigation supports independent new flags and nested product ordering updates', () => {
   assert.match(endpoint, /isNew: item\.isNew === true/)
-  assert.match(endpoint, /products: products\.filter/)
+  assert.match(endpoint, /productsForChild/)
   assert.match(endpoint, /productUpdates/)
   assert.match(endpoint, /product does not belong to the selected subcategory/)
   assert.match(endpoint, /data\.isNew = update\.isNew/)
@@ -46,4 +46,10 @@ test('navigation supports independent new flags and nested product ordering upda
   assert.match(view, /catalog-product-list/)
   assert.match(view, /catalog-product-image/)
   assert.match(view, /Новинка/)
+})
+
+test('MacBook placement stays separate from Apple Mac placement', () => {
+  assert.match(endpoint, /getCatalogPlacementByChildKey\(key\)/)
+  assert.match(endpoint, /catalogPlacementFilter\(placement\)/)
+  assert.match(endpoint, /apple-mac/)
 })

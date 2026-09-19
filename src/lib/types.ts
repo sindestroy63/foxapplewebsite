@@ -70,6 +70,7 @@ export type ProductVariant = {
   screenSize?: string
   connectivity?: string
   generation?: string
+  revision?: string
   packageLabel?: string
   material?: string
   strapSize?: string
@@ -116,6 +117,7 @@ export type Product = {
   screenSize?: string
   connectivity?: string
   generation?: string
+  revision?: string
   packageLabel?: string
   hasTouchId?: boolean | null
   shortDescription?: string
@@ -176,6 +178,7 @@ export type CartItemVariant = {
   size?: string
   chip?: string
   screenSize?: string
+  revision?: string
 }
 
 export type CartItem = {

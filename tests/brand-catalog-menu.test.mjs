@@ -72,3 +72,9 @@ test('placement mapping provides confirmed product fields without guessing produ
   }
   assert.match(menu, /product-catalog-placement/)
 })
+
+test('submenu products use exclusive most-specific placement and product new flags', () => {
+  assert.match(cms, /productsForMenuChild/)
+  assert.match(cms, /const best = Math\.max/)
+  assert.match(cms, /isNew: Boolean\(product\.isNew\)/)
+})

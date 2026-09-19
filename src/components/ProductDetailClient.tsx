@@ -24,7 +24,7 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
   return (items || []).filter((m): m is Media => Boolean(m) && typeof m === 'object' && 'id' in m)
 }
 
-type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'packageLabel'
+type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'revision' | 'packageLabel'
 
 function toSortableNumber(s: string): number | null {
   const m = s.match(/^([\d.]+)\s*(TB|ТБ|GB|ГБ|MB|МБ)?$/i)
@@ -98,6 +98,7 @@ const STRING_AXES: { key: StringKey; title: string }[] = [
   { key: 'connectivity', title: 'Подключение' },
   { key: 'size', title: 'Размер корпуса' },
   { key: 'generation', title: 'Поколение' },
+  { key: 'revision', title: 'Ревизия' },
   { key: 'packageLabel', title: 'Комплектация' },
 ]
 
@@ -169,21 +170,6 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   const displayStatus = activeVariant?.status ?? product.status
   const tone = statusTone(displayStatus)
 
-  const specs = [
-    ['Память', firstText(activeVariant?.storage, activeVariant?.memory, product.memory)],
-    ['Тип SIM', firstText(activeVariant?.simType, product.simType) ? displayLabel('simType', firstText(activeVariant?.simType, product.simType)!) : undefined],
-    ['Цвет', firstText(activeVariant?.color?.englishLabel, activeVariant?.color?.value, product.color)],
-    ['Оперативная память', firstText(activeVariant?.ram, product.ram)],
-    ['Чип', firstText(activeVariant?.chip, product.chip)],
-    ['Диагональ', firstText(activeVariant?.screenSize, product.screenSize)],
-    ['Подключение', firstText(activeVariant?.connectivity, product.connectivity)],
-    ['Размер корпуса', firstText(activeVariant?.size, product.size)],
-    ['Поколение / модель', firstText(activeVariant?.generation, product.generation)],
-    ['Материал', firstText(activeVariant?.material)],
-    ['Ремешок', firstText(activeVariant?.strapSize)],
-    ['Комплектация', firstText(activeVariant?.packageLabel, product.packageLabel)],
-  ].filter((entry): entry is [string, string] => Boolean(entry[1]))
-
   const colorGroupImages = useMemo(() => {
     if (!selectedColor || !product.colorImages?.length) return []
     const group = product.colorImages.find((ci) => {
@@ -219,6 +205,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
       </div>
 
       <div className="detail-info">
+        {product.isNew && <span className="detail-new-badge">НОВИНКА</span>}
         <p className="detail-eyebrow">Карточка товара</p>
         <h1 className="detail-title">{product.name}</h1>
 
@@ -282,12 +269,6 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
           </div>
         )}
 
-        {specs.length > 0 && (
-          <dl className="spec-list-inline product-variant-specs">
-            {specs.map(([label, value]) => <><dt key={`${label}-label`}>{label}</dt><dd key={`${label}-value`}>{value}</dd></>)}
-          </dl>
-        )}
-
         <hr className="detail-divider" />
 
         <div className="detail-pricing">
@@ -326,6 +307,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
               size: activeVariant.size,
               chip: activeVariant.chip,
               screenSize: activeVariant.screenSize,
+              revision: activeVariant.revision,
             } : (product.memory || product.color || product.simType || product.size ? {
               memory: product.memory,
               color: product.color ? { value: product.color, englishLabel: product.color } : undefined,
@@ -347,16 +329,17 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
           )}
         </div>
 
-        {product.shortDescription && (
-          <>
-            <hr className="detail-divider" />
-            <details className="detail-accordion">
-              <summary>Подробнее о товаре</summary>
-              <p>{product.shortDescription}</p>
-            </details>
-          </>
-        )}
       </div>
+
+      {product.shortDescription && (
+        <div className="detail-description">
+          <hr className="detail-divider" />
+          <details className="detail-accordion" open>
+            <summary>Подробнее о товаре</summary>
+            <p className="product-short-description">{product.shortDescription}</p>
+          </details>
+        </div>
+      )}
     </>
   )
 }

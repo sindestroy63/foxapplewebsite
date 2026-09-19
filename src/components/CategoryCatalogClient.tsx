@@ -142,7 +142,7 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, ph
               className={`model-tab${idx === selectedIndex ? ' model-tab--active' : ''}`}
               onClick={() => setSelectedIndex(idx)}
             >
-              {product.model || product.name}
+              {product.name}
             </button>
           ))}
         </div>

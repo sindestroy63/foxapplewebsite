@@ -156,7 +156,20 @@ export async function getProducts(args?: {
       }
     }
     if (args?.filters?.brand) conditions.push({ brand: { equals: args.filters.brand } })
-    if (args?.filters?.line) conditions.push({ productLine: { equals: args.filters.line } })
+    if (args?.filters?.line) {
+      // Apple Mac and MacBook are two menu branches over the shared laptops
+      // group. Their stored productLine values contain the concrete model
+      // name (for example "Apple MacBook Pro ..."), so exact matching would
+      // either merge the branches or hide every product.
+      if (args.filters.line === 'MacBook') conditions.push({ productLine: { like: 'MacBook' } })
+      else if (args.filters.line === 'Apple Mac') conditions.push({ or: [
+        { productLine: { like: 'iMac' } },
+        { productLine: { like: 'Mac mini' } },
+        { productLine: { like: 'Mac Studio' } },
+        { productLine: { like: 'Mac Pro' } },
+      ] })
+      else conditions.push({ productLine: { equals: args.filters.line } })
+    }
     if (args?.filters?.appleAccessories) {
       conditions.push({
         or: [
@@ -349,7 +362,7 @@ export type CatalogNavNode = {
   children: CatalogNavNode[]
 }
 
-export type BrandCatalogNavigationItem = { title: string; key: string; href?: string; filter?: Record<string, string>; isVisible?: boolean; sortOrder?: number; coverImage?: import('./types').Media | null; children?: BrandCatalogNavigationItem[] }
+export type BrandCatalogNavigationItem = { title: string; key: string; href?: string; filter?: Record<string, string>; isVisible?: boolean; sortOrder?: number; coverImage?: import('./types').Media | null; children?: BrandCatalogNavigationItem[]; products?: Array<{ id: string | number; name: string; href: string; isNew?: boolean }> }
 
 /** Build a public catalog URL from the normalized filter stored in the Global. */
 function hrefFromFilter(filter: unknown): string | undefined {
@@ -382,23 +395,62 @@ function resolveBrandHref(key: string, href: unknown, filter: unknown): string |
   return fallback?.href
 }
 
+function productMatchesFilter(product: any, filter: Record<string, string> | undefined): boolean {
+  if (!filter) return false
+  if (filter.group && product.productGroup !== filter.group) return false
+  if (filter.brand && product.brand !== filter.brand) return false
+  if (filter.line) {
+    if (filter.line === 'MacBook' && !String(product.productLine || '').includes('MacBook')) return false
+    else if (filter.line === 'Apple Mac' && !['iMac', 'Mac mini', 'Mac Studio', 'Mac Pro'].some((line) => String(product.productLine || '').includes(line))) return false
+    else if (!['MacBook', 'Apple Mac'].includes(filter.line) && product.productLine !== filter.line) return false
+  }
+  if (filter.appleAccessories === '1' && !(product.productGroup === 'other' && product.brand === 'Apple')) return false
+  if (filter.q && !`${product.name || ''} ${product.model || ''} ${product.productLine || ''}`.toLowerCase().includes(filter.q.toLowerCase())) return false
+  return true
+}
+
+function productsForMenuChild(products: any[], children: any[], child: any): any[] {
+  const matchingChildren = (product: any) => children.filter((candidate) =>
+    candidate.isVisible !== false && productMatchesFilter(product, candidate.filter || undefined))
+  const specificity = (candidate: any) => Object.values(candidate.filter || {}).filter((value) => value !== '' && value != null).length
+  return products.filter((product) => {
+    const matches = matchingChildren(product)
+    if (!matches.some((candidate) => String(candidate.key) === String(child.key))) return false
+    const best = Math.max(...matches.map(specificity))
+    return specificity(child) === best
+  })
+}
+
+function productHref(product: any): string {
+  const category = product.category && typeof product.category === 'object' ? product.category.slug : null
+  return `/catalog/${productGroupSlug(product.productGroup) || category || 'other'}/${product.slug}`
+}
+
 export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
   try {
     const payload = await getPayloadClient()
-    const value = await payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 1 }) as any
+    const [value, productResult] = await Promise.all([
+      payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 1 }),
+      payload.find({ collection: 'products', depth: 1, limit: 1000, pagination: false, where: { isAvailable: { equals: true } } }),
+    ]) as [any, any]
+    const products = productResult.docs as any[]
     const source = Array.isArray(value.groups) && value.groups.length >= 6 ? value.groups : DEFAULT_BRAND_CATALOG_MENU
-    const menu = visibleBrandMenu(source.map((group: any) => ({
-      label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
-      coverImage: group.coverImage || null, isVisible: group.isVisible !== false, isNew: group.isNew === true, sortOrder: Number(group.sortOrder ?? 0),
-      items: Array.isArray(group.children) ? group.children.map((child: any) => ({
-        label: String(child.title ?? child.label), key: String(child.key), href: resolveBrandHref(String(child.key), child.href, child.filter), filter: child.filter || undefined,
-        coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),
-      })) : [],
-    })) as BrandMenu[])
+    const menu = visibleBrandMenu(source.map((group: any) => {
+      const children = Array.isArray(group.children) ? group.children : []
+      return {
+        label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
+        coverImage: group.coverImage || null, isVisible: group.isVisible !== false, isNew: group.isNew === true, sortOrder: Number(group.sortOrder ?? 0),
+        items: children.map((child: any) => ({
+          label: String(child.title ?? child.label), key: String(child.key), href: resolveBrandHref(String(child.key), child.href, child.filter), filter: child.filter || undefined,
+          coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),
+          products: productsForMenuChild(products, children, child).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || Number(a.id) - Number(b.id)).map((product) => ({ id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) })),
+        })),
+      }
+    }) as BrandMenu[])
     return menu.map((group) => ({
       title: group.label, key: group.key, href: group.href, filter: group.filter, coverImage: group.coverImage,
       isVisible: group.isVisible, isNew: group.isNew, sortOrder: group.sortOrder,
-      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder })),
+      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder, products: child.products })),
     }))
   } catch {
     return DEFAULT_BRAND_CATALOG_MENU.map((group) => ({
@@ -428,7 +480,7 @@ export async function getNavData(): Promise<NavCategory[]> {
             const cid = typeof p.category === 'object' ? p.category?.id : p.category
             return cid == cat.id
           })
-          .map(p => ({ model: p.model || p.name, slug: p.slug, name: p.name, badge: p.badge || null })),
+          .map(p => ({ model: p.name, slug: p.slug, name: p.name, badge: p.badge || null })),
       ),
     }))
   } catch (error) {

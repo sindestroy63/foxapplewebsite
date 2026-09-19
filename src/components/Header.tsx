@@ -23,11 +23,11 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
   </div>
 }
 
-export function Header({ settings, navData, groupNavData, brandNavigation }: { settings: SiteSettings; navData?: NavCategory[]; groupNavData?: NavGroup[]; brandNavigation?: Array<{ title: string; key: string; href?: string; isVisible?: boolean; isNew?: boolean; sortOrder?: number; coverImage?: import('@/lib/types').Media | null; children?: Array<{ title: string; key: string; href?: string; isVisible?: boolean; isNew?: boolean; sortOrder?: number; coverImage?: import('@/lib/types').Media | null }> }> }) {
+ export function Header({ settings, navData, groupNavData, brandNavigation }: { settings: SiteSettings; navData?: NavCategory[]; groupNavData?: NavGroup[]; brandNavigation?: Array<{ title: string; key: string; href?: string; isVisible?: boolean; isNew?: boolean; sortOrder?: number; coverImage?: import('@/lib/types').Media | null; children?: Array<{ title: string; key: string; href?: string; isVisible?: boolean; isNew?: boolean; sortOrder?: number; coverImage?: import('@/lib/types').Media | null; products?: Array<{ id: string | number; name: string; href: string; isNew?: boolean }> }> }> }) {
   const phone = settings.phone || '+7 (917) 954-64-64'
   const brandMenu: BrandMenu[] = (brandNavigation || []).map((group) => ({
     label: group.title, key: group.key, href: group.href || '/catalog', isVisible: group.isVisible, isNew: group.isNew, sortOrder: group.sortOrder, coverImage: group.coverImage,
-    items: (group.children || []).map((child) => ({ label: child.title, key: child.key, href: child.href || '/catalog', isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder, coverImage: child.coverImage })),
+    items: (group.children || []).map((child) => ({ label: child.title, key: child.key, href: child.href || '/catalog', isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder, coverImage: child.coverImage, products: child.products })),
   }))
 
   return (
@@ -57,6 +57,11 @@ export function Header({ settings, navData, groupNavData, brandNavigation }: { s
         </nav>
 
         <div className="header-actions">
+          <form className="header-search" action="/catalog" method="get">
+            <label className="sr-only" htmlFor="header-search-input">Поиск товаров</label>
+            <input id="header-search-input" name="q" placeholder="Поиск товаров" type="search" />
+            <button aria-label="Найти товары" type="submit">⌕</button>
+          </form>
           <CartIcon />
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>
             Позвонить

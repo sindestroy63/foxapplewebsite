@@ -44,7 +44,12 @@ export function MobileMenu({ phone, settings, navData: _navData, groupNavData: _
     {open && <div className="mobile-overlay" onClick={close}>
       <nav className="mobile-nav" onClick={(event) => event.stopPropagation()} aria-label="Мобильная навигация">
         <button className="mobile-nav-close" aria-label="Закрыть меню" onClick={close}>×</button>
-        <div className="mobile-catalog-tree">{menu.map((brand) => brand.key === 'trade-in' ? <Link key={brand.key} href="/trade-in/catalog" onClick={close} className="mobile-nav-cat">TRADE-IN</Link> : <details key={brand.key} className="mobile-nav-group"><summary>{brand.label}</summary>{brand.items.map((item) => <Link key={item.key} href={item.href} onClick={close} className="mobile-tree-link">{item.label}</Link>)}</details>)}</div>
+        <form className="catalog-search mobile-catalog-search" action="/catalog" method="get">
+          <label className="sr-only" htmlFor="mobile-search-input">Поиск товаров</label>
+          <input id="mobile-search-input" name="q" placeholder="Найти товар" type="search" />
+          <button className="button" type="submit">Найти</button>
+        </form>
+        <div className="mobile-catalog-tree">{menu.map((brand) => brand.key === 'trade-in' ? <Link key={brand.key} href="/trade-in/catalog" onClick={close} className="mobile-nav-cat">TRADE-IN</Link> : <details key={brand.key} className="mobile-nav-group"><summary>{brand.label}{brand.isNew && <small className="nav-new-badge">Новинка</small>}</summary>{brand.items.map((item) => item.products?.length ? <details key={item.key} className="mobile-tree-level mobile-tree-level-1"><summary><span>{item.label}</span>{item.isNew && <small className="nav-new-badge">Новинка</small>}</summary><Link href={item.href} onClick={close} className="mobile-tree-open-link">Открыть раздел</Link>{item.products.map((product) => <Link key={product.id} href={product.href} onClick={close} className="mobile-tree-link mobile-tree-level-2"><span>{product.name}</span>{product.isNew && <small className="nav-new-badge">Новинка</small>}</Link>)}</details> : <Link key={item.key} href={item.href} onClick={close} className="mobile-tree-link"><span>{item.label}</span>{item.isNew && <small className="nav-new-badge">Новинка</small>}</Link>)}</details>)}</div>
         <span className="mobile-nav-heading mobile-nav-heading--secondary">Дополнительная информация</span>
         <div className="mobile-nav-secondary">{secondaryLinks.map((item) => <Link key={item.href} href={item.href} onClick={close}>{item.label}</Link>)}</div>
         <div className="mobile-nav-contact">

@@ -12,6 +12,7 @@ export type BrandMenuItem = {
   isVisible?: boolean
   isNew?: boolean
   sortOrder?: number
+  products?: Array<{ id: string | number; name: string; href: string; isNew?: boolean }>
 }
 
 export type BrandMenu = {

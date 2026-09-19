@@ -424,6 +424,7 @@ export const Products: CollectionConfig = {
           { name: 'connectivity', type: 'text', label: 'Устаревшее подключение', admin: { condition: (_data: any, siblingData: any) => !siblingData?.connectivityOption && Boolean(siblingData?.connectivity) } },
           { name: 'connectivityOption', type: 'relationship', relationTo: 'connectivity-options', label: 'Подключение (справочник)', filterOptions: { archived: { not_equals: true } }, admin: { condition: productTypeCondition(['mac', 'ipad', 'apple-watch', 'airpods'], 'connectivityOption'), description: 'Для iPad выберите Wi-Fi/LTE, для AirPods — USB-C/Lightning, если значение есть в справочнике.' } },
           { name: 'generation', type: 'text', label: 'Поколение / модель', admin: { condition: productTypeCondition(['mac', 'ipad', 'apple-watch', 'airpods'], 'generation') } },
+          { name: 'revision', type: 'text', label: 'Ревизия', admin: { condition: (data: any, siblingData: any) => data?.productGroup === 'gaming-consoles' || siblingData?.deviceType === 'game-console' } },
           { name: 'packageLabel', type: 'text', label: 'Комплектация', admin: { condition: productTypeCondition(['apple-watch', 'airpods', 'other'], 'packageLabel'), description: 'Существующая комплектация или описание ремешка. Не используйте generation для комплектации.' } },
         ] },
         { type: 'row', fields: [

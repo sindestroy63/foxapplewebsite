@@ -334,16 +334,18 @@ export default function CatalogNavigationView() {
         {cover(item, parent)}
         {parent && item.products && item.products.length > 0 && <div className="catalog-product-list">
           <button type="button" className="catalog-product-toggle" onClick={() => setProductOpen((state) => ({ ...state, [item.key]: state[item.key] === false }))}>{productOpen[item.key] === false ? 'Показать товары' : `Товары (${item.products.length})`}</button>
-          {productOpen[item.key] !== false && [...item.products].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.id).localeCompare(String(b.id))).map((product, productIndex, sortedProducts) => {
+          {productOpen[item.key] !== false && [...item.products].sort((a, b) => (productDrafts[`${item.key}:${a.id}`]?.sortOrder ?? a.sortOrder ?? 0) - (productDrafts[`${item.key}:${b.id}`]?.sortOrder ?? b.sortOrder ?? 0) || String(a.id).localeCompare(String(b.id))).map((product, productIndex, sortedProducts) => {
             const draftKey = `${item.key}:${product.id}`;
             const draft = productDrafts[draftKey] || { isNew: product.isNew === true, sortOrder: product.sortOrder || 0 };
             const moveProduct = (direction: -1 | 1) => {
-              const sorted = [...item.products!].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.id).localeCompare(String(b.id)));
-              const index = sorted.findIndex((entry) => String(entry.id) === String(product.id));
-              const target = index + direction;
-              if (target < 0 || target >= sorted.length) return;
-              const other = sorted[target];
-              setProductDrafts((all) => ({ ...all, [`${item.key}:${product.id}`]: { ...draft, sortOrder: other.sortOrder || 0 }, [`${item.key}:${other.id}`]: { isNew: other.isNew === true, sortOrder: product.sortOrder || 0 } }));
+              const target = productIndex + direction;
+              if (target < 0 || target >= sortedProducts.length) return;
+              const reordered = [...sortedProducts];
+              [reordered[productIndex], reordered[target]] = [reordered[target], reordered[productIndex]];
+              setProductDrafts((all) => ({ ...all, ...Object.fromEntries(reordered.map((entry, order) => {
+                const key = `${item.key}:${entry.id}`;
+                return [key, { isNew: all[key]?.isNew ?? entry.isNew === true, sortOrder: order }];
+              })) }));
               setDirty(true);
             };
             return <div className="catalog-product-row" key={product.id}>

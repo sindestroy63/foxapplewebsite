@@ -24,7 +24,7 @@ function nv(v: Record<string, any>): ProductVariant {
   return {
     id: v.id, sku: v.sku, color: nc(v.color), memory: storage, simType,
     size, hasTouchId: v.hasTouchId, storage, sim: v.sim?.value,
-    chip: v.chip, ram, screenSize, connectivity, generation: v.generation,
+    chip: v.chip, ram, screenSize, connectivity, generation: v.generation, revision: v.revision,
     packageLabel: v.packageLabel, material: v.material, strapSize: v.strapSize,
     price: v.price, oldPrice: v.oldPrice,
     status: v.status, isAvailable: v.isAvailable, images: v.images,

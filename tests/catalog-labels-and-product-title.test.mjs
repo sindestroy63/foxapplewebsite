@@ -7,6 +7,16 @@ test('homepage hero points to the general catalog', () => {
   assert.match(source, /<Link className="button hero-primary" href="\/catalog">[\s\S]*Подобрать технику/)
 })
 
+test('catalog search is available in desktop and mobile navigation', () => {
+  const header = fs.readFileSync('src/components/Header.tsx', 'utf8')
+  const mobileMenu = fs.readFileSync('src/components/MobileMenu.tsx', 'utf8')
+  const catalog = fs.readFileSync('src/app/(frontend)/catalog/page.tsx', 'utf8')
+  assert.match(header, /className="header-search" action="\/catalog" method="get"/)
+  assert.match(mobileMenu, /className="catalog-search mobile-catalog-search" action="\/catalog" method="get"/)
+  assert.match(catalog, /if \(filters\.query\)/)
+  assert.match(catalog, /<ProductGrid emptyText=/)
+})
+
 test('Trade-in catalog uses TRADE-IN label and omits the retired subtitle', () => {
   const page = fs.readFileSync('src/app/(frontend)/trade-in/catalog/page.tsx', 'utf8')
   assert.match(page, /TRADE-IN/)

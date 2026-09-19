@@ -165,11 +165,12 @@ const normalizeItem = (value: unknown, field: string, index: number) => {
       `${field}.coverImage`,
       "must be a Media ID or null",
     );
+  const placement = getCatalogPlacementByChildKey(key);
   return {
     title,
     key,
-    href: text(item.href, `${field}.href`),
-    filter: jsonFilter(item.filter, `${field}.filter`),
+    href: placement ? catalogPlacementHref(placement) : text(item.href, `${field}.href`),
+    filter: placement ? catalogPlacementFilter(placement) : jsonFilter(item.filter, `${field}.filter`),
     sortOrder,
     isVisible: item.isVisible !== false,
     isNew: item.isNew === true,
@@ -268,20 +269,18 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
           );
         const productsResult = await req.payload.find({ collection: 'products', depth: 0, limit: 1000, pagination: false, req });
         const products = productsResult.docs as Record<string, any>[];
-        const matches = (product: Record<string, any>, filter: any) => {
-          if (!filter || typeof filter !== 'object') return false;
-          if (filter.group && product.productGroup !== filter.group) return false;
-          if (filter.brand && product.brand !== filter.brand) return false;
-          if (filter.line && product.productLine !== filter.line) return false;
-          if (filter.q && !String(product.name || '').toLowerCase().includes(String(filter.q).toLowerCase())) return false;
-          if (filter.appleAccessories && !(product.productGroup === 'other' && product.brand === 'Apple')) return false;
-          return true;
-        };
+        const matches = (product: Record<string, any>, filter: any) => matchesProductFilter(product, filter);
+        const specificity = (child: any) => Object.values(child.filter || {}).filter((value) => value !== '' && value != null).length;
+        const productsForChild = (group: any, child: any) => products.filter((product) => {
+          const candidates = group.children.filter((candidate: any) => candidate.isVisible !== false && matches(product, candidate.filter));
+          if (!candidates.some((candidate: any) => candidate.key === child.key)) return false;
+          return specificity(child) === Math.max(...candidates.map(specificity));
+        });
         return Response.json({ groups: groups.map((group) => ({
           ...group,
           children: group.children.map((child) => ({
             ...child,
-            products: products.filter((product) => matches(product, child.filter)).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.id).localeCompare(String(b.id))).map((product): NavigationProduct => ({ id: product.id, name: product.name, slug: product.slug, isNew: product.isNew === true, isAvailable: product.isAvailable !== false, sortOrder: Number(product.sortOrder) || 0, images: product.images })),
+            products: productsForChild(group, child).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.id).localeCompare(String(b.id))).map((product): NavigationProduct => ({ id: product.id, name: product.name, slug: product.slug, isNew: product.isNew === true, isAvailable: product.isAvailable !== false, sortOrder: Number(product.sortOrder) || 0, images: product.images })),
           })),
         })) });
       } catch (error) {
@@ -373,8 +372,12 @@ function matchesProductFilter(product: Record<string, any>, filter: any): boolea
   if (!filter || typeof filter !== 'object') return false;
   if (filter.group && product.productGroup !== filter.group) return false;
   if (filter.brand && product.brand !== filter.brand) return false;
-  if (filter.line && product.productLine !== filter.line) return false;
-  if (filter.q && !String(product.name || '').toLowerCase().includes(String(filter.q).toLowerCase())) return false;
+  if (filter.line) {
+    if (filter.line === 'MacBook' && !String(product.productLine || '').includes('MacBook')) return false;
+    else if (filter.line === 'Apple Mac' && !['iMac', 'Mac mini', 'Mac Studio', 'Mac Pro'].some((line) => String(product.productLine || '').includes(line))) return false;
+    else if (!['MacBook', 'Apple Mac'].includes(filter.line) && product.productLine !== filter.line) return false;
+  }
+  if (filter.q && !`${product.name || ''} ${product.model || ''} ${product.productLine || ''}`.toLowerCase().includes(String(filter.q).toLowerCase())) return false;
   if (filter.appleAccessories && !(product.productGroup === 'other' && product.brand === 'Apple')) return false;
   return true;
 }

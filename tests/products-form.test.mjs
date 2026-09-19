@@ -45,12 +45,14 @@ test('normalized API variants retain relationship-backed characteristics', () =>
   assert.equal(product.variants?.[0]?.packageLabel, 'Sport Band')
 })
 
-test('product detail renders selected variant characteristics and omits empty fields', () => {
-  assert.match(detail, /product-variant-specs/)
-  assert.match(detail, /activeVariant\?\.size/)
-  assert.match(detail, /activeVariant\?\.connectivity/)
-  assert.match(detail, /activeVariant\?\.generation/)
-  assert.match(detail, /activeVariant\?\.packageLabel/)
+test('product detail does not repeat selected characteristics below the selectors', () => {
+  assert.doesNotMatch(detail, /product-variant-specs/)
+  assert.match(detail, /STRING_AXES/)
+  assert.match(detail, /key: 'revision'/)
+})
+
+test('product detail renders the new marker in the upper-right information area', () => {
+  assert.match(detail, /product\.isNew && <span className="detail-new-badge">НОВИНКА<\/span>/)
 })
 
 test('Product identifiers and SEO inputs are protected in CMS', () => {

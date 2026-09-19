@@ -50,7 +50,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <section className="page-section">
-      <div className="container product-detail">
+      <div className="container product-detail product-detail-panel">
         <ProductDetailClient
           product={product}
           phone={phone}

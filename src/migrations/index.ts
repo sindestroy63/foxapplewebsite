@@ -53,6 +53,7 @@ import * as migration_20260910_120000_backfill_product_type from './20260910_120
 import * as migration_20260910_130000_add_device_type from './20260910_130000_add_device_type';
 import * as migration_20260911_090000_variant_material_strap_size from './20260911_090000_variant_material_strap_size';
 import * as migration_20260911_110000_brand_navigation_is_new from './20260911_110000_brand_navigation_is_new';
+import * as migration_20260919_120000_variant_revision from './20260919_120000_variant_revision';
 
 export const migrations = [
   {
@@ -324,5 +325,10 @@ export const migrations = [
     up: migration_20260911_110000_brand_navigation_is_new.up,
     down: migration_20260911_110000_brand_navigation_is_new.down,
     name: '20260911_110000_brand_navigation_is_new'
+  },
+  {
+    up: migration_20260919_120000_variant_revision.up,
+    down: migration_20260919_120000_variant_revision.down,
+    name: '20260919_120000_variant_revision'
   },
 ];

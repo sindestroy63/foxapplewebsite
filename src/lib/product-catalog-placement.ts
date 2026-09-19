@@ -39,8 +39,8 @@ export const PRODUCT_CATALOG_PLACEMENTS: CatalogPlacementDefinition[] = [
   placement('apple', 'APPLE', 'ipad', 'iPad', 'tablets', 'Apple'),
   placement('apple', 'APPLE', 'apple-watch', 'Apple Watch', 'smart-watches', 'Apple'),
   placement('apple', 'APPLE', 'apple-airpods', 'Apple AirPods', 'audio', 'Apple'),
-  placement('apple', 'APPLE', 'apple-mac', 'Apple Mac', 'laptops', 'Apple', '', undefined, ['iMac', 'Mac mini', 'Mac Studio', 'Mac Pro']),
-  placement('apple', 'APPLE', 'macbook', 'MacBook', 'laptops', 'Apple'),
+  placement('apple', 'APPLE', 'apple-mac', 'Apple Mac', 'laptops', 'Apple', '', { group: 'laptops', brand: 'Apple', line: 'Apple Mac' }, ['iMac', 'Mac mini', 'Mac Studio', 'Mac Pro']),
+  placement('apple', 'APPLE', 'macbook', 'MacBook', 'laptops', 'Apple', 'MacBook', { group: 'laptops', 'brand': 'Apple', 'line': 'MacBook' }),
   placement('apple', 'APPLE', 'apple-accessories', 'Аксессуары Apple', 'other', 'Apple', '', { group: 'other', appleAccessories: '1' }),
 
   placement('samsung', 'SAMSUNG', 'samsung-smartphones', 'Смартфоны', 'smartphones', 'Samsung'),
