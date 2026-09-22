@@ -122,6 +122,9 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
+    // Локальная база уже синхронизирована миграциями; schema push запускает
+    // интерактивное переименование enum и блокирует dev-сервер на HTTP-запросах.
+    push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     prodMigrations: migrations,
   }),

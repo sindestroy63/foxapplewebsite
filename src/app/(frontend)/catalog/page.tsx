@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { getBrandCatalogNavigation, getGroupNavData, getProducts, getProductsByProductGroup, getSiteSettings, readCatalogParams } from '@/lib/cms'
+import { getBrandCatalogNavigation, getProducts, getProductsByProductGroup, getSiteSettings, readCatalogParams } from '@/lib/cms'
 import { ProductGrid } from '@/components/ProductGrid'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
 import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
@@ -26,24 +26,28 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const filters = readCatalogParams(query)
   const groupSlug = filters.productGroup
   if (groupSlug) {
-    const [{ group, products }, groupNavigation] = await Promise.all([
+    const [{ group, products }, brandNavigation] = await Promise.all([
       getProductsByProductGroup(groupSlug, filters),
-      getGroupNavData(),
+      getBrandCatalogNavigation(),
     ])
     const { default: GroupCatalogPage } = await import('@/components/GroupCatalogPage')
     const placement = resolveProductCatalogPlacement({ productGroup: groupSlug, brand: filters.brand, productLine: filters.line })
     const heading = placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : undefined
-    return <GroupCatalogPage group={group!} products={products} heading={heading} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} placementTabs={getCatalogPlacementTabs({ productGroup: groupSlug, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories })} activePlacement={placement} />
+    const menuGroup = placement ? brandNavigation.find((item) => item.key === placement.groupKey) : undefined
+    const childOrder = menuGroup?.children?.map((item) => item.key)
+    return <GroupCatalogPage group={group!} products={products} heading={heading} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} placementTabs={getCatalogPlacementTabs({ productGroup: groupSlug, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories, childOrder })} activePlacement={placement} />
   }
   if (filters.query) {
     const [products, settings] = await Promise.all([getProducts({ filters }), getSiteSettings()])
-    return <section className="page-section"><div className="container"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>Поиск</span></nav><h1 className="catalog-category-title">Поиск товаров</h1><form className="catalog-search catalog-search--page" action="/catalog" method="get"><input aria-label="Поиск товаров" defaultValue={filters.query} name="q" placeholder="Например, iPhone 17 Pro" type="search" /><button className="button" type="submit">Найти</button></form><p className="catalog-category-subtitle">Результаты по запросу: «{filters.query}»</p><ProductGrid emptyText="По вашему запросу ничего не найдено. Попробуйте изменить формулировку." products={products} settings={settings} /></div></section>
+    return <section className="page-section"><div className="container"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>Поиск</span></nav><h1 className="catalog-category-title">Поиск товаров</h1><form className="catalog-search catalog-search--page" action="/catalog" method="get"><input aria-label="Поиск товаров" defaultValue={filters.query} name="q" placeholder="Например, iPhone 17 Pro" type="search" /><button className="button" type="submit">Найти</button></form><p className="catalog-category-subtitle">Найдено: {products.length}. Запрос: «{filters.query}»</p><ProductGrid emptyText="По вашему запросу ничего не найдено. Попробуйте изменить формулировку." products={products} settings={settings} />{products.length > 0 && <p><Link href="/catalog">Сбросить поиск</Link></p>}</div></section>
   }
   if (filters.brand || filters.line) {
-    const products = await getProducts({ filters })
+    const [products, brandNavigation] = await Promise.all([getProducts({ filters }), getBrandCatalogNavigation()])
     const title = filters.line || filters.brand || 'Каталог'
     const placement = resolveProductCatalogPlacement({ productGroup: filters.productGroup, brand: filters.brand, productLine: filters.line })
-    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" placementTabs={getCatalogPlacementTabs({ productGroup: filters.productGroup, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories })} activePlacement={placement} breadcrumbBrand={placement && filters.brand ? filters.brand : undefined} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} /></div></section>
+    const menuGroup = placement ? brandNavigation.find((item) => item.key === placement.groupKey) : undefined
+    const childOrder = menuGroup?.children?.map((item) => item.key)
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" placementTabs={getCatalogPlacementTabs({ productGroup: filters.productGroup, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories, childOrder })} activePlacement={placement} breadcrumbBrand={placement && filters.brand ? filters.brand : undefined} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} /></div></section>
   }
   const brandNavigation = await getBrandCatalogNavigation()
   return (

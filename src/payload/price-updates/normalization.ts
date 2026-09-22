@@ -17,11 +17,10 @@ function clean(value: unknown): string {
 export function normalizeModelKey(value: unknown): string {
   const raw = clean(value).replace(/^(?:apple|samsung)\s+/u, '').replace(/^galaxy\s+/u, '')
   if (!raw) return ''
-  if (/^(?:17|iphone 17)$/u.test(raw)) return 'iphone 17'
-  if (/^(?:17\s+pro|iphone 17\s+pro)$/u.test(raw)) return 'iphone 17 pro'
-  if (/^(?:17\s+(?:pro\s+)?max|iphone 17\s+(?:pro\s+)?max)$/u.test(raw)) return 'iphone 17 pro max'
   if (/^(?:17e|iphone 17e)$/u.test(raw)) return 'iphone 17e'
   if (/^(?:air|17 air|iphone air|iphone 17 air)$/u.test(raw)) return 'iphone air'
+  const iphone = raw.match(/^(?:iphone\s+)?(\d+)(?:\s+(pro)(?:\s+(max))?|\s+(max))?$/u)
+  if (iphone) return `iphone ${iphone[1]}${iphone[3] || iphone[4] ? ' pro max' : iphone[2] ? ' pro' : ''}`
   if (/^airpods\s+4\s+(?:anc|\u0441\s+\u0448\u0443\u043c\u043e\u043f\u043e\u0434\u0430\u0432\u043b\u0435\u043d\u0438\u0435\u043c)$/u.test(raw)) return 'airpods 4 anc'
   if (/^airpods\s+4$/u.test(raw)) return 'airpods 4'
   if (/^airpods\s+pro\s+3$/u.test(raw)) return 'airpods pro 3'
@@ -52,7 +51,7 @@ export function normalizeModel(value: unknown, contextHeading?: unknown): Normal
   const raw = clean(value)
   // A group heading may be the only model signal after storage/color/SIM are removed.
   const key = normalizeModelKey(raw) || normalizeModelKey(contextHeading)
-  if (key === 'iphone 17 pro max' || key === 'iphone 17 pro' || key === 'iphone 17') return { key, label: key.replace(/^iphone\s+/u, 'iPhone ') }
+  if (/^iphone\s+\d+(?:\s+pro(?:\s+max)?|\s+max)?$/u.test(key)) return { key, label: key.replace(/^iphone\s+/u, 'iPhone ') }
   if (key === 'samsung galaxy s25 ultra') return { key, label: 'Samsung Galaxy S25 Ultra' }
   if (key === 'samsung galaxy s26') return { key, label: 'Samsung Galaxy S26' }
   if (key === 'samsung galaxy s26 ultra') return { key, label: 'Samsung Galaxy S26 Ultra' }
@@ -135,6 +134,7 @@ export function normalizeColor(value?: unknown, model?: unknown): string {
   if (!raw) return ''
   const modelKey = normalizeModelKey(model)
   const aliases: Record<string, string> = {}
+  if (modelKey === 'iphone 17') aliases.blue = 'mist blue'
   if (modelKey === 'iphone 17 pro' || modelKey === 'iphone 17 pro max') {
     aliases.blue = 'deep blue'
     aliases.orange = 'cosmic orange'

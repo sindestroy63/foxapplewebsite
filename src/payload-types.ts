@@ -286,7 +286,10 @@ export interface Product {
    */
   condition?: ('new' | 'used') | null;
   brand?: string | null;
-  deviceType?: ('phone' | 'tablet' | 'laptop' | 'smartwatch' | 'headphones' | 'game-console' | 'hair-dryer' | 'vacuum-cleaner' | 'accessory' | 'other') | null;
+  /**
+   * Выберите тип устройства до настройки вариантов.
+   */
+  deviceType?: string | null;
   /**
    * Выберите тип до добавления вариантов.
    */
@@ -385,7 +388,7 @@ export interface Product {
          */
         ramOption?: (number | null) | RamOption;
         /**
-         * Старое значение сохранено для совместимости.
+         * Старое значение сохранено для совместимости; новое значение можно выбрать рядом.
          */
         size?: string | null;
         /**
@@ -404,8 +407,7 @@ export interface Product {
          */
         connectivityOption?: (number | null) | ConnectivityOption;
         generation?: string | null;
-        material?: string | null;
-        strapSize?: string | null;
+        revision?: string | null;
         /**
          * Существующая комплектация или описание ремешка. Не используйте generation для комплектации.
          */
@@ -417,6 +419,8 @@ export interface Product {
          * 1000×1000 px, JPG/PNG/WebP. Пусто → общие фото товара.
          */
         images?: (number | Media)[] | null;
+        material?: string | null;
+        strapSize?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1107,11 +1111,14 @@ export interface ProductsSelect<T extends boolean = true> {
         connectivity?: T;
         connectivityOption?: T;
         generation?: T;
+        revision?: T;
         packageLabel?: T;
         price?: T;
         status?: T;
         isAvailable?: T;
         images?: T;
+        material?: T;
+        strapSize?: T;
         id?: T;
       };
   seoTitle?: T;
@@ -1492,6 +1499,7 @@ export interface BrandCatalogNavigation {
       | null;
     sortOrder?: number | null;
     isVisible?: boolean | null;
+    isNew?: boolean | null;
     coverImage?: (number | null) | Media;
     children?:
       | {
@@ -1509,6 +1517,7 @@ export interface BrandCatalogNavigation {
             | null;
           sortOrder?: number | null;
           isVisible?: boolean | null;
+          isNew?: boolean | null;
           coverImage?: (number | null) | Media;
           id?: string | null;
         }[]
@@ -1572,6 +1581,7 @@ export interface BrandCatalogNavigationSelect<T extends boolean = true> {
         filter?: T;
         sortOrder?: T;
         isVisible?: T;
+        isNew?: T;
         coverImage?: T;
         children?:
           | T
@@ -1582,6 +1592,7 @@ export interface BrandCatalogNavigationSelect<T extends boolean = true> {
               filter?: T;
               sortOrder?: T;
               isVisible?: T;
+              isNew?: T;
               coverImage?: T;
               id?: T;
             };

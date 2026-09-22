@@ -33,7 +33,7 @@ const REGION_TOKENS: Array<[RegExp, string]> = [
   [/\u{1f1e6}\u{1f1ea}|\buae\b|\bunited\s+arab\s+emirates\b|\u043e\u0430\u044d/iu, 'United Arab Emirates'],
 ]
 
-const COLOR_TOKENS = ['black / black titanium milanese loop', 'natural / light blue', 'white silver', 'cosmic orange', 'space black', 'cloud white', 'light gold', 'space gray', 'jet black', 'sky blue', 'mist blue', 'deep blue', 'cobalt violet', 'rose gold', 'light blue', 'lavender', 'starlight', 'midnight', 'indigo', 'citrus', 'natural', 'silver', 'orange', 'purple', 'yellow', 'black', 'blue', 'violet', 'sage', 'pink', 'white', 'gold']
+const COLOR_TOKENS = ['black / black titanium milanese loop', 'natural / light blue', 'white silver', 'cosmic orange', 'space black', 'cloud white', 'light gold', 'space gray', 'jet black', 'sky blue', 'mist blue', 'deep blue', 'cobalt violet', 'rose gold', 'light blue', 'burgundy', 'glacier', 'lavender', 'starlight', 'midnight', 'indigo', 'citrus', 'natural', 'silver', 'orange', 'purple', 'yellow', 'black', 'blue', 'violet', 'sage', 'pink', 'white', 'gold']
 
 const SIM_TOKEN = /(?<![\p{L}\p{N}])(?:\(\s*)?(?:(?:1\s*)?sim\s*\+?\s*e\s*sim|1\s*sim|e\s*sim)(?:\s*\))?(?![\p{L}\p{N}])/giu
 const ACTIVE_TOKEN = /(?<![\p{L}\p{N}])актив(?![\p{L}\p{N}])/giu
@@ -70,7 +70,11 @@ function stripServiceTokens(line: string): { text: string; sim: string | null; r
 function knownHeading(value: string): boolean {
   const cleaned = value.replace(/[·•]\s*\d+\s*\/\s*\d+$/u, '').trim()
   const key = normalizeModelKey(cleaned)
-  return new Set(['iphone 17', 'iphone 17e', 'iphone 17 pro', 'iphone 17 pro max', 'iphone air', 'airpods', 'airpods 4', 'airpods 4 anc', 'airpods pro 2', 'airpods pro 3', 'airpods max', 'airpods max 2', 'ipad', 'watch', 'mac']).has(key) || /^(?:iphone\s+17(?:e|\s+pro(?:\s+max)?|\s+max)?|iphone\s+air|ipad|watch|airpods|mac)$/iu.test(cleaned)
+  return new Set(['iphone 17e', 'iphone air', 'airpods', 'airpods 4', 'airpods 4 anc', 'airpods pro 2', 'airpods pro 3', 'airpods max', 'airpods max 2', 'ipad', 'watch', 'mac']).has(key) || /^(?:iphone\s+\d+(?:e|\s+pro(?:\s+max)?|\s+max)?|iphone\s+air|ipad|watch|airpods|mac)$/iu.test(cleaned)
+}
+
+function stripListMarker(value: string): string {
+  return value.replace(/^\s*(?:[\u2022\u00b7\u25cf\u25aa\u25e6*-])\s+/u, '').trim()
 }
 
 function extractPrice(line: string): { body: string; price: number } | null {
@@ -84,8 +88,9 @@ function extractPrice(line: string): { body: string; price: number } | null {
 }
 
 function parseFreeformItem(line: string, lineNumber: number, contextHeading: string): FreeformPriceLine {
-  const services = stripServiceTokens(line)
-  const headingCandidate = line.replace(/:\s*$/u, '').trim()
+  const contentLine = stripListMarker(line)
+  const services = stripServiceTokens(contentLine)
+  const headingCandidate = contentLine.replace(/:\s*$/u, '').trim()
   if (knownHeading(headingCandidate)) return { lineNumber, sourceLine: line, contextHeading: headingCandidate, error: 'Заголовок группы пропущен.' }
   const priced = extractPrice(services.text)
   if (!priced) return { lineNumber, sourceLine: line, contextHeading, error: 'Не удалось извлечь целую цену в конце строки.' }
@@ -211,7 +216,8 @@ export function parseFreeformPriceList(rawText: string): { lines: FreeformPriceL
     const current = sourceLines[index]
     let sourceLine = current.text
     if (!sourceLine) continue
-    const serviceText = stripServiceTokens(sourceLine).text
+    const contentLine = stripListMarker(sourceLine)
+    const serviceText = stripServiceTokens(contentLine).text
     if (/^.+:\s*$/u.test(sourceLine) || (knownHeading(sourceLine) && !extractPrice(serviceText))) {
       contextHeading = sourceLine.replace(/:\s*$/u, '').replace(/[·•]\s*\d+\s*\/\s*\d+$/u, '').trim()
       continue

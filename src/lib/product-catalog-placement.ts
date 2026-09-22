@@ -89,9 +89,9 @@ export function getCatalogPlacementByChildKey(childKey?: string | null) {
   return PRODUCT_CATALOG_PLACEMENTS.find((item) => item.childKey === childKey)
 }
 
-export function getCatalogPlacementTabs(fields: { productGroup?: string; brand?: string; line?: string; appleAccessories?: boolean }) {
+export function getCatalogPlacementTabs(fields: { productGroup?: string; brand?: string; line?: string; appleAccessories?: boolean; childOrder?: string[] }) {
   const brand = fields.brand?.trim()
-  return PRODUCT_CATALOG_PLACEMENTS.filter((item) => {
+  const placements = PRODUCT_CATALOG_PLACEMENTS.filter((item) => {
     if (!item.childKey || item.productGroup === 'trade-in') return false
     if (brand && item.brand !== brand) return false
     if (!brand && fields.productGroup !== 'other') return false
@@ -101,6 +101,9 @@ export function getCatalogPlacementTabs(fields: { productGroup?: string; brand?:
     if (fields.line && item.productLine !== fields.line) return false
     return true
   })
+  if (!fields.childOrder?.length) return placements
+  const order = new Map(fields.childOrder.map((key, index) => [key, index]))
+  return placements.sort((a, b) => (order.get(a.childKey || '') ?? Number.MAX_SAFE_INTEGER) - (order.get(b.childKey || '') ?? Number.MAX_SAFE_INTEGER))
 }
 
 export function resolveProductCatalogPlacement(fields: ProductCatalogFields): CatalogPlacementDefinition | null {

@@ -783,6 +783,60 @@ iPhone 17 Pro Max
   }
 })
 
+test('iPhone 18 Pro Max bullet price list matches every storage, color and SIM variant', () => {
+  const fixture = `iPhone 18 Pro Max
+• 18 Pro Max 256GB Burgundy (eSIM) - 167000
+• 18 Pro Max 256GB Black (eSIM) - 167000
+• 18 Pro Max 256GB Glacier (eSIM) - 166000
+• 18 Pro Max 256GB Silver (eSIM) - 164500
+• 18 Pro Max 256GB Black (1SIM) - 175000
+• 18 Pro Max 256GB Burgundy (1SIM) - 179500
+• 18 Pro Max 256GB Glacier (1SIM) - 174500
+• 18 Pro Max 256GB Silver (1SIM) - 173500
+• 18 Pro Max 512GB Black (eSIM) - 188500
+• 18 Pro Max 512GB Burgundy (eSIM) - 186000
+• 18 Pro Max 512GB Glacier (eSIM) - 184000
+• 18 Pro Max 512GB Silver (eSIM) - 183500
+• 18 Pro Max 512GB Black (1SIM) - 190000
+• 18 Pro Max 512GB Burgundy (1SIM) - 190000
+• 18 Pro Max 512GB Glacier (1SIM) - 190000
+• 18 Pro Max 512GB Silver (1SIM) - 190000
+• 18 Pro Max 1TB Black (eSIM) - 250000
+• 18 Pro Max 1TB Glacier (eSIM) - 230000
+• 18 Pro Max 1TB Black (1SIM) - 259000
+• 18 Pro Max 1TB Burgundy (1SIM) - 246500
+• 18 Pro Max 1TB Glacier (1SIM) - 256500
+• 18 Pro Max 2TB Black (eSIM) - 329000
+• 18 Pro Max 2TB Burgundy (eSIM) - 319000
+• 18 Pro Max 2TB Glacier (eSIM) - 309000
+• 18 Pro Max 2TB Silver (eSIM) - 329000
+• 18 Pro Max 2TB Black (1SIM) - 330000
+• 18 Pro Max 2TB Burgundy (1SIM) - 344000
+• 18 Pro Max 2TB Glacier (1SIM) - 328000
+• 18 Pro Max 2TB Silver (1SIM) - 344000`
+  const colors = ['Black', 'Burgundy', 'Glacier', 'Silver']
+  const variants = ['256GB', '512GB', '1TB', '2TB'].flatMap((storage) => colors.flatMap((color) => ['eSIM', 'SIM + eSIM'].map((sim) => ({
+    id: `${storage}-${color}-${sim}`,
+    sku: `18PM-${storage}-${color}-${sim === 'eSIM' ? 'ESIM' : 'SIM-ESIM'}`,
+    storage,
+    color,
+    sim,
+  }))))
+  const catalog = [{ id: 180, name: 'iPhone 18 Pro Max', model: 'iPhone 18 Pro Max', variants }]
+  const parsed = parseFreeformPriceList(fixture)
+  assert.equal(parsed.errors.length, 0)
+  assert.equal(parsed.items.length, 29)
+  assert.deepEqual(parsed.items.slice(0, 4).map((item) => [item.modelText, item.storage, item.color, item.sim]), [
+    ['18 Pro Max', '256GB', 'Burgundy', 'eSIM'],
+    ['18 Pro Max', '256GB', 'Black', 'eSIM'],
+    ['18 Pro Max', '256GB', 'Glacier', 'eSIM'],
+    ['18 Pro Max', '256GB', 'Silver', 'eSIM'],
+  ])
+  const report = parsed.items.map((item) => matchCatalogItem(item, catalog))
+  assert.equal(report.filter((result) => result.status === 'matched').length, 29)
+  assert.equal(report.filter((result) => result.status !== 'matched').length, 0)
+})
+
 test('third regression fixture handles money before SIM or region and keeps headings out of import results', () => {
   const fixture = `iPhone 17e
 Japan 17e 256GB White ESIM — 56.300
@@ -1035,6 +1089,20 @@ test('unresolved rows never enter the verified price preview', () => {
 test('does not apply iPhone color aliases to other product models', () => {
   const result = matchCatalogItem(aiItem({ modelText: 'Z Fold 8', storage: '256GB', ram: '12', color: 'Blue' }), catalog)
   assert.equal(result.status, 'not_found')
+})
+
+test('matches supplier Blue to iPhone 17 Mist Blue', () => {
+  const catalog = [{
+    id: 17,
+    name: 'iPhone 17',
+    model: 'iPhone 17',
+    variants: [{ id: '17-blue', sku: 'IPHONE-17-MIST-BLUE', storage: '256GB', color: 'Mist Blue', sim: 'eSIM' }],
+  }]
+  const parsed = parseFreeformPriceList('iPhone 17 256GB Blue (eSIM) 100000')
+  assert.equal(parsed.errors.length, 0)
+  const result = matchCatalogItem(parsed.items[0], catalog)
+  assert.equal(result.status, 'matched')
+  assert.equal(result.selected?.sku, 'IPHONE-17-MIST-BLUE')
 })
 
 test('excludes a matching used catalog product from automatic price import', () => {

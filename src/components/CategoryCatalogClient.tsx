@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import type { Product, ProductVariant } from '@/lib/types'
-import { sortProductsByPriority } from '@/lib/sort'
 import { ProductDetailClient } from './ProductDetailClient'
 import { catalogPlacementHref, type CatalogPlacementDefinition } from '@/lib/product-catalog-placement'
 
@@ -91,7 +90,7 @@ type Props = {
 }
 
 export function CategoryCatalogClient({ categoryName, categorySlug, products, phone, telegramUsername, initialModelSlug, breadcrumbBrand, breadcrumbChild, placementTabs, activePlacement }: Props) {
-  const merged = useMemo(() => mergeByScreenSize(sortProductsByPriority(products)), [products])
+  const merged = useMemo(() => mergeByScreenSize(products), [products])
 
   const [selectedIndex, setSelectedIndex] = useState(() => {
     if (initialModelSlug) {

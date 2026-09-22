@@ -1,4 +1,5 @@
 import config from '@payload-config'
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './constants'
@@ -185,8 +186,23 @@ export async function getProducts(args?: {
     }
 
     if (args?.filters?.query) {
+      const searchFields = ['name', 'model', 'brand', 'productLine', 'productType', 'deviceType', 'sku', 'shortDescription']
+      const aliases: Record<string, string[]> = {
+        '\u0430\u0439\u0444\u043e\u043d': ['iphone'],
+        '\u0430\u0439\u043f\u0430\u0434': ['ipad'],
+        '\u043c\u0430\u043a\u0431\u0443\u043a': ['macbook'],
+        '\u0441\u0430\u043c\u0441\u0443\u043d\u0433': ['samsung'],
+        '\u043f\u043b\u0435\u0439\u0441\u0442\u0435\u0439\u0448\u043d': ['playstation'],
+      }
+      const terms = args.filters.query
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((term) => [...new Set([term, ...(aliases[term] || [])])])
       conditions.push({
-        or: [{ name: { like: args.filters.query } }, { model: { like: args.filters.query } }],
+        and: terms.map((termAlternatives) => ({
+          or: termAlternatives.flatMap((term) => searchFields.map((field) => ({ [field]: { like: term } }))),
+        })),
       })
     }
 
@@ -195,7 +211,7 @@ export async function getProducts(args?: {
     const result = await payload.find({
       collection: 'products',
       depth: 2,
-      limit: args?.limit || 100,
+      limit: args?.limit || (args?.filters?.query ? 1000 : 100),
       sort: 'sortOrder',
       where: {
         and: conditions,
@@ -356,6 +372,7 @@ export type CatalogNavNode = {
   title: string
   kind: 'group' | 'brand' | 'line' | 'product' | 'custom_link'
   href: string
+  sortOrder?: number
   isNew?: boolean
   badgeText?: string | null
   coverImage?: import('./types').Media | null
@@ -427,11 +444,16 @@ function productHref(product: any): string {
 }
 
 export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
+  return getCachedBrandCatalogNavigation()
+}
+
+const getCachedBrandCatalogNavigation = unstable_cache(
+  async (): Promise<BrandCatalogNavigationItem[]> => {
   try {
     const payload = await getPayloadClient()
     const [value, productResult] = await Promise.all([
       payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 1 }),
-      payload.find({ collection: 'products', depth: 1, limit: 1000, pagination: false, where: { isAvailable: { equals: true } } }),
+      payload.find({ collection: 'products', depth: 0, limit: 1000, pagination: false, where: { isAvailable: { equals: true } } }),
     ]) as [any, any]
     const products = productResult.docs as any[]
     const source = Array.isArray(value.groups) && value.groups.length >= 6 ? value.groups : DEFAULT_BRAND_CATALOG_MENU
@@ -458,11 +480,19 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
       children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: null, isVisible: true, sortOrder: child.sortOrder })),
     }))
   }
-}
+  },
+  ['brand-catalog-navigation'],
+  { revalidate: 60 },
+)
 
 export { sortProductsByPriority }
 
 export async function getNavData(): Promise<NavCategory[]> {
+  return getCachedNavData()
+}
+
+const getCachedNavData = unstable_cache(
+  async (): Promise<NavCategory[]> => {
   try {
     const payload = await getPayloadClient()
     const [catResult, prodResult] = await Promise.all([
@@ -487,9 +517,17 @@ export async function getNavData(): Promise<NavCategory[]> {
     console.error('Failed to load nav data', error)
     return []
   }
-}
+  },
+  ['frontend-nav-data'],
+  { revalidate: 60 },
+)
 
 export async function getGroupNavData(): Promise<NavGroup[]> {
+  return getCachedGroupNavData()
+}
+
+const getCachedGroupNavData = unstable_cache(
+  async (): Promise<NavGroup[]> => {
   try {
     const payload = await getPayloadClient()
     const result = await payload.find({ collection: 'products', depth: 0, limit: 1_000, pagination: false, where: { isAvailable: { equals: true } } })
@@ -507,7 +545,10 @@ export async function getGroupNavData(): Promise<NavGroup[]> {
   } catch {
     return CATALOG_GROUPS.map((group) => ({ slug: group.slug, name: group.label, brands: [] }))
   }
-}
+  },
+  ['frontend-group-nav-data'],
+  { revalidate: 60 },
+)
 
 export async function getCatalogNavigation(): Promise<CatalogNavNode[]> {
   try {
@@ -529,6 +570,7 @@ export async function getCatalogNavigation(): Promise<CatalogNavNode[]> {
             : doc.kind === 'brand' && doc.productGroup && doc.brand
               ? `/catalog?group=${encodeURIComponent(doc.productGroup)}&brand=${encodeURIComponent(doc.brand)}`
               : doc.productGroup ? `/catalog?group=${encodeURIComponent(doc.productGroup)}` : '/catalog'),
+        sortOrder: Number(doc.sortOrder ?? 0),
         isNew: Boolean(doc.isNew),
         badgeText: doc.badgeText || null,
         coverImage: doc.coverImage && typeof doc.coverImage === 'object' ? doc.coverImage : null,
@@ -543,6 +585,11 @@ export async function getCatalogNavigation(): Promise<CatalogNavNode[]> {
       if (parent) parent.children.push(node)
       else roots.push(node)
     }
+    const sortNodes = (items: CatalogNavNode[]) => {
+      items.sort((a, b) => Number((a as any).sortOrder ?? 0) - Number((b as any).sortOrder ?? 0) || String(a.id).localeCompare(String(b.id), 'en'))
+      items.forEach((item) => sortNodes(item.children))
+    }
+    sortNodes(roots)
     return roots
   } catch (error) {
     console.error('Failed to load catalog navigation', error)
