@@ -1,77 +1,58 @@
 # ФОХСТОР
 
-Production-ready сайт магазина техники Apple: **Next.js 16**, **TypeScript**, **Payload CMS 3**, **PostgreSQL**, **Docker Compose**, **Nginx**.
-
-Сайт работает без корзины и онлайн-оплаты. Клиент звонит, пишет в Telegram, уточняет наличие и бронирует товар.
+Публичный сайт магазина техники Apple в Самаре. Пользователь выбирает товар и вариант, добавляет позиции в корзину и отправляет заявку менеджеру. Онлайн-оплаты на сайте нет.
 
 ## Стек
 
-- **Next.js 16.2** (Turbopack) + React 19
-- **Payload CMS 3.84** (PostgreSQL adapter)
-- **PostgreSQL 16** (Alpine)
-- **Nginx** (reverse-proxy, SSL, IDN)
-- **Docker Compose** (app + postgres + nginx)
+- Next.js `16.2.4`, React `19.2.5`, TypeScript `5.9.3`
+- Payload CMS `3.84.1` с PostgreSQL adapter
+- PostgreSQL `16-alpine`
+- Nginx `1.27-alpine`, Docker Compose
+- Lexical, Sharp, Zod; серверная интеграция Telegram Bot API
+
+## Архитектура и структура
+
+Next.js App Router содержит публичный frontend и встроенную админку Payload. Payload использует PostgreSQL, миграции из `src/migrations` и файловое хранилище media volume. Nginx проксирует HTTP/HTTPS на приложение и обслуживает SSL.
+
+```text
+src/app/(frontend)/       публичные страницы
+src/app/(payload)/        Payload admin, REST и GraphQL routes
+src/components/           UI, каталог, корзина и формы
+src/actions/              server actions для заявок
+src/lib/                  CMS-запросы, типы, корзина, Telegram и утилиты
+src/payload/collections/  коллекции Payload
+src/payload/globals/      глобальные настройки Payload
+src/migrations/           миграции PostgreSQL/Payload
+src/seed.ts               seed категорий, справочников, страниц и товаров
+src/seed-products.ts      исходный каталог товаров
+nginx/                    активный конфиг и шаблоны для SSL/доменов
+docker-compose.yml        app + postgres + nginx
+```
 
 ## Локальный запуск
 
-1. Скопируйте переменные окружения:
-
 ```bash
 cp .env.example .env
-```
-
-2. Укажите сильные значения `POSTGRES_PASSWORD` и `PAYLOAD_SECRET`.
-
-3. Запустите стек:
-
-```bash
+# задайте POSTGRES_PASSWORD и PAYLOAD_SECRET
 docker compose up -d --build
 ```
 
-4. Откройте сайт:
+Локальные адреса из `docker-compose.yml`:
 
-| URL | Описание |
-|-----|----------|
-| `http://localhost` | Публичный сайт |
-| `http://localhost/admin` | Админка Payload CMS |
+- `http://localhost:3003` — приложение напрямую;
+- `http://localhost` — приложение через Nginx;
+- `http://localhost:3003/admin` — Payload CMS.
 
-При первом входе Payload предложит создать администратора. Seed-данные (категории, страницы, товары с вариантами) применяются автоматически, если `PAYLOAD_SEED_ON_START=true`.
+Для запуска без Docker нужны Node.js/npm и доступная PostgreSQL, после чего применяются обычные `npm install`, `npm run dev`, `npm run typecheck` и `npm run build`. В Docker миграции запускаются при старте, если `RUN_MIGRATIONS_ON_START=true`.
 
-## Структура проекта
+## Каталог, товары и варианты
 
-```text
-src/
-  app/(frontend)/             публичный сайт (страницы, каталог, товары)
-  app/(payload)/              стандартные маршруты Payload CMS
-  components/                 React-компоненты (ProductCard, ProductDetailClient, LeadForm и др.)
-  lib/                        утилиты, типы, форматирование, CMS-запросы
-  payload/collections/        коллекции CMS (Products, Categories, Leads и др.)
-  payload/globals/            глобальные настройки (SiteSettings, SiteAppearance)
-  migrations/                 SQL-миграции для PostgreSQL
-  seed.ts                     seed-логика (категории, страницы, товары)
-  seed-products.ts            каталог товаров с официальными спецификациями Apple
-nginx/conf.d/                 конфигурация Nginx (HTTP / SSL)
-docker-compose.yml            app + postgres + nginx
-```
+Товары находятся в коллекции `Products`. Один товар имеет slug, категорию, изображения, цену, статус и вложенные `variants`; вариант получает отдельный SKU и может содержать цвет, память, SIM, размер, чип, диагональ, подключение, материал и размер ремешка. Статусы товара и варианта: `in_stock`, `preorder`, `out_of_stock`. Отдельные товары для конфигураций создавать нельзя: конфигурации хранятся внутри `variants`.
 
-## Каталог товаров
-
-Товары хранятся в коллекции `Products` с вложенным массивом `variants`. Каждый вариант содержит:
-
-- **Цвет** — структурированный объект: `englishLabel`, `russianLabel`, `value`, `primaryHex`, `secondaryHex?`
-- **Память / SSD** — 128GB, 256GB, 512GB, 1TB, 2TB
-- **SIM** — `SIM + eSIM` или `eSIM`
-- **Размер** — для Apple Watch (42mm, 46mm и т.д.)
-- **Чип / RAM / Диагональ / Подключение** — для Mac и iPad
-- **Цена** — наличные, старая цена
-- **Статус** — в наличии, под заказ, нет в наличии
-
-Все цвета соответствуют официальным спецификациям Apple и отображаются с цветным кружком + билингвальной подписью (English / Русский).
-
-### Категории
+Seed содержит категории:
 
 | Категория | Slug |
-|-----------|------|
+|---|---|
 | iPhone | `iphone` |
 | iPad | `ipad` |
 | MacBook | `macbook` |
@@ -81,198 +62,90 @@ docker-compose.yml            app + postgres + nginx
 | Аксессуары | `accessories` |
 | Б/У техника | `used` |
 
-### Карточка каталога
+Справочники характеристик включают цвета, память, SIM, модели устройств, RAM, размеры вариантов, диагонали и подключение. Каталог также поддерживает навигацию и группы брендов через `CatalogNavigation` и `BrandCatalogNavigation`.
 
-В карточке каталога: изображение, название, цена «от» (наличные / по карте), статус наличия, кнопки связи. Конфигурации (цвет, память, SIM) видны только на странице товара.
+## Корзина и заявка
 
-Для новых товаров показывается юридический disclaimer про RuStore. Для категории «Б/У техника» он скрыт.
+На странице товара пользователь выбирает вариант и добавляет товар в корзину. Корзина хранится в браузере в `localStorage` под ключом `foxapple-cart`; для одинакового товара и конфигурации количество объединяется.
 
-## CMS-модели
+Маршрут `/cart` показывает позиции, варианты, количество и сумму. На этой же странице находится форма оформления: имя, телефон, Telegram, комментарий и согласие на обработку персональных данных. Онлайн-эквайринга и оплаты нет. После отправки корзина очищается, а менеджер связывается с клиентом для подтверждения заказа, наличия и доставки.
 
-### Коллекции
+Заявка записывается в Payload collection `Leads` с источником `cart_order`, составом корзины и статусами заявки/отправки в Telegram. Сервер отправляет сообщение через Telegram Bot API (`sendMessage`) в чат из `TELEGRAM_CHAT_ID`; токен задаётся через `TELEGRAM_BOT_TOKEN`. Результат фиксируется как `telegram_sent` или `telegram_failed`. Остальные формы сайта создают заявки с собственными источниками (`product_form`, `contact_form`, `repair_form`, `trade_in_form`, `installment_form`).
 
-- **Categories** — категории каталога (название, slug, обложка, сортировка)
-- **Products** — товары с вариантами, ценами, фото и SEO
-- **Leads** — заявки с карточек товара и страницы контактов
-- **Pages** — редактируемые текстовые страницы (Rich Text)
-- **Media** — загрузка изображений (thumbnail / card / detail)
-- **Users** — сотрудники админки (admin / manager)
+## Payload CMS
 
-### Глобалы
+Коллекции: `Users`, `Media`, `Categories`, `Products`, `Leads`, `Pages`, `CatalogNavigation`, а также справочники характеристик и коллекции импорта/обновления цен (`PriceUpdateBatches`, `PriceUpdateItems`, `PriceImportSessions`, `PriceImportItems`).
 
-- **SiteSettings** — контакты, домены, hero-тексты, Telegram, WhatsApp
-- **SiteAppearance** — hero-видео, медиа-блок на главной
+Глобалы: `SiteSettings`, `SiteAppearance`, `BrandCatalogNavigation`.
 
-## Полезные команды
+Админка доступна по `/admin`. Дополнительные административные разделы: обновление цен `/admin/price-updates`, Trade-In `/admin/trade-in` и навигация каталога `/admin/catalog-navigation`.
 
-```bash
-docker compose up -d --build          # сборка и запуск
-docker compose down -v                # остановка и очистка данных
-docker compose logs -f app            # логи приложения
-docker compose exec app npm run payload -- migrate   # миграции
-docker compose exec app npm run seed                 # seed-данные
-npm run typecheck                     # проверка типов
-npm run build                         # production-сборка
-```
+## Основные маршруты
 
-## Деплой на Ubuntu 22.04
+- `/` — главная;
+- `/catalog` — каталог;
+- `/catalog/[categorySlug]` — категория;
+- `/catalog/[categorySlug]/[productSlug]` — товар;
+- `/cart` — корзина и оформление заявки;
+- `/contacts`, `/installment`, `/trade-in`, `/trade-in/catalog`, `/warranty`, `/repair` — сервисные страницы;
+- `/offer`, `/privacy`, `/privacy-policy`, `/personal-data-consent`, `/purchase-return` — юридические страницы;
+- `/admin` — Payload CMS.
 
-### 1. Установка Docker
+## ENV и команды
 
-```bash
-sudo apt update
-sudo apt install -y ca-certificates curl gnupg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-
-### 2. Клонирование проекта
-
-```bash
-sudo mkdir -p /opt/foxapple
-sudo chown -R "$USER":"$USER" /opt/foxapple
-git clone <repo-url> /opt/foxapple
-cd /opt/foxapple
-```
-
-### 3. Настройка `.env`
-
-```bash
-cp .env.example .env
-nano .env
-```
-
-Для production (домен ФОХСТОР — фохстор.рф, ASCII/punycode-форма `xn--n1aagcfji.xn--p1ai`):
+Основные переменные `.env.example`:
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://xn--n1aagcfji.xn--p1ai
-PAYLOAD_PUBLIC_SERVER_URL=https://xn--n1aagcfji.xn--p1ai
-POSTGRES_PASSWORD=<strong-password>
-PAYLOAD_SECRET=<long-random-secret>
+POSTGRES_DB=foxapple
+POSTGRES_USER=foxapple
+POSTGRES_PASSWORD=...
+DATABASE_URL=postgres://...
+PAYLOAD_SECRET=...
+NEXT_PUBLIC_SITE_URL=http://localhost
+PAYLOAD_PUBLIC_SERVER_URL=http://localhost
+PAYLOAD_ALLOWED_ORIGINS=http://localhost:3003
 RUN_MIGRATIONS_ON_START=true
-PAYLOAD_SEED_ON_START=true
+PAYLOAD_SEED_ON_START=false
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+TELEGRAM_API_BASE=...
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=...
+OPENAI_PRICE_MODEL=...
+OPENAI_RESPONSE_FORMAT=json_schema
 ```
 
-ENV-переменные и `Metadata.metadataBase` / canonical / sitemap / robots читают домен централизованно через `SITE_URL` / `absoluteUrl()` в `src/lib/constants.ts` — при смене домена достаточно поменять `NEXT_PUBLIC_SITE_URL` / `PAYLOAD_PUBLIC_SERVER_URL`, без правки кода. Опционально можно указать дополнительные разрешённые CORS/CSRF origin-ы через `PAYLOAD_ALLOWED_ORIGINS` (через запятую).
-
-### 4. Запуск
+Не публикуйте секреты и токены. В production `NEXT_PUBLIC_SITE_URL` и `PAYLOAD_PUBLIC_SERVER_URL` должны указывать на технический IDN-домен `https://xn--n1aagcfji.xn--p1ai` (фохстор.рф), если используется текущая схема домена.
 
 ```bash
+npm run dev
+npm run typecheck
+npm run build
+npm test
+
 docker compose up -d --build
-```
-
-Миграции применяются entrypoint-скриптом контейнера `app`, если включен `RUN_MIGRATIONS_ON_START=true`. Повторно применить миграции можно командой:
-
-```bash
+docker compose ps
+docker compose logs --tail=200 app
 docker compose exec app npm run payload -- migrate
-```
-
-Seed:
-
-```bash
 docker compose exec app npm run seed
 ```
 
-### 5. Первый администратор Payload
+`PAYLOAD_SEED_ON_START=true` включает seed при старте. Seed обновляет контакты, категории, справочники, канонический каталог товаров, страницы и пользователей Payload; для production включайте его осознанно.
 
-Откройте:
+## Migrations и seed
 
-```text
-https://xn--n1aagcfji.xn--p1ai/admin
-```
+Payload настроен на `src/migrations`, `push: false`, и выполняет зарегистрированные миграции из `src/migrations/index.ts`. При необходимости миграции запускаются вручную командой `npm run payload -- migrate`. Seed зарегистрирован как Payload command `npm run seed`; он не является миграцией схемы.
 
-Если коллекция пользователей пустая, Payload покажет форму создания первого администратора.
+## Production deployment
 
-### 6. DNS
+Compose запускает три сервиса:
 
-Создайте A-записи на новый домен ФОХСТОР:
+- `postgres` — PostgreSQL 16, порт хоста `5433`, volume `postgres_data`;
+- `app` — production-сборка Next.js, порт хоста `3003`, volume `media_data`;
+- `nginx` — порты `80/443`, reverse proxy, сертификаты из `/etc/letsencrypt` и ACME volume.
 
-```text
-фохстор.рф          -> IP сервера
-www.фохстор.рф       -> IP сервера
-```
+Базовый порядок на Ubuntu: установить Docker Engine и Compose plugin, развернуть проект, создать `.env`, задать production URL/секреты/Telegram, затем выполнить `docker compose up -d --build`. После запуска проверить `docker compose ps`, логи app/Nginx и доступность `/admin`.
 
-IDN-домен (ASCII/punycode-форма) для Nginx и всех технических настроек:
+Активный конфиг `nginx/conf.d/foxapple.conf` пока обслуживает текущий домен `foxapple.ru`. Шаблоны нового домена находятся в `nginx/examples/foxstore.conf` и `nginx/examples/foxstore.ssl.conf`; они не подключаются автоматически. Для перехода на `фохстор.рф` сначала направьте DNS A-записи `фохстор.рф` и `www.фохстор.рф` на сервер, используйте punycode `xn--n1aagcfji.xn--p1ai`, выпустите сертификат Let's Encrypt через HTTP-конфиг, затем активируйте SSL-конфиг и перезапустите Nginx.
 
-```text
-фохстор.рф = xn--n1aagcfji.xn--p1ai
-```
-
-> **Важно:** миграция кода на новый бренд/домен подготовлена (Nginx-шаблоны, ENV, CORS/CSRF), но DNS ещё не переключён и сертификаты для нового домена ещё не выпущены. Активный `nginx/conf.d/foxapple.conf` продолжает обслуживать старый домен `foxapple.ru`, пока эти шаги не выполнены вручную.
-
-### 7. SSL через Certbot / Let's Encrypt
-
-Шаблоны для нового домена лежат в `nginx/examples/foxstore.conf` (HTTP-бутстрап + редиректы) и `nginx/examples/foxstore.ssl.conf` (полный SSL-конфиг) — они **не активны** и не подключены в `docker-compose.yml`. Каждый файл содержит подробные комментарии по активации. Общий порядок:
-
-```bash
-# 1. Скопировать HTTP-бутстрап конфиг для ACME-challenge нового домена
-cp nginx/examples/foxstore.conf nginx/conf.d/foxstore.conf
-docker compose restart nginx
-
-# 2. Выпустить сертификат для нового домена
-docker run --rm \
-  -v foxapple_certbot_www:/var/www/certbot \
-  -v foxapple_letsencrypt:/etc/letsencrypt \
-  certbot/certbot certonly --webroot \
-  -w /var/www/certbot \
-  -d xn--n1aagcfji.xn--p1ai \
-  -d www.xn--n1aagcfji.xn--p1ai \
-  --email admin@фохстор.рф \
-  --agree-tos \
-  --no-eff-email
-```
-
-После выпуска сертификата замените HTTP-бутстрап на полный SSL-конфиг:
-
-```bash
-cp nginx/examples/foxstore.ssl.conf nginx/conf.d/foxstore.conf
-docker compose restart nginx
-```
-
-### 8. Редирект со старого домена `foxapple.ru`
-
-`nginx/examples/foxstore.conf` и `nginx/examples/foxstore.ssl.conf` уже содержат 301-редиректы со старого домена (`foxapple.ru`, `www.foxapple.ru`, старый punycode `xn--j1achfjp0e.xn--p1ai`) на новый, с сохранением пути и query-параметров:
-
-```nginx
-server_name foxapple.ru www.foxapple.ru;
-return 301 https://xn--n1aagcfji.xn--p1ai$request_uri;
-```
-
-Старый `nginx/conf.d/foxapple.conf` можно вывести из эксплуатации только после того, как новый домен полностью подтверждён рабочим (DNS, сертификат, редиректы протестированы).
-
-## Проверка после деплоя
-
-```bash
-docker compose ps
-docker compose logs --tail=200 app
-docker compose logs --tail=200 nginx
-curl -I http://xn--n1aagcfji.xn--p1ai
-curl -I http://foxapple.ru
-```
-
-Публичные URL:
-
-| Путь | Описание |
-|------|----------|
-| `/` | Главная страница |
-| `/catalog` | Каталог товаров |
-| `/catalog/[categorySlug]` | Категория каталога |
-| `/catalog/[categorySlug]/[productSlug]` | Карточка товара |
-| `/contacts` | Контакты |
-| `/installment` | Рассрочка |
-| `/trade-in` | Trade-In |
-| `/warranty` | Гарантия |
-| `/repair` | Ремонт |
-| `/offer` | Публичная оферта |
-| `/privacy` | Политика конфиденциальности |
-| `/privacy-policy` | Обработка персональных данных |
-| `/personal-data-consent` | Согласие на обработку ПД |
-| `/purchase-return` | Возврат товара |
-| `/admin` | Админка Payload CMS |
+До ручной активации нового конфига DNS и SSL для нового домена не считаются переключёнными. Шаблоны предусматривают 301-редирект со старого `foxapple.ru` после готовности нового домена; не удаляйте активный конфиг до проверки DNS, сертификата и редиректов.

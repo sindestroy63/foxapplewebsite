@@ -33,7 +33,7 @@ const REGION_TOKENS: Array<[RegExp, string]> = [
   [/\u{1f1e6}\u{1f1ea}|\buae\b|\bunited\s+arab\s+emirates\b|\u043e\u0430\u044d/iu, 'United Arab Emirates'],
 ]
 
-const COLOR_TOKENS = ['black / black titanium milanese loop', 'natural / light blue', 'white silver', 'cosmic orange', 'space black', 'cloud white', 'light gold', 'space gray', 'jet black', 'sky blue', 'mist blue', 'deep blue', 'cobalt violet', 'rose gold', 'light blue', 'burgundy', 'glacier', 'lavender', 'starlight', 'midnight', 'indigo', 'citrus', 'natural', 'silver', 'orange', 'purple', 'yellow', 'black', 'blue', 'violet', 'sage', 'pink', 'white', 'gold']
+const COLOR_TOKENS = ['black / black titanium milanese loop', 'natural / light blue', 'white silver', 'cosmic orange', 'space black', 'cloud white', 'light gold', 'space gray', 'jet black', 'sky blue', 'mist blue', 'deep blue', 'cobalt violet', 'rose gold', 'light blue', 'burgundy', 'graphite', 'cream', 'lavender', 'glacier', 'starlight', 'midnight', 'indigo', 'citrus', 'natural', 'silver', 'orange', 'purple', 'yellow', 'black', 'blue', 'violet', 'sage', 'pink', 'white', 'gold']
 
 const SIM_TOKEN = /(?<![\p{L}\p{N}])(?:\(\s*)?(?:(?:1\s*)?sim\s*\+?\s*e\s*sim|1\s*sim|e\s*sim)(?:\s*\))?(?![\p{L}\p{N}])/giu
 const ACTIVE_TOKEN = /(?<![\p{L}\p{N}])актив(?![\p{L}\p{N}])/giu
@@ -227,7 +227,9 @@ export function parseFreeformPriceList(rawText: string): { lines: FreeformPriceL
       while (nextIndex < sourceLines.length && !sourceLines[nextIndex].text) nextIndex += 1
       const next = sourceLines[nextIndex]
       const hasConfiguration = /(?:\b(?:128|256|512)\b|\b\d+\s*(?:gb|tb|гб|тб)\b|\bwi[- ]?fi\b|\blte\b|\be\s*sim\b|\b1\s*sim\b)/iu.test(sourceLine)
-      if (hasConfiguration && next && STANDALONE_MONEY_TOKEN.test(next.text)) {
+      const splitModel = Boolean(normalizeModelKey(sourceLine)) && /^(?:iphone\s+)?\d+\s+(?:pro(?:\s+max)?|max)$/iu.test(sourceLine)
+      const nextHasConfiguration = next && /(?:\b(?:128|256|512)\b|\b\d+\s*(?:gb|tb|гб|тб)\b|\bwi[- ]?fi\b|\blte\b|\be\s*sim\b|\b1\s*sim\b)/iu.test(next.text)
+      if ((hasConfiguration || splitModel) && next && (STANDALONE_MONEY_TOKEN.test(next.text) || (splitModel && nextHasConfiguration && extractPrice(next.text) !== undefined))) {
         sourceLine = `${sourceLine}  ${next.text}`
         index = nextIndex
       }

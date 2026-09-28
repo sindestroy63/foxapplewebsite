@@ -1,11 +1,10 @@
 import { HeroSlideshow } from '@/components/HeroSlideshow'
-import { HomepageMediaShowcase } from '@/components/HomepageMediaShowcase'
 import { ScrollReveal } from '@/components/ScrollReveal'
 import Link from 'next/link'
 
 import { ProductGrid } from '@/components/ProductGrid'
 import { normalizeProducts } from '@/lib/normalize'
-import { getBrandCatalogNavigation, getProducts, getSiteSettings } from '@/lib/cms'
+import { getBestOffers, getBrandCatalogNavigation, getSiteSettings } from '@/lib/cms'
 import { heroMedia } from '@/lib/catalog-group-assets'
 import { getMediaUrl } from '@/lib/media'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
@@ -30,7 +29,7 @@ const benefits = [
 export default async function HomePage() {
   const [settings, featuredProducts, brandNavigation] = await Promise.all([
     getSiteSettings(),
-    getProducts({ featuredOnly: true, limit: 6 }),
+    getBestOffers(),
     getBrandCatalogNavigation(),
   ])
   const bestOffers = featuredProducts

@@ -7,6 +7,29 @@ import { prepareProductPriceUpdate } from '../src/payload/price-updates/apply.ts
 import { aiPriceUpdateSchema, normalizeAIPriceUpdateResponse } from '../src/payload/price-updates/ai-response.ts'
 import { buildPreviewPriceInput, candidateByKey, canManuallyConfirmMissingAttributes, matchCatalogItem } from '../src/payload/price-updates/match.ts'
 import { duplicateSkus, parseFreeformPriceList, parsePriceUpdateInput } from '../src/payload/price-updates/parse.ts'
+import { normalizeModelKey, normalizeSim } from '../src/payload/price-updates/normalization.ts'
+
+test('normalization keeps Fold 8, storage, RAM, colors and SIM configurations distinct', () => {
+  assert.notEqual(normalizeModelKey('Z Fold 8'), normalizeModelKey('Z Fold 8 Ultra'))
+  assert.equal(normalizeSim('eSIM'), 'esim')
+  assert.equal(normalizeSim('esIM'), 'esim')
+  assert.equal(normalizeSim('(1SIM)'), 'sim+esim')
+
+  const parsed = parseFreeformPriceList([
+    'Z Fold 8 12/256 Cream — 125 000',
+    'Z Fold 8 12/512 Graphite — 138 000',
+    'Z Fold 8 Ultra 12/256 Violet — 137 000',
+    '18 Pro 256GB Black (1SIM) - 144180',
+    '18 Pro Max 512GB Black (esIM) - 170290',
+  ].join('\n'))
+  assert.deepEqual(parsed.items.map((item) => [item.modelText, item.ram, item.storage, item.color, item.sim]), [
+    ['Z Fold 8', '12GB', '256GB', 'Cream', null],
+    ['Z Fold 8', '12GB', '512GB', 'Graphite', null],
+    ['Z Fold 8 Ultra', '12GB', '256GB', 'Violet', null],
+    ['18 Pro', null, '256GB', 'Black', 'SIM + eSIM'],
+    ['18 Pro Max', null, '512GB', 'Black', 'eSIM'],
+  ])
+})
 import { classifyVariantForNormalization } from '../src/payload/catalog-normalization/dry-run.ts'
 import {
   assertNoForbiddenChanges,
@@ -108,21 +131,22 @@ test('internal audit collections and globals stay protected from CMS mutations',
   }
   for (const file of ['SiteSettings.ts', 'SiteAppearance.ts']) {
     const source = await readFile(new URL(`../src/payload/globals/${file}`, import.meta.url), 'utf8')
-    assert.match(source, /admin:\s*\{\s*hidden:\s*true\s*\}/)
+    if (file === 'SiteSettings.ts') assert.match(source, /admin:\s*\{\s*hidden:\s*true\s*\}/)
+    else assert.match(source, /admin:\s*\{\s*hidden:\s*false\s*\}/)
     assert.match(source, /read:\s*anyone/)
-    assert.match(source, /update:\s*denyAll/)
+    if (file === 'SiteSettings.ts') assert.match(source, /update:\s*denyAll/)
+    else assert.match(source, /update:\s*admins/)
   }
   assert.match(config, /priceUpdates:\s*\{/)
   assert.match(config, /path:\s*'\/price-updates'/)
 })
 
-test('frontend does not read editable site appearance globals', async () => {
+test('frontend reads the CMS-managed best offers global', async () => {
   const homepage = await readFile(new URL('../src/app/(frontend)/page.tsx', import.meta.url), 'utf8')
   const cms = await readFile(new URL('../src/lib/cms.ts', import.meta.url), 'utf8')
-  assert.equal(homepage.includes('getSiteAppearance'), false)
-  assert.equal(homepage.includes('appearance.'), false)
-  assert.equal(cms.includes("findGlobal({ slug: 'site-settings'"), false)
-  assert.equal(cms.includes("findGlobal({ slug: 'site-appearance'"), false)
+  assert.match(homepage, /getBestOffers/)
+  assert.match(cms, /findGlobal\(\{ slug: 'site-appearance'/)
+  assert.match(cms, /featuredOnly: true/)
 })
 
 test('formats a full, readable price-update target without exposing SKU', () => {

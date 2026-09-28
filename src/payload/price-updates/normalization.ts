@@ -41,7 +41,8 @@ export function normalizeModelKey(value: unknown): string {
   if (samsung) return `samsung galaxy ${samsung[1]}${samsung[2] ? ` ${samsung[2]}` : ''}`
   if (/^(?:watch\s+)?s\s*\d{2}$/u.test(raw)) return `apple watch series ${raw.replace(/^(?:watch\s+)?s\s*/u, '')}`
   if (/^(?:watch\s+)?ul(?:tra)?\s*\d$/u.test(raw)) return `apple watch ultra ${raw.replace(/^(?:watch\s+)?ul(?:tra)?\s*/u, '')}`
-  if (/^z\s*fold\s*8(?:\s*\(\s*2026\s*\))?$/u.test(raw)) return 'z fold 8'
+  const fold = raw.match(/^z\s*fold\s*8(?:\s+(ultra))?(?:\s*\(\s*2026\s*\))?$/u)
+  if (fold) return `z fold 8${fold[1] ? ' ultra' : ''}`
   if (/^playstation\s+5\s+(?:slim\s+)?(?:disk|disc|diskovodom|\u0441\s+\u0434\u0438\u0441\u043a\u043e\u0432\u043e\u0434\u043e\u043c|1\s*\u0442\u0431)(?:\s+.*)?$/iu.test(raw)) return 'playstation 5 slim disk'
   if (/^playstation\s+5\s+(?:slim\s+)?(?:digital|\u0446\u0438\u0444\u0440\u043e\u0432\u0430\u044f)(?:\s+.*)?$/iu.test(raw)) return 'playstation 5 slim digital'
   return raw
@@ -133,24 +134,18 @@ export function normalizeColor(value?: unknown, model?: unknown): string {
   const raw = clean(value)
   if (!raw) return ''
   const modelKey = normalizeModelKey(model)
-  const aliases: Record<string, string> = {}
-  if (modelKey === 'iphone 17') aliases.blue = 'mist blue'
-  if (modelKey === 'iphone 17 pro' || modelKey === 'iphone 17 pro max') {
-    aliases.blue = 'deep blue'
-    aliases.orange = 'cosmic orange'
+  const aliases: Record<string, Record<string, string>> = {
+    'iphone 17': { blue: 'mist blue' },
+    'iphone 17 pro': { blue: 'deep blue', orange: 'cosmic orange' },
+    'iphone 17 pro max': { blue: 'deep blue', orange: 'cosmic orange' },
+    'iphone air': { blue: 'sky blue', gold: 'light gold', black: 'space black', white: 'cloud white' },
+    'iphone 17e': { pink: 'soft pink' },
+    'samsung galaxy s26': { blue: 'sky blue', violet: 'cobalt violet' },
+    'samsung galaxy s26 ultra': { blue: 'sky blue', violet: 'cobalt violet' },
+    'z fold 8': { cream: 'creamy' },
+    'z fold 8 ultra': { cream: 'creamy', violet: 'violet shadow' },
   }
-  if (modelKey === 'iphone air') {
-    aliases.blue = 'sky blue'
-    aliases.gold = 'light gold'
-    aliases.black = 'space black'
-    aliases.white = 'cloud white'
-  }
-  if (modelKey === 'iphone 17e') aliases.pink = 'soft pink'
-  if (modelKey === 'samsung galaxy s26' || modelKey === 'samsung galaxy s26 ultra') {
-    aliases.blue = 'sky blue'
-    aliases.violet = 'cobalt violet'
-  }
-  return aliases[raw] || raw
+  return aliases[modelKey]?.[raw] || raw
 }
 
 export function canonicalText(value?: unknown): string {

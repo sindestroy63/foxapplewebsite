@@ -1,14 +1,14 @@
 import type { GlobalConfig } from 'payload'
 
-import { anyone, denyAll } from '../access'
+import { admins, anyone } from '../access'
 
 export const SiteAppearance: GlobalConfig = {
   slug: 'site-appearance',
   label: 'Оформление сайта',
-  admin: { hidden: true },
+  admin: { hidden: false },
   access: {
     read: anyone,
-    update: denyAll,
+    update: admins,
   },
   fields: [
     {
@@ -39,32 +39,6 @@ export const SiteAppearance: GlobalConfig = {
           ],
         },
         {
-          label: 'Медиа-блок',
-          fields: [
-            {
-              name: 'mediaBlockTitle',
-              type: 'text',
-              label: 'Заголовок медиа-блока',
-              defaultValue: 'ФОХСТОР вживую',
-            },
-            {
-              name: 'mediaBlockText',
-              type: 'textarea',
-              label: 'Текст медиа-блока',
-            },
-            {
-              name: 'mediaBlockItems',
-              type: 'relationship',
-              label: 'Медиа для блока на главной',
-              relationTo: 'media',
-              hasMany: true,
-              admin: {
-                description: 'Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент показывается крупно, остальные — в сетку.',
-              },
-            },
-          ],
-        },
-        {
           label: 'Лучшие предложения',
           fields: [
             {
@@ -75,7 +49,8 @@ export const SiteAppearance: GlobalConfig = {
               hasMany: true,
               maxRows: 6,
               admin: {
-                description: 'Выберите до 6 товаров. Если не задано — используются товары с флагом «Популярный».',
+                description: 'Товары показываются на главной в этом порядке. Можно найти товар по названию и быстро изменить порядок.',
+                components: { Field: '/payload/components/admin/BestOffersField' },
               },
             },
           ],

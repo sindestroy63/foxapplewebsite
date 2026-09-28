@@ -41,7 +41,6 @@ const pageText: Record<string, string[]> = {
     'Сумму оценки можно использовать как часть оплаты новой техники. Финальное предложение зависит от состояния устройства.',
   ],
   warranty: [],
-  repair: [],
   contacts: [
     'Магазин ФОХСТОР находится в Самаре. Напишите в Telegram или позвоните, чтобы уточнить наличие нужной модели перед визитом.',
   ],
@@ -306,7 +305,6 @@ export const script = async (config: SanitizedConfig) => {
     { slug: 'installment', title: 'Рассрочка на технику Apple' },
     { slug: 'trade-in', title: 'Trade-In в ФОХСТОР' },
     { slug: 'warranty', title: 'Гарантия 12 месяцев' },
-    { slug: 'repair', title: 'Ремонт техники Apple' },
     { slug: 'contacts', title: 'Контакты ФОХСТОР' },
   ]
 

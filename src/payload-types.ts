@@ -1442,12 +1442,6 @@ export interface SiteSetting {
   heroTitle?: string | null;
   heroSubtitle?: string | null;
   aboutText?: string | null;
-  homepageMediaTitle?: string | null;
-  homepageMediaText?: string | null;
-  /**
-   * Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент — крупно, остальные в сетку.
-   */
-  homepageMedia?: (number | Media)[] | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1465,14 +1459,8 @@ export interface SiteAppearance {
    * Используется как fallback, если слайды не заданы.
    */
   heroVideo?: (number | null) | Media;
-  mediaBlockTitle?: string | null;
-  mediaBlockText?: string | null;
   /**
-   * Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент показывается крупно, остальные — в сетку.
-   */
-  mediaBlockItems?: (number | Media)[] | null;
-  /**
-   * Выберите до 6 товаров. Если не задано — используются товары с флагом «Популярный».
+   * Товары показываются на главной в этом порядке. Можно найти товар по названию и быстро изменить порядок.
    */
   bestOffers?: (number | Product)[] | null;
   updatedAt?: string | null;
@@ -1545,9 +1533,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   heroTitle?: T;
   heroSubtitle?: T;
   aboutText?: T;
-  homepageMediaTitle?: T;
-  homepageMediaText?: T;
-  homepageMedia?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1559,9 +1544,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
 export interface SiteAppearanceSelect<T extends boolean = true> {
   heroSlides?: T;
   heroVideo?: T;
-  mediaBlockTitle?: T;
-  mediaBlockText?: T;
-  mediaBlockItems?: T;
   bestOffers?: T;
   updatedAt?: T;
   createdAt?: T;

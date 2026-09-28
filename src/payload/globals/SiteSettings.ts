@@ -88,29 +88,5 @@ export const SiteSettings: GlobalConfig = {
       defaultValue:
         'ФОХСТОР помогает быстро выбрать актуальную технику Apple, проверить наличие и забронировать товар в Самаре.',
     },
-    {
-      name: 'homepageMediaTitle',
-      type: 'text',
-      label: 'Заголовок медиа-блока на главной',
-      defaultValue: 'ФОХСТОР вживую',
-    },
-    {
-      name: 'homepageMediaText',
-      type: 'textarea',
-      label: 'Текст медиа-блока на главной',
-      defaultValue:
-        'Загружайте фото, видео и GIF из офиса, выдач и новых поставок в раздел «Медиа», а затем выбирайте их здесь для главной страницы.',
-    },
-    {
-      name: 'homepageMedia',
-      type: 'relationship',
-      label: 'Медиа для главной страницы',
-      relationTo: 'media',
-      hasMany: true,
-      admin: {
-        description:
-          'Рекомендуемый размер: 1400×1050 px (фото), 1920×1080 (видео). Формат: JPG, PNG, WebP, GIF или MP4. Первый элемент — крупно, остальные в сетку.',
-      },
-    },
   ],
 }

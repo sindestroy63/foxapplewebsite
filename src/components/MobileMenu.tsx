@@ -14,7 +14,6 @@ const secondaryLinks = [
   { href: '/installment', label: 'Рассрочка' },
   { href: '/trade-in', label: 'Trade-In' },
   { href: '/warranty', label: 'Гарантия и возврат' },
-  { href: '/repair', label: 'Ремонт' },
   { href: '/contacts', label: 'Контакты' },
 ]
 

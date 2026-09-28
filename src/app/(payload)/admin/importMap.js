@@ -32,6 +32,7 @@ import { MediaSection as MediaSection_0f23eed0731f5cda2046b74e09ae11a5 } from '.
 import { default as default_32083bbf911ecfc703edfa28fdf4fc48 } from '../../../payload/components/admin/VariantGenerator'
 import { VariantsSection as VariantsSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
 import { default as default_b5b131095d52421d2a0942d2135f4a23 } from '../../../payload/components/admin/ProductSystemData'
+import { default as default_50e108fbf1d801da66d76e1dca79dd25 } from '../../../payload/components/admin/BestOffersField'
 import { NavIcon as NavIcon_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { LoginLogo as LoginLogo_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { default as default_ec5053350bda77791279610b7dbe999f } from '../../../payload/components/admin/PriceUpdateNavLink'
@@ -78,6 +79,7 @@ export const importMap = {
   "/payload/components/admin/VariantGenerator#default": default_32083bbf911ecfc703edfa28fdf4fc48,
   "/payload/components/admin/ProductSection#VariantsSection": VariantsSection_0f23eed0731f5cda2046b74e09ae11a5,
   "/payload/components/admin/ProductSystemData#default": default_b5b131095d52421d2a0942d2135f4a23,
+  "/payload/components/admin/BestOffersField#default": default_50e108fbf1d801da66d76e1dca79dd25,
   "/payload/components/admin/Branding#NavIcon": NavIcon_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/Branding#LoginLogo": LoginLogo_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/PriceUpdateNavLink#default": default_ec5053350bda77791279610b7dbe999f,

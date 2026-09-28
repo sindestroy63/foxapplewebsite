@@ -52,15 +52,16 @@ test('standard CatalogNavigation collection stays hidden while custom navigation
   assert.match(navEndpoints, /if \(!isAdmin\(req\)\) return Response\.json\(\{ error: 'Forbidden' \}, \{ status: 403 \}\)/)
 })
 
-test('hidden sections preserve system/public reads and deny CMS mutations', () => {
+test('hidden system settings stay protected while editable appearance stays manager-accessible', () => {
   assert.match(users, /hidden: true/)
   assert.match(users, /create: denyAll/)
   assert.match(users, /delete: denyAll/)
   assert.match(categories, /hidden: true/)
   assert.match(categories, /read: anyone/)
-  for (const source of globals) {
-    assert.match(source, /hidden: true/)
-    assert.match(source, /read: anyone/)
-    assert.match(source, /update: denyAll/)
-  }
+  assert.match(globals[0], /hidden: true/)
+  assert.match(globals[0], /read: anyone/)
+  assert.match(globals[0], /update: denyAll/)
+  assert.match(globals[1], /hidden: false/)
+  assert.match(globals[1], /read: anyone/)
+  assert.match(globals[1], /update: admins/)
 })

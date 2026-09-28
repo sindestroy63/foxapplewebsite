@@ -22,7 +22,7 @@ export type Media = {
 
 export type ProductStatus = 'in_stock' | 'preorder' | 'out_of_stock'
 
-export type CatalogSort = 'price_asc' | 'price_desc'
+export type CatalogSort = 'relevance' | 'price_asc' | 'price_desc' | 'name'
 
 export type ProductGroup =
   | 'smartphones'
@@ -45,6 +45,14 @@ export type CatalogFilters = {
   brand?: string
   line?: string
   appleAccessories?: boolean
+  category?: string
+  minPrice?: number
+  maxPrice?: number
+  inStock?: boolean
+  storage?: string
+  color?: string
+  sim?: string
+  ram?: string
 }
 
 export type VariantColor = {
@@ -143,17 +151,11 @@ export type SiteSettings = {
   heroTitle?: string
   heroSubtitle?: string
   aboutText?: string
-  homepageMediaTitle?: string
-  homepageMediaText?: string
-  homepageMedia?: Array<Media | string | number>
 }
 
 export type SiteAppearance = {
   heroVideo?: Media | string | number
   heroSlides?: Array<Media | string | number>
-  mediaBlockTitle?: string
-  mediaBlockText?: string
-  mediaBlockItems?: Array<Media | string | number>
   bestOffers?: Array<Product | string | number>
 }
 

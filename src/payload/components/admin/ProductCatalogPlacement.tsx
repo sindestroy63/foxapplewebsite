@@ -79,11 +79,15 @@ export default function ProductCatalogPlacement() {
       return
     }
     const placement = getCatalogPlacementByChildKey(selectedChild?.key)
-    if (!placement) { setStatus('Для выбранного подраздела не задано подтверждённое размещение'); return }
-    productGroupField.setValue(placement.productGroup)
-    brandField.setValue(placement.brand)
-    productLineField.setValue(placement.productLine)
-    conditionField.setValue(placement.condition)
+    const filter = selectedChild?.filter || {}
+    const productGroup = placement?.productGroup || filter.group || filter.productGroup || (filter.appleAccessories ? 'other' : '')
+    const brand = placement?.brand || filter.brand || ''
+    const productLine = placement?.productLine || filter.line || ''
+    if (!productGroup) { setStatus('У выбранного подраздела нет фильтра каталога'); return }
+    productGroupField.setValue(productGroup)
+    brandField.setValue(brand)
+    productLineField.setValue(productLine)
+    conditionField.setValue('new')
     setStatus(`Размещение подготовлено: ${currentPath}`)
   }
 

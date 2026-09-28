@@ -42,6 +42,13 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     return <section className="page-section"><div className="container"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>Поиск</span></nav><h1 className="catalog-category-title">Поиск товаров</h1><form className="catalog-search catalog-search--page" action="/catalog" method="get"><input aria-label="Поиск товаров" defaultValue={filters.query} name="q" placeholder="Например, iPhone 17 Pro" type="search" /><button className="button" type="submit">Найти</button></form><p className="catalog-category-subtitle">Найдено: {products.length}. Запрос: «{filters.query}»</p><ProductGrid emptyText="По вашему запросу ничего не найдено. Попробуйте изменить формулировку." products={products} settings={settings} />{products.length > 0 && <p><Link href="/catalog">Сбросить поиск</Link></p>}</div></section>
   }
   if (filters.brand || filters.line) {
+    if (filters.brand && !filters.line) {
+      const brandNavigation = await getBrandCatalogNavigation()
+      const group = brandNavigation.find((item) => item.filter?.brand === filters.brand)
+      if (group?.children?.length) {
+        return <section className="page-section"><div className="container catalog-categories-page"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>{group.title}</span></nav><h1 className="catalog-category-title">{group.title}</h1><div className="catalog-cat-grid">{group.children.filter((child) => child.isVisible !== false).map((child) => <CatalogGroupCard key={child.key} slug={child.key} label={child.title} href={child.href} coverImage={child.coverImage || null} compact />)}</div></div></section>
+      }
+    }
     const [products, brandNavigation] = await Promise.all([getProducts({ filters }), getBrandCatalogNavigation()])
     const title = filters.line || filters.brand || 'Каталог'
     const placement = resolveProductCatalogPlacement({ productGroup: filters.productGroup, brand: filters.brand, productLine: filters.line })

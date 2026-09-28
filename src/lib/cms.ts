@@ -33,8 +33,6 @@ export const fallbackSettings: Required<
     | 'heroTitle'
     | 'heroSubtitle'
     | 'aboutText'
-    | 'homepageMediaTitle'
-    | 'homepageMediaText'
   >
 > &
   SiteSettings = CONTACTS
@@ -52,11 +50,19 @@ export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
   const rawSort = one(searchParams.sort)
   return {
     query,
-    sort: rawSort === 'price_desc' || rawSort === 'price_asc' ? rawSort : undefined,
+    sort: rawSort === 'price_desc' || rawSort === 'price_asc' || rawSort === 'name' || rawSort === 'relevance' ? rawSort : undefined,
     productGroup: getCatalogGroup(one(searchParams.group) || '')?.slug,
     brand: one(searchParams.brand)?.trim() || undefined,
     line: one(searchParams.line)?.trim() || undefined,
     appleAccessories: one(searchParams.appleAccessories) === '1' ? true : undefined,
+    category: one(searchParams.category)?.trim() || undefined,
+    minPrice: Number(one(searchParams.minPrice)) || undefined,
+    maxPrice: Number(one(searchParams.maxPrice)) || undefined,
+    inStock: one(searchParams.inStock) === '1' ? true : undefined,
+    storage: one(searchParams.storage)?.trim() || undefined,
+    color: one(searchParams.color)?.trim() || undefined,
+    sim: one(searchParams.sim)?.trim() || undefined,
+    ram: one(searchParams.ram)?.trim() || undefined,
   }
 }
 
@@ -73,6 +79,22 @@ function getMinPrice(product: Product): number {
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   return fallbackSettings
+}
+
+export async function getBestOffers(): Promise<Product[]> {
+  try {
+    const payload = await getPayloadClient()
+    const appearance = await payload.findGlobal({ slug: 'site-appearance', depth: 2 }) as SiteAppearance
+    const selected = (appearance.bestOffers || [])
+      .filter((product): product is Product => typeof product === 'object' && product !== null && 'id' in product)
+      .filter((product) => product.isAvailable !== false)
+
+    if (selected.length > 0) return normalizeProducts(selected)
+  } catch (error) {
+    console.error('Failed to load best offers', error)
+  }
+
+  return getProducts({ featuredOnly: true, limit: 6 })
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -181,6 +203,8 @@ export async function getProducts(args?: {
       })
     }
 
+    if (args?.filters?.category) conditions.push({ category: { equals: args.filters.category } })
+
     if (args?.featuredOnly) {
       conditions.push({ isFeatured: { equals: true } })
     }
@@ -219,11 +243,30 @@ export async function getProducts(args?: {
     })
 
     let products = normalizeProducts(result.docs)
+    const requested = args?.filters
+    const value = (input: unknown) => String(input || '').trim().toLowerCase().replace(/\s+/g, '')
+    const variantsForFilter = (product: Product) => (product.variants?.length ? product.variants : [{ ...product, price: product.price }])
+    if (requested?.minPrice || requested?.maxPrice || requested?.inStock || requested?.storage || requested?.color || requested?.sim || requested?.ram) {
+      products = products.filter((product) => variantsForFilter(product).some((variant) => {
+        const variantRecord = variant as NonNullable<Product['variants']>[number] & { storage?: string; sim?: string }
+        const price = Number(variant.price || product.price)
+        const color = typeof variant.color === 'object' ? [variant.color.value, variant.color.englishLabel, variant.color.russianLabel].join(' ') : variant.color
+        return (!requested.minPrice || price >= requested.minPrice)
+          && (!requested.maxPrice || price <= requested.maxPrice)
+          && (!requested.inStock || (variant.isAvailable !== false && variant.status !== 'out_of_stock'))
+          && (!requested.storage || value(variantRecord.storage || variant.memory).includes(value(requested.storage)))
+          && (!requested.color || value(color).includes(value(requested.color)))
+          && (!requested.sim || value(variantRecord.sim || variant.simType).includes(value(requested.sim)))
+          && (!requested.ram || value(variant.ram).includes(value(requested.ram)))
+      }))
+    }
 
     if (wantSort === 'price_asc') {
       products = products.slice().sort((a, b) => getMinPrice(a) - getMinPrice(b))
     } else if (wantSort === 'price_desc') {
       products = products.slice().sort((a, b) => getMinPrice(b) - getMinPrice(a))
+    } else if (wantSort === 'name') {
+      products = products.slice().sort((a, b) => a.name.localeCompare(b.name, 'ru'))
     }
 
     return products

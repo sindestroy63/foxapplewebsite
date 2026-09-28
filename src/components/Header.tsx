@@ -5,6 +5,7 @@ import { CartIcon } from '@/components/CartIcon'
 import { MobileMenu } from '@/components/MobileMenu'
 import { DesktopCatalogMenu } from '@/components/DesktopCatalogMenu'
 import { normalizePhone } from '@/lib/format'
+import { HeaderSearch } from '@/components/HeaderSearch'
 import type { CatalogNavNode, NavCategory, NavGroup } from '@/lib/cms'
 import type { SiteSettings } from '@/lib/types'
 import type { BrandMenu } from '@/lib/brand-catalog-menu'
@@ -12,7 +13,6 @@ import type { BrandMenu } from '@/lib/brand-catalog-menu'
 const secondaryNav = [
   { href: '/trade-in', label: 'Trade-In' },
   { href: '/warranty', label: 'Гарантия и возврат' },
-  { href: '/repair', label: 'Ремонт' },
   { href: '/contacts', label: 'Контакты' },
 ]
 
@@ -57,11 +57,8 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
         </nav>
 
         <div className="header-actions">
-          <form className="header-search" action="/catalog" method="get">
-            <label className="sr-only" htmlFor="header-search-input">Поиск товаров</label>
-            <input id="header-search-input" name="q" placeholder="Поиск товаров" type="search" />
-            <button aria-label="Найти товары" type="submit">⌕</button>
-          </form>
+          {/* className="header-search" action="/catalog" method="get" */}
+          <HeaderSearch />
           <CartIcon />
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>
             Позвонить
