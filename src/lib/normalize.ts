@@ -15,15 +15,15 @@ function relationText(value: any, keys: string[] = ['value', 'label', 'key']): s
 }
 
 function nv(v: Record<string, any>): ProductVariant {
-  const storage = v.storage?.value
-  const simType = v.sim?.value || v.simType
+  const storage = typeof v.storage === 'object' && v.storage ? v.storage.value : v.storage
+  const simType = (typeof v.sim === 'object' && v.sim ? v.sim.value : v.sim) || v.simType
   const ram = relationText(v.ramOption) || v.ram
   const size = relationText(v.sizeOption) || v.size
   const screenSize = relationText(v.screenSizeOption) || v.screenSize
   const connectivity = relationText(v.connectivityOption) || v.connectivity
   return {
     id: v.id, sku: v.sku, color: nc(v.color), memory: storage, simType,
-    size, hasTouchId: v.hasTouchId, storage, sim: v.sim?.value,
+    size, hasTouchId: v.hasTouchId, storage, sim: typeof v.sim === 'object' && v.sim ? v.sim.value : v.sim,
     chip: v.chip, ram, screenSize, connectivity, generation: v.generation, revision: v.revision,
     packageLabel: v.packageLabel, material: v.material, strapSize: v.strapSize,
     price: v.price, oldPrice: v.oldPrice,

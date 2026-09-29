@@ -9,6 +9,9 @@ import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSe
 import { CATALOG_GROUPS, getCatalogGroup, productGroupSlug } from './catalog-groups'
 import { DEFAULT_BRAND_CATALOG_MENU, visibleBrandMenu, type BrandMenu } from './brand-catalog-menu'
 import { catalogPlacementHref, getCatalogPlacementByChildKey } from './product-catalog-placement'
+import { rankSearchResults } from './search'
+import { sortCatalogProducts } from './catalog-sort.ts'
+import { getCatalogPrice } from './pricing.ts'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -46,7 +49,7 @@ function one(value?: string | string[]): string | undefined {
 }
 
 export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
-  const query = one(searchParams.q)?.trim() || ''
+  const query = one(searchParams.search)?.trim() || one(searchParams.q)?.trim() || ''
   const rawSort = one(searchParams.sort)
   return {
     query,
@@ -64,17 +67,6 @@ export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
     sim: one(searchParams.sim)?.trim() || undefined,
     ram: one(searchParams.ram)?.trim() || undefined,
   }
-}
-
-function getMinPrice(product: Product): number {
-  if (product.variants && product.variants.length > 0) {
-    const prices = product.variants
-      .filter((v) => v.isAvailable !== false)
-      .map((v) => v.price)
-      .filter(Boolean)
-    return prices.length > 0 ? Math.min(...prices) : product.price
-  }
-  return product.price
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -209,33 +201,13 @@ export async function getProducts(args?: {
       conditions.push({ isFeatured: { equals: true } })
     }
 
-    if (args?.filters?.query) {
-      const searchFields = ['name', 'model', 'brand', 'productLine', 'productType', 'deviceType', 'sku', 'shortDescription']
-      const aliases: Record<string, string[]> = {
-        '\u0430\u0439\u0444\u043e\u043d': ['iphone'],
-        '\u0430\u0439\u043f\u0430\u0434': ['ipad'],
-        '\u043c\u0430\u043a\u0431\u0443\u043a': ['macbook'],
-        '\u0441\u0430\u043c\u0441\u0443\u043d\u0433': ['samsung'],
-        '\u043f\u043b\u0435\u0439\u0441\u0442\u0435\u0439\u0448\u043d': ['playstation'],
-      }
-      const terms = args.filters.query
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((term) => [...new Set([term, ...(aliases[term] || [])])])
-      conditions.push({
-        and: terms.map((termAlternatives) => ({
-          or: termAlternatives.flatMap((term) => searchFields.map((field) => ({ [field]: { like: term } }))),
-        })),
-      })
-    }
-
     const wantSort = args?.filters?.sort
 
     const result = await payload.find({
       collection: 'products',
       depth: 2,
-      limit: args?.limit || (args?.filters?.query ? 1000 : 100),
+      limit: args?.filters?.query ? 1000 : (args?.limit || 100),
+      pagination: false,
       sort: 'sortOrder',
       where: {
         and: conditions,
@@ -243,30 +215,32 @@ export async function getProducts(args?: {
     })
 
     let products = normalizeProducts(result.docs)
+    if (requestedQuery(args?.filters?.query)) products = rankSearchResults(products, args!.filters!.query!)
     const requested = args?.filters
     const value = (input: unknown) => String(input || '').trim().toLowerCase().replace(/\s+/g, '')
     const variantsForFilter = (product: Product) => (product.variants?.length ? product.variants : [{ ...product, price: product.price }])
     if (requested?.minPrice || requested?.maxPrice || requested?.inStock || requested?.storage || requested?.color || requested?.sim || requested?.ram) {
-      products = products.filter((product) => variantsForFilter(product).some((variant) => {
+      products = products.filter((product) => {
+        const catalogPrice = getCatalogPrice(product)
+        const priceMatches = (!requested.minPrice || catalogPrice >= requested.minPrice)
+          && (!requested.maxPrice || catalogPrice <= requested.maxPrice)
+        return priceMatches && variantsForFilter(product).some((variant) => {
         const variantRecord = variant as NonNullable<Product['variants']>[number] & { storage?: string; sim?: string }
-        const price = Number(variant.price || product.price)
-        const color = typeof variant.color === 'object' ? [variant.color.value, variant.color.englishLabel, variant.color.russianLabel].join(' ') : variant.color
-        return (!requested.minPrice || price >= requested.minPrice)
-          && (!requested.maxPrice || price <= requested.maxPrice)
-          && (!requested.inStock || (variant.isAvailable !== false && variant.status !== 'out_of_stock'))
+        const color = variant.color && typeof variant.color === 'object' ? [variant.color.value, variant.color.englishLabel, variant.color.russianLabel].join(' ') : variant.color
+        return (!requested.inStock || (variant.isAvailable !== false && variant.status !== 'out_of_stock'))
           && (!requested.storage || value(variantRecord.storage || variant.memory).includes(value(requested.storage)))
           && (!requested.color || value(color).includes(value(requested.color)))
           && (!requested.sim || value(variantRecord.sim || variant.simType).includes(value(requested.sim)))
           && (!requested.ram || value(variant.ram).includes(value(requested.ram)))
-      }))
+        })
+      })
     }
 
-    if (wantSort === 'price_asc') {
-      products = products.slice().sort((a, b) => getMinPrice(a) - getMinPrice(b))
-    } else if (wantSort === 'price_desc') {
-      products = products.slice().sort((a, b) => getMinPrice(b) - getMinPrice(a))
-    } else if (wantSort === 'name') {
-      products = products.slice().sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+    const queryForRanking = args?.filters?.query
+    if (wantSort === 'relevance' || (queryForRanking && !wantSort)) {
+      products = rankSearchResults(products, queryForRanking || '')
+    } else if (wantSort === 'price_asc' || wantSort === 'price_desc' || wantSort === 'name') {
+      products = sortCatalogProducts(products, wantSort)
     }
 
     return products
@@ -274,6 +248,10 @@ export async function getProducts(args?: {
     console.error('Failed to load products', error)
     return []
   }
+}
+
+function requestedQuery(query?: string): boolean {
+  return Boolean(query && query.trim().length >= 2)
 }
 
 export async function getProductsByProductGroup(productGroup: NonNullable<CatalogFilters['productGroup']>, params?: CatalogFilters) {

@@ -13,6 +13,7 @@ import type { Category, Product, SiteSettings } from '@/lib/types'
 import { ProductPill } from './ProductPill'
 import { ImageWithFallback } from './ImageWithFallback'
 import { productGroupSlug } from '@/lib/catalog-groups'
+import { getCatalogPrice } from '@/lib/pricing'
 
 function productHref(product: Product): string {
   const category = product.category
@@ -26,13 +27,7 @@ function productHref(product: Product): string {
 }
 
 function getDisplayPrice(product: Product): number {
-  if (product.variants && product.variants.length > 0) {
-    return Math.min(
-      ...product.variants.filter((v) => v.isAvailable !== false).map((v) => v.price).filter(Boolean),
-      product.price,
-    )
-  }
-  return product.price
+  return getCatalogPrice(product)
 }
 
 function getCategorySlug(product: Product): string | null {

@@ -334,6 +334,20 @@ textarea {
   font-size: 13px;
 }
 
+.header-search-start,
+.header-search-status { padding: 16px; color: var(--muted); font-size: 13px; }
+.header-search-start strong { display: block; margin-bottom: 10px; color: var(--ink); font-size: 12px; }
+.header-search-start div { display: flex; flex-wrap: wrap; gap: 6px; }
+.header-search-start a { display: inline-flex; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; }
+.header-search-dropdown a.is-active { background: var(--bg); }
+.header-search-thumb { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border-radius: 4px; background: var(--bg); overflow: hidden; }
+.header-search-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.header-search-result-copy { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.header-search-result-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-search-result-copy small { color: var(--muted); font-size: 11px; }
+.header-search-dropdown b { flex: 0 0 auto; font-size: 12px; white-space: nowrap; }
+.header-search-shortcut { color: var(--muted); font-size: 10px; white-space: nowrap; }
+
 .header-search input {
   min-width: 0;
   border: 0;
@@ -1347,6 +1361,12 @@ textarea:focus {
   min-height: 44px;
 }
 
+.search-results-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0; flex-wrap: wrap; }
+.search-results-toolbar form { display: flex; gap: 8px; align-items: center; }
+.search-results-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 16px; margin: 12px 0 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.search-results-filters label { min-width: 0; }
+.search-results-filters .button { align-self: end; }
+
 .mobile-catalog-search {
   grid-template-columns: minmax(0, 1fr) auto;
   margin: 0 0 20px;
@@ -1777,8 +1797,9 @@ a.contact-item:hover {
 
   .split-grid,
   .contacts-grid,
-  .product-detail,
-  
+  .product-detail {
+    grid-template-columns: 1fr;
+  }
 
   .hero {
     min-height: 60dvh;
@@ -1812,6 +1833,10 @@ a.contact-item:hover {
 }
 
 @media (max-width: 720px) {
+  .header-search-shortcut { display: none; }
+  .header-search-dropdown { position: fixed; top: 76px; left: 8px; right: 8px; width: auto; max-height: calc(100vh - 96px); overflow: auto; }
+  .search-results-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search-results-toolbar form { width: 100%; }
   .container {
     width: min(100% - 24px, 1180px);
   }
