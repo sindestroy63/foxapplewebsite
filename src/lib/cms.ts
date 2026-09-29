@@ -66,6 +66,7 @@ export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
     color: one(searchParams.color)?.trim() || undefined,
     sim: one(searchParams.sim)?.trim() || undefined,
     ram: one(searchParams.ram)?.trim() || undefined,
+    placement: one(searchParams.placement)?.trim() || undefined,
   }
 }
 
@@ -146,6 +147,16 @@ export async function getProducts(args?: {
 }): Promise<Product[]> {
   try {
     const payload = await getPayloadClient()
+    let directPlacementIds: Array<string | number> = []
+    if (args?.filters?.placement) {
+      const navigation = await payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 0 }) as any
+      const groups = Array.isArray(navigation.groups) ? navigation.groups : []
+      const child = groups.flatMap((group: any) => Array.isArray(group.children) ? group.children : [])
+        .find((item: any) => String(item.key) === args.filters?.placement)
+      directPlacementIds = Array.isArray(child?.products)
+        ? child.products.map((item: any) => typeof item === 'object' ? item.id : item).filter(Boolean)
+        : []
+    }
     const conditions: any[] = [{ isAvailable: { equals: true } }, { id: { not_equals: 49 } }, { id: { not_equals: 61 } }, { id: { not_equals: 66 } }, { id: { not_equals: 70 } }]
 
     // Trade-in inventory has its own public storefront and must not leak into brand filters.
@@ -155,7 +166,9 @@ export async function getProducts(args?: {
       conditions.push({ category: { equals: args.categoryId } })
     }
 
-    if (args?.filters?.productGroup) {
+    if (directPlacementIds.length > 0) {
+      conditions.push({ id: { in: directPlacementIds } })
+    } else if (args?.filters?.productGroup) {
       // The data migration from accessories to other is deliberately pending
       // confirmation. Treat both values as Other meanwhile, so the public
       // catalog does not split the same business group during the transition.
@@ -170,8 +183,13 @@ export async function getProducts(args?: {
         conditions.push({ productGroup: { equals: args.filters.productGroup } })
       }
     }
-    if (args?.filters?.brand) conditions.push({ brand: { equals: args.filters.brand } })
+    if (args?.filters?.brand) {
+      if (!directPlacementIds.length) conditions.push({ brand: { equals: args.filters.brand } })
+    }
     if (args?.filters?.line) {
+      if (directPlacementIds.length) {
+        // Direct CMS placement is authoritative for a selected subsection.
+      } else {
       // Apple Mac and MacBook are two menu branches over the shared laptops
       // group. Their stored productLine values contain the concrete model
       // name (for example "Apple MacBook Pro ..."), so exact matching would
@@ -184,6 +202,7 @@ export async function getProducts(args?: {
         { productLine: { like: 'Mac Pro' } },
       ] })
       else conditions.push({ productLine: { equals: args.filters.line } })
+      }
     }
     if (args?.filters?.appleAccessories) {
       conditions.push({
@@ -448,10 +467,12 @@ function productMatchesFilter(product: any, filter: Record<string, string> | und
 }
 
 function productsForMenuChild(products: any[], children: any[], child: any): any[] {
+  const directIds = new Set((Array.isArray(child.products) ? child.products : []).map((item: any) => String(typeof item === 'object' ? item.id : item)))
   const matchingChildren = (product: any) => children.filter((candidate) =>
     candidate.isVisible !== false && productMatchesFilter(product, candidate.filter || undefined))
   const specificity = (candidate: any) => Object.values(candidate.filter || {}).filter((value) => value !== '' && value != null).length
   return products.filter((product) => {
+    if (directIds.has(String(product.id))) return true
     const matches = matchingChildren(product)
     if (!matches.some((candidate) => String(candidate.key) === String(child.key))) return false
     const best = Math.max(...matches.map(specificity))
@@ -484,7 +505,7 @@ const getCachedBrandCatalogNavigation = unstable_cache(
         label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
         coverImage: group.coverImage || null, isVisible: group.isVisible !== false, isNew: group.isNew === true, sortOrder: Number(group.sortOrder ?? 0),
         items: children.map((child: any) => ({
-          label: String(child.title ?? child.label), key: String(child.key), href: resolveBrandHref(String(child.key), child.href, child.filter), filter: child.filter || undefined,
+          label: String(child.title ?? child.label), key: String(child.key), href: `${resolveBrandHref(String(child.key), child.href, child.filter) || '/catalog'}${String(resolveBrandHref(String(child.key), child.href, child.filter)).includes('?') ? '&' : '?'}placement=${encodeURIComponent(String(child.key))}`, filter: child.filter || undefined,
           coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),
           products: productsForMenuChild(products, children, child).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || Number(a.id) - Number(b.id)).map((product) => ({ id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) })),
         })),

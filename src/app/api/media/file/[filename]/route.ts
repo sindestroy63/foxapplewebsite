@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
+import { createReadStream } from 'fs'
+import { stat } from 'fs/promises'
+import { Readable } from 'stream'
 import path from 'path'
 
 // Content-Type mapping by file extension
@@ -67,22 +69,18 @@ export async function GET(
   }
 
   try {
-    // Read file
-    const fileBuffer = await readFile(filePath)
-
-    // Convert Buffer to Uint8Array for NextResponse compatibility
-    const fileData = new Uint8Array(fileBuffer)
+    const fileStats = await stat(filePath)
 
     // Determine Content-Type
     const contentType = getContentType(safeFilename)
 
-    // Return file with proper headers
-    return new NextResponse(fileData, {
+    // Stream the generated thumbnail instead of buffering and copying the whole file per request.
+    return new NextResponse(Readable.toWeb(createReadStream(filePath)) as ReadableStream, {
       status: 200,
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
-        'Content-Length': fileData.length.toString(),
+        'Content-Length': fileStats.size.toString(),
       },
     })
   } catch (error) {

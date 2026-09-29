@@ -166,6 +166,9 @@ const normalizeItem = (value: unknown, field: string, index: number) => {
       "must be a Media ID or null",
     );
   const placement = getCatalogPlacementByChildKey(key);
+  const products = Array.isArray(item.products)
+    ? item.products.map((value) => typeof value === "object" && value ? (value as InputItem).id : value).filter(Boolean)
+    : [];
   return {
     title,
     key,
@@ -174,6 +177,7 @@ const normalizeItem = (value: unknown, field: string, index: number) => {
     sortOrder,
     isVisible: item.isVisible !== false,
     isNew: item.isNew === true,
+    products,
     coverImage,
   };
 };
@@ -250,6 +254,23 @@ const errorResponse = (error: unknown, context?: { field?: string; groups?: unkn
 };
 
 export const brandCatalogNavigationEndpoints: Endpoint[] = [
+  { path: '/brand-catalog-placement', method: 'post', handler: async (req) => {
+    if (!hasFullAdminAccess(req.user)) return Response.json({ error: 'Forbidden' }, { status: 403 })
+    const body = await req.json?.() as any
+    if (!body?.productId || !body?.childKey) return Response.json({ error: 'productId and childKey are required' }, { status: 400 })
+    const current = await req.payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 0 }) as any
+    const groups = Array.isArray(current.groups) ? current.groups : []
+    let found = false
+    const nextGroups = groups.map((group: any) => ({ ...group, children: (Array.isArray(group.children) ? group.children : []).map((child: any) => {
+      if (String(child.key) !== String(body.childKey)) return child
+      found = true
+      const ids = (Array.isArray(child.products) ? child.products : []).map((item: any) => typeof item === 'object' ? item.id : item).filter(Boolean)
+      return { ...child, products: [...new Set([...ids, body.productId])] }
+    }) }))
+    if (!found) return Response.json({ error: 'Подраздел каталога не найден' }, { status: 404 })
+    const saved = await req.payload.updateGlobal({ slug: 'brand-catalog-navigation', data: { groups: nextGroups }, depth: 0, req })
+    return Response.json({ ok: true, groups: (saved as any).groups })
+  } },
   {
     path: "/brand-catalog-navigation",
     method: "get",
@@ -272,6 +293,8 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
         const matches = (product: Record<string, any>, filter: any) => matchesProductFilter(product, filter);
         const specificity = (child: any) => Object.values(child.filter || {}).filter((value) => value !== '' && value != null).length;
         const productsForChild = (group: any, child: any) => products.filter((product) => {
+          const directIds = new Set((child.products || []).map((item: any) => String(typeof item === 'object' ? item.id : item)))
+          if (directIds.has(String(product.id))) return true;
           const candidates = group.children.filter((candidate: any) => candidate.isVisible !== false && matches(product, candidate.filter));
           if (!candidates.some((candidate: any) => candidate.key === child.key)) return false;
           return specificity(child) === Math.max(...candidates.map(specificity));

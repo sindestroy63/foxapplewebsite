@@ -164,6 +164,7 @@ export default function CatalogNavigationView() {
             isVisible: child.isVisible !== false,
             isNew: child.isNew === true,
             coverImage: coverId(child) || null,
+            products: (child.products || []).map((product: any) => typeof product === 'object' ? product.id : product),
           })),
         })),
       };

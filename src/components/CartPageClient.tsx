@@ -124,6 +124,12 @@ export function CartPageClient({ settings }: Props) {
                         {item.variant.size && (
                           <span className="cart-item-attr">{item.variant.size}</span>
                         )}
+                        {item.variant.material && (
+                          <span className="cart-item-attr">{item.variant.material}</span>
+                        )}
+                        {item.variant.strapSize && (
+                          <span className="cart-item-attr">{item.variant.strapSize}</span>
+                        )}
                       </div>
                     )}
                   </div>

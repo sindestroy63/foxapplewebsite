@@ -14,6 +14,8 @@ function generateItemId(
   if (variant.size) parts.push(`sz:${variant.size}`)
   if (variant.chip) parts.push(`ch:${variant.chip}`)
   if (variant.screenSize) parts.push(`sc:${variant.screenSize}`)
+  if (variant.material) parts.push(`mat:${variant.material}`)
+  if (variant.strapSize) parts.push(`strap:${variant.strapSize}`)
   return parts.join('|')
 }
 

@@ -55,6 +55,7 @@ import * as migration_20260911_090000_variant_material_strap_size from './202609
 import * as migration_20260911_110000_brand_navigation_is_new from './20260911_110000_brand_navigation_is_new';
 import * as migration_20260919_120000_variant_revision from './20260919_120000_variant_revision';
 import * as migration_20260928_120000_remove_media_blocks from './20260928_120000_remove_media_blocks';
+import * as migration_20260929_120000_brand_navigation_direct_products from './20260929_120000_brand_navigation_direct_products';
 
 export const migrations = [
   {
@@ -336,5 +337,10 @@ export const migrations = [
     up: migration_20260928_120000_remove_media_blocks.up,
     down: migration_20260928_120000_remove_media_blocks.down,
     name: '20260928_120000_remove_media_blocks'
+  },
+  {
+    up: migration_20260929_120000_brand_navigation_direct_products.up,
+    down: migration_20260929_120000_brand_navigation_direct_products.down,
+    name: '20260929_120000_brand_navigation_direct_products'
   },
 ];

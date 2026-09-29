@@ -72,7 +72,12 @@ export function normalizeRam(value?: unknown): string {
 }
 
 export function normalizeSim(value?: unknown): string {
-  const raw = clean(value).replace(/[+\-_/]/g, ' ')
+  const source = value && typeof value === 'object'
+    ? ((value as { value?: unknown; label?: unknown; name?: unknown }).value
+      ?? (value as { label?: unknown }).label
+      ?? (value as { name?: unknown }).name)
+    : value
+  const raw = clean(source).replace(/[+\-_/]/g, ' ')
   if (!raw) return ''
   const hasNumberedSim = /\b1\s*sim\b/u.test(raw)
   const hasSim = /(?:\bsim\b|\d+sim\b)/u.test(raw)

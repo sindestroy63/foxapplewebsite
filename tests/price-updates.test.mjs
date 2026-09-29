@@ -14,6 +14,8 @@ test('normalization keeps Fold 8, storage, RAM, colors and SIM configurations di
   assert.equal(normalizeSim('eSIM'), 'esim')
   assert.equal(normalizeSim('esIM'), 'esim')
   assert.equal(normalizeSim('(1SIM)'), 'sim+esim')
+  assert.equal(normalizeSim({ value: 'SIM_ESIM', label: 'SIM + eSIM' }), 'sim+esim')
+  assert.equal(normalizeSim({ value: 'ESIM', label: 'eSIM' }), 'esim')
 
   const parsed = parseFreeformPriceList([
     'Z Fold 8 12/256 Cream — 125 000',
@@ -29,6 +31,57 @@ test('normalization keeps Fold 8, storage, RAM, colors and SIM configurations di
     ['18 Pro', null, '256GB', 'Black', 'SIM + eSIM'],
     ['18 Pro Max', null, '512GB', 'Black', 'eSIM'],
   ])
+})
+
+test('iPhone SIM supplier fixture matches only the corresponding CMS SIM variant', () => {
+  const fixture = [
+    '18 Pro 256GB Black (eSIM) - 132300',
+    '18 Pro 256GB Black (1SIM) - 144180',
+    '18 Pro 512GB Black (esIM) - 157800',
+    '18 Pro 512GB Black (1 SIM) - 175000',
+    '18 Pro Max 2TB Black (eSIM) - 288560',
+    '18 Pro Max 2TB Black (1SIM) - 272240',
+  ].join('\n')
+  const relation = (value, label) => ({ value, label })
+  const catalog = [
+    {
+      id: 18,
+      name: 'iPhone 18 Pro',
+      model: 'iPhone 18 Pro',
+      variants: [
+        { id: '18p-esim', sku: '18P-256-BLACK-ESIM', storage: '256GB', color: 'Black', sim: relation('ESIM', 'eSIM') },
+        { id: '18p-sim', sku: '18P-256-BLACK-SIM', storage: '256GB', color: 'Black', sim: relation('SIM_ESIM', 'SIM + eSIM') },
+        { id: '18p-512-esim', sku: '18P-512-BLACK-ESIM', storage: '512GB', color: 'Black', sim: relation('ESIM', 'eSIM') },
+        { id: '18p-512-sim', sku: '18P-512-BLACK-SIM', storage: '512GB', color: 'Black', sim: relation('SIM_ESIM', 'SIM + eSIM') },
+      ],
+    },
+    {
+      id: 19,
+      name: 'iPhone 18 Pro Max',
+      model: 'iPhone 18 Pro Max',
+      variants: [
+        { id: '18pm-esim', sku: '18PM-2TB-BLACK-ESIM', storage: '2TB', color: 'Black', sim: relation('ESIM', 'eSIM') },
+        { id: '18pm-sim', sku: '18PM-2TB-BLACK-SIM', storage: '2TB', color: 'Black', sim: relation('SIM_ESIM', 'SIM + eSIM') },
+      ],
+    },
+  ]
+  const parsed = parseFreeformPriceList(fixture)
+  assert.equal(parsed.errors.length, 0)
+  const results = parsed.items.map((item) => matchCatalogItem(item, catalog))
+  assert.deepEqual(results.map((result) => result.status), ['matched', 'matched', 'matched', 'matched', 'matched', 'matched'])
+  assert.deepEqual(results.map((result) => result.selected?.sku), [
+    '18P-256-BLACK-ESIM', '18P-256-BLACK-SIM',
+    '18P-512-BLACK-ESIM', '18P-512-BLACK-SIM',
+    '18PM-2TB-BLACK-ESIM', '18PM-2TB-BLACK-SIM',
+  ])
+  assert.equal(matchCatalogItem(parsed.items[0], [catalog[0], { ...catalog[1], variants: [] }]).selected?.sku, '18P-256-BLACK-ESIM')
+  assert.equal(matchCatalogItem(parsed.items[1], [{ ...catalog[0], variants: [catalog[0].variants[0]] }]).status, 'not_found')
+  assert.equal(matchCatalogItem(parsed.items[0], [{ ...catalog[0], variants: [catalog[0].variants[1]] }]).status, 'not_found')
+  assert.equal(matchCatalogItem(parsed.items[1], [{ ...catalog[1], variants: catalog[1].variants }]).status, 'not_found')
+  assert.equal(matchCatalogItem(parsed.items[4], [catalog[0]]).status, 'not_found')
+  assert.equal(matchCatalogItem({ ...parsed.items[0], modelText: '18 Pro Max' }, catalog).status, 'not_found')
+  assert.equal(matchCatalogItem({ ...parsed.items[4], storage: '512GB' }, catalog).status, 'not_found')
+  assert.equal(matchCatalogItem({ ...parsed.items[0], color: 'Silver' }, catalog).status, 'not_found')
 })
 import { classifyVariantForNormalization } from '../src/payload/catalog-normalization/dry-run.ts'
 import {

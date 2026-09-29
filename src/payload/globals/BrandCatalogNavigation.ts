@@ -25,6 +25,7 @@ export const BrandCatalogNavigation: GlobalConfig = {
       { name: 'sortOrder', type: 'number', defaultValue: 100 },
       { name: 'isVisible', type: 'checkbox', defaultValue: true },
       { name: 'isNew', type: 'checkbox', defaultValue: false },
+      { name: 'products', type: 'relationship', relationTo: 'products', hasMany: true },
       cover,
     ] },
   ] }],

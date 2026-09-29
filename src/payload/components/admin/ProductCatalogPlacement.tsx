@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useField, useFormFields } from '@payloadcms/ui'
+import { useDocumentInfo, useField, useFormFields } from '@payloadcms/ui'
 import { getCatalogPlacementByChildKey, resolveProductCatalogPlacement } from '@/lib/product-catalog-placement'
 
 type NavigationItem = {
@@ -11,6 +11,7 @@ type NavigationItem = {
   filter?: Record<string, string>
   isVisible?: boolean
   children?: NavigationItem[]
+  products?: Array<{ id?: string | number } | string | number>
 }
 
 const labelForGroup = (key: string, title: string) => key === 'trade-in' ? 'TRADE-IN' : title
@@ -20,6 +21,7 @@ export default function ProductCatalogPlacement() {
   const brandField = useField<string>({ path: 'brand' })
   const productLineField = useField<string>({ path: 'productLine' })
   const conditionField = useField<string>({ path: 'condition' })
+  const { id: productId } = useDocumentInfo()
   const values = useFormFields(([fields]: any) => ({
     productGroup: fields.productGroup?.value,
     brand: fields.brand?.value,
@@ -35,10 +37,16 @@ export default function ProductCatalogPlacement() {
   React.useEffect(() => {
     if (!groups.length) return
     const placement = resolveProductCatalogPlacement(values)
-    if (!placement) return
-    setGroupKey((current) => current || placement.groupKey)
-    setChildKey((current) => current || placement.childKey || '')
-  }, [groups, values.productGroup, values.brand, values.productLine, values.condition])
+    const direct = productId ? groups.find((group) => group.children?.some((child) => (child.products || []).some((product: any) => String(typeof product === 'object' ? product.id : product) === String(productId)))) : undefined
+    const directChild = direct?.children?.find((child: NavigationItem) => (child.products || []).some((product: any) => String(typeof product === 'object' ? product.id : product) === String(productId)))
+    if (direct && directChild) {
+      setGroupKey((current) => current || direct.key)
+      setChildKey((current) => current || directChild.key)
+    } else if (placement) {
+      setGroupKey((current) => current || placement.groupKey)
+      setChildKey((current) => current || placement.childKey || '')
+    }
+  }, [groups, productId, values.productGroup, values.brand, values.productLine, values.condition])
 
   React.useEffect(() => {
     let active = true
@@ -83,12 +91,26 @@ export default function ProductCatalogPlacement() {
     const productGroup = placement?.productGroup || filter.group || filter.productGroup || (filter.appleAccessories ? 'other' : '')
     const brand = placement?.brand || filter.brand || ''
     const productLine = placement?.productLine || filter.line || ''
-    if (!productGroup) { setStatus('У выбранного подраздела нет фильтра каталога'); return }
-    productGroupField.setValue(productGroup)
-    brandField.setValue(brand)
-    productLineField.setValue(productLine)
-    conditionField.setValue('new')
-    setStatus(`Размещение подготовлено: ${currentPath}`)
+    const save = async () => {
+      if (productId && selectedChild?.key) {
+        const response = await fetch('/api/brand-catalog-placement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, childKey: selectedChild.key }),
+        })
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}))
+          setStatus(payload.error || 'Не удалось сохранить размещение')
+          return
+        }
+      }
+      if (productGroup) productGroupField.setValue(productGroup)
+      brandField.setValue(brand)
+      productLineField.setValue(productLine)
+      conditionField.setValue('new')
+      setStatus('Размещение сохранено')
+    }
+    void save()
   }
 
   return (<>

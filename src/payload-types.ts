@@ -1506,6 +1506,7 @@ export interface BrandCatalogNavigation {
           sortOrder?: number | null;
           isVisible?: boolean | null;
           isNew?: boolean | null;
+          products?: (number | Product)[] | null;
           coverImage?: (number | null) | Media;
           id?: string | null;
         }[]
@@ -1575,6 +1576,7 @@ export interface BrandCatalogNavigationSelect<T extends boolean = true> {
               sortOrder?: T;
               isVisible?: T;
               isNew?: T;
+              products?: T;
               coverImage?: T;
               id?: T;
             };

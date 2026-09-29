@@ -24,7 +24,7 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
   return (items || []).filter((m): m is Media => Boolean(m) && typeof m === 'object' && 'id' in m)
 }
 
-type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'revision' | 'packageLabel'
+type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'revision' | 'packageLabel' | 'material' | 'strapSize'
 
 function toSortableNumber(s: string): number | null {
   const m = s.match(/^([\d.]+)\s*(TB|ТБ|GB|ГБ|MB|МБ)?$/i)
@@ -100,6 +100,8 @@ const STRING_AXES: { key: StringKey; title: string }[] = [
   { key: 'generation', title: 'Поколение' },
   { key: 'revision', title: 'Ревизия' },
   { key: 'packageLabel', title: 'Комплектация' },
+  { key: 'material', title: 'Материал' },
+  { key: 'strapSize', title: 'Размер ремешка' },
 ]
 
 function displayLabel(key: StringKey, value: string): string {
@@ -125,12 +127,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
 
   const [selection, setSelection] = useState<Record<string, string | null>>(() => {
     if (!hasVariants) return {}
-    const init: Record<string, string | null> = {}
-    for (const { key } of STRING_AXES) {
-      const vals = uniqueStrings(variants, key)
-      if (vals.length > 0) init[key] = vals[0]
-    }
-    return init
+    return {}
   })
 
   const colors = useMemo(() => {
@@ -148,7 +145,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
     return STRING_AXES.filter(({ key }) => {
       const vals = uniqueStrings(variants, key)
       if (vals.length === 0) return false
-      if (key === 'connectivity' && vals.length <= 1) return false
+      if (vals.length <= 1) return false
       return true
     })
   }, [hasVariants, variants])
@@ -228,7 +225,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                           key={val}
                           type="button"
                           className={`variant-btn${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}`}
-                          onClick={() => setSelection((prev) => ({ ...prev, [key]: val }))}
+                          onClick={() => { if (!isDisabled) setSelection((prev) => ({ ...prev, [key]: val })) }}
                         >
                           {displayLabel(key, val)}
                         </button>
@@ -253,7 +250,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                         key={clr.value}
                         type="button"
                         className={`variant-btn variant-btn--color${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}`}
-                        onClick={() => setSelectedColor(clr.value)}
+                        onClick={() => { if (!isDisabled) setSelectedColor(clr.value) }}
                       >
                         <ColorDot hex={clr.hex} hex2={clr.hex2} />
                         <span className="color-label">
@@ -308,6 +305,8 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
               chip: activeVariant.chip,
               screenSize: activeVariant.screenSize,
               revision: activeVariant.revision,
+              material: activeVariant.material,
+              strapSize: activeVariant.strapSize,
             } : (product.memory || product.color || product.simType || product.size ? {
               memory: product.memory,
               color: product.color ? { value: product.color, englishLabel: product.color } : undefined,

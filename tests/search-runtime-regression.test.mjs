@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 
 const { normalizeSearch, rankSearchResults, searchScore, searchQueryTerms } = await import('../src/lib/search.ts')
 
@@ -106,4 +107,13 @@ test('category aliases find products whose title lacks the Russian category word
 
 test('specific Apple Watch queries remain precise', () => {
   assert.deepEqual(rankSearchResults([unrelated, samsungWatch, appleWatch], 'Apple Watch').map((product) => product.id), [appleWatch.id])
+})
+
+test('live search uses a compact generated thumbnail DTO with a stable fallback URL', () => {
+  const route = readFileSync('src/app/api/catalog-search/route.ts', 'utf8')
+  assert.match(route, /sizes\?\.thumbnail/)
+  assert.match(route, /thumbnail\?\.filename \|\| media\.filename/)
+  assert.match(route, /\/api\/media\/file\//)
+  assert.match(route, /return \{ id: product\.id, name: product\.name, slug: product\.slug, href:/)
+  assert.doesNotMatch(route, /return \{\.\.\.product/)
 })

@@ -14,10 +14,12 @@ export type Media = {
   filename?: string
   mimeType?: string
   sizes?: {
-    thumbnail?: { url?: string; filename?: string; mimeType?: string }
-    card?: { url?: string; filename?: string; mimeType?: string }
-    detail?: { url?: string; filename?: string; mimeType?: string }
+    thumbnail?: { url?: string; filename?: string; mimeType?: string; width?: number; height?: number }
+    card?: { url?: string; filename?: string; mimeType?: string; width?: number; height?: number }
+    detail?: { url?: string; filename?: string; mimeType?: string; width?: number; height?: number }
   }
+  width?: number
+  height?: number
 }
 
 export type ProductStatus = 'in_stock' | 'preorder' | 'out_of_stock'
@@ -53,6 +55,7 @@ export type CatalogFilters = {
   color?: string
   sim?: string
   ram?: string
+  placement?: string
 }
 
 export type VariantColor = {
@@ -181,6 +184,8 @@ export type CartItemVariant = {
   chip?: string
   screenSize?: string
   revision?: string
+  material?: string
+  strapSize?: string
 }
 
 export type CartItem = {

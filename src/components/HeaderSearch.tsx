@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
-type Suggestion = { id: string | number; name: string; href: string; price?: number; image?: string; configuration?: string; available?: boolean }
+type Suggestion = { id: string | number; name: string; href: string; price?: number; thumbnail?: { url: string; width: number; height: number }; configuration?: string; available?: boolean }
 
 export function HeaderSearch() {
   const [query, setQuery] = useState('')
@@ -14,6 +14,7 @@ export function HeaderSearch() {
   const ref = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const requestRef = useRef(0)
+  const imageCache = useRef(new Set<string>())
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -31,17 +32,20 @@ export function HeaderSearch() {
     const value = query.trim()
     if (value.length < 2) { setItems([]); setLoading(false); return }
     const requestId = ++requestRef.current
+    const controller = new AbortController()
     const timer = window.setTimeout(async () => {
       setLoading(true)
       try {
-        const response = await fetch(`/api/catalog-search?q=${encodeURIComponent(value)}`)
+        const response = await fetch(`/api/catalog-search?q=${encodeURIComponent(value)}`, { signal: controller.signal })
         const next = response.ok ? await response.json() as Suggestion[] : []
         if (requestId === requestRef.current) { setItems(next); setActive(-1) }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') throw error
       } finally {
         if (requestId === requestRef.current) setLoading(false)
       }
     }, 250)
-    return () => window.clearTimeout(timer)
+    return () => { window.clearTimeout(timer); controller.abort() }
   }, [query])
   useEffect(() => {
     const close = (event: MouseEvent) => { if (!ref.current?.contains(event.target as Node)) setOpen(false) }
@@ -68,7 +72,7 @@ export function HeaderSearch() {
       <button aria-label="Найти товары" type="submit">⌕</button>
     </form>
     {open && <div className="header-search-dropdown" id="header-search-results" role="listbox">
-      {query.trim().length < 2 ? <div className="header-search-start"><strong>Популярные категории</strong><div>{['/catalog', '/catalog?group=smartphones', '/catalog?group=laptops', '/catalog?group=audio'].map((href, index) => <Link key={href} href={href} onClick={() => setOpen(false)}>{['Каталог', 'Смартфоны', 'Ноутбуки', 'Аудио'][index]}</Link>)}</div></div> : loading ? <div className="header-search-status">Ищем товары…</div> : items.length ? <>{items.map((item, index) => <Link key={item.id} role="option" aria-selected={index === active} className={index === active ? 'is-active' : ''} href={item.href} onClick={() => setOpen(false)}><span className="header-search-thumb">{item.image && <img src={item.image} alt="" />}</span><span className="header-search-result-copy"><strong>{item.name}</strong>{item.configuration && <small>{item.configuration}</small>}<small>{item.available === false ? 'Под заказ' : 'В наличии'}</small></span>{item.price ? <b>от {item.price.toLocaleString('ru-RU')} ₽</b> : null}</Link>)}<Link className="header-search-all" href={`/catalog?q=${encodeURIComponent(query.trim())}`} onClick={() => setOpen(false)}>Показать все результаты →</Link></> : <div className="header-search-status">Ничего не найдено</div>}
+       {query.trim().length < 2 ? <div className="header-search-start"><strong>Популярные категории</strong><div>{['/catalog', '/catalog?group=smartphones', '/catalog?group=laptops', '/catalog?group=audio'].map((href, index) => <Link key={href} href={href} onClick={() => setOpen(false)}>{['Каталог', 'Смартфоны', 'Ноутбуки', 'Аудио'][index]}</Link>)}</div></div> : loading ? <div className="header-search-status">Ищем товары…</div> : items.length ? <>{items.map((item, index) => <Link key={item.id} role="option" aria-selected={index === active} className={index === active ? 'is-active' : ''} href={item.href} onClick={() => setOpen(false)}><span className="header-search-thumb">{item.thumbnail ? <img src={item.thumbnail.url} width={item.thumbnail.width} height={item.thumbnail.height} loading={index < 2 ? 'eager' : 'lazy'} alt="" onLoad={(event) => { imageCache.current.add(item.thumbnail!.url); event.currentTarget.classList.add('is-loaded') }} /> : null}</span><span className="header-search-result-copy"><strong>{item.name}</strong>{item.configuration && <small>{item.configuration}</small>}<small>{item.available === false ? 'Под заказ' : 'В наличии'}</small></span>{item.price ? <b>от {item.price.toLocaleString('ru-RU')} ₽</b> : null}</Link>)}<Link className="header-search-all" href={`/catalog?q=${encodeURIComponent(query.trim())}`} onClick={() => setOpen(false)}>Показать все результаты →</Link></> : <div className="header-search-status">Ничего не найдено</div>}
     </div>}
   </div>
 }

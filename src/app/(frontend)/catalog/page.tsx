@@ -25,6 +25,12 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const query = await searchParams
   const filters = readCatalogParams(query)
   const groupSlug = filters.productGroup
+  if (filters.placement) {
+    const products = await getProducts({ filters })
+    const brandNavigation = await getBrandCatalogNavigation()
+    const child = brandNavigation.flatMap((group) => group.children || []).find((item) => item.key === filters.placement)
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={child?.title || 'Каталог'} categorySlug="other" products={products} phone="+7 (917) 954-64-64" breadcrumbBrand={brandNavigation.find((group) => group.children?.some((item) => item.key === filters.placement))?.title} breadcrumbChild={child?.title} /></div></section>
+  }
   if (groupSlug) {
     const [{ group, products }, brandNavigation] = await Promise.all([
       getProductsByProductGroup(groupSlug, filters),

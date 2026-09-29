@@ -341,7 +341,8 @@ textarea {
 .header-search-start a { display: inline-flex; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; }
 .header-search-dropdown a.is-active { background: var(--bg); }
 .header-search-thumb { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border-radius: 4px; background: var(--bg); overflow: hidden; }
-.header-search-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.header-search-thumb img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 160ms ease; }
+.header-search-thumb img.is-loaded { opacity: 1; }
 .header-search-result-copy { display: grid; min-width: 0; flex: 1; gap: 2px; }
 .header-search-result-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .header-search-result-copy small { color: var(--muted); font-size: 11px; }
