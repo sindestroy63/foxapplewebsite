@@ -148,13 +148,17 @@ export async function getProducts(args?: {
   try {
     const payload = await getPayloadClient()
     let directPlacementIds: Array<string | number> = []
+    let placementChild: BrandCatalogNavigationItem | undefined
+    let placementChildren: BrandCatalogNavigationItem[] = []
     if (args?.filters?.placement) {
       const navigation = await payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 0 }) as any
       const groups = Array.isArray(navigation.groups) ? navigation.groups : []
-      const child = groups.flatMap((group: any) => Array.isArray(group.children) ? group.children : [])
+      placementChild = groups.flatMap((group: any) => Array.isArray(group.children) ? group.children : [])
         .find((item: any) => String(item.key) === args.filters?.placement)
-      directPlacementIds = Array.isArray(child?.products)
-        ? child.products.map((item: any) => typeof item === 'object' ? item.id : item).filter(Boolean)
+      const parent = groups.find((group: any) => Array.isArray(group.children) && group.children.some((item: any) => String(item.key) === args.filters?.placement))
+      placementChildren = (parent?.children || []).filter((item: any) => item.isVisible !== false)
+      directPlacementIds = Array.isArray(placementChild?.products)
+        ? placementChild.products.map((item: any) => typeof item === 'object' ? item.id : item).filter(Boolean)
         : []
     }
     const conditions: any[] = [{ isAvailable: { equals: true } }, { id: { not_equals: 49 } }, { id: { not_equals: 61 } }, { id: { not_equals: 66 } }, { id: { not_equals: 70 } }]
@@ -234,6 +238,9 @@ export async function getProducts(args?: {
     })
 
     let products = normalizeProducts(result.docs)
+    if (placementChild && placementChildren.length > 0) {
+      products = filterProductsForNavigationChild(products, placementChildren, placementChild)
+    }
     if (requestedQuery(args?.filters?.query)) products = rankSearchResults(products, args!.filters!.query!)
     const requested = args?.filters
     const value = (input: unknown) => String(input || '').trim().toLowerCase().replace(/\s+/g, '')
@@ -420,6 +427,56 @@ export type CatalogNavNode = {
 }
 
 export type BrandCatalogNavigationItem = { title: string; key: string; href?: string; filter?: Record<string, string>; isVisible?: boolean; sortOrder?: number; coverImage?: import('./types').Media | null; children?: BrandCatalogNavigationItem[]; products?: Array<{ id: string | number; name: string; href: string; isNew?: boolean }> }
+
+export function navigationFilterMatchesCatalogParams(filter: Record<string, string> | undefined, params: CatalogFilters): boolean {
+  if (!filter) return false
+  const values: Record<string, string | undefined> = {
+    group: params.productGroup,
+    brand: params.brand,
+    line: params.line,
+    appleAccessories: params.appleAccessories ? '1' : undefined,
+    q: params.query || undefined,
+  }
+  return Object.entries(filter).every(([key, value]) => String(values[key] || '') === String(value))
+}
+
+export function visibleNavigationChildren(group: BrandCatalogNavigationItem | undefined): BrandCatalogNavigationItem[] {
+  return (group?.children || []).filter((child) => child.isVisible !== false)
+}
+
+export function findBrandNavigationRoot(navigation: BrandCatalogNavigationItem[], params: CatalogFilters): BrandCatalogNavigationItem | undefined {
+  return navigation.find((group) => {
+    if (group.isVisible === false) return false
+    if (navigationFilterMatchesCatalogParams(group.filter, params)) return true
+    // Some legacy/public root links use the CMS group key as `brand`.
+    return !params.line && !params.placement && params.brand?.toLowerCase() === group.key.toLowerCase()
+  })
+}
+
+function productMatchesNavigationFilter(product: any, filter: Record<string, string> | undefined): boolean {
+  if (!filter) return false
+  if (filter.group && product.productGroup !== filter.group) return false
+  if (filter.brand && product.brand !== filter.brand) return false
+  if (filter.line) {
+    if (filter.line === 'MacBook' && !String(product.productLine || '').includes('MacBook')) return false
+    if (filter.line === 'Apple Mac' && !['iMac', 'Mac mini', 'Mac Studio', 'Mac Pro'].some((line) => String(product.productLine || '').includes(line))) return false
+    if (!['MacBook', 'Apple Mac'].includes(filter.line) && product.productLine !== filter.line) return false
+  }
+  if (filter.appleAccessories === '1' && !(product.productGroup === 'other' && product.brand === 'Apple')) return false
+  if (filter.q && !`${product.name || ''} ${product.model || ''} ${product.productLine || ''}`.toLowerCase().includes(filter.q.toLowerCase())) return false
+  return true
+}
+
+export function filterProductsForNavigationChild(products: any[], children: BrandCatalogNavigationItem[], child: BrandCatalogNavigationItem): any[] {
+  const directIds = new Set((child.products || []).map((item: any) => String(item.id)))
+  return products.filter((product) => {
+    if (directIds.has(String(product.id))) return true
+    const matches = children.filter((candidate) => candidate.isVisible !== false && productMatchesNavigationFilter(product, candidate.filter))
+    if (!matches.some((candidate) => candidate.key === child.key)) return false
+    const specificity = (candidate: BrandCatalogNavigationItem) => Object.keys(candidate.filter || {}).length
+    return specificity(child) === Math.max(...matches.map(specificity))
+  })
+}
 
 /** Build a public catalog URL from the normalized filter stored in the Global. */
 function hrefFromFilter(filter: unknown): string | undefined {

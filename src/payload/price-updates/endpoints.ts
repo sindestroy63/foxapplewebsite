@@ -399,12 +399,16 @@ async function confirmHandler(req: PayloadRequest): Promise<Response> {
 
 type StoredCandidate = MatchCandidate & { key: string; displayPath?: string }
 
-function relationText(value: unknown, keys: string[]): string | undefined {
-  if (typeof value === 'string') return value
+function relationText(value: unknown, keys: string[], values?: Map<string, string>): string | undefined {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return values?.get(String(value)) || String(value)
+  }
   if (!value || typeof value !== 'object') return undefined
+  const id = (value as Record<string, unknown>).id
+  if ((typeof id === 'string' || typeof id === 'number') && values?.has(String(id))) return values.get(String(id))
   for (const key of keys) {
     const candidate = (value as Record<string, unknown>)[key]
-    if (typeof candidate === 'string' && candidate.trim()) return candidate
+    if (typeof candidate === 'string' && candidate.trim()) return values?.get(candidate) || candidate
   }
   return undefined
 }
@@ -430,7 +434,7 @@ function catalogProduct(product: Record<string, any>, simValues = new Map<string
       price: Number(variant.price),
       color: relationText(variant.color, ['englishLabel', 'russianLabel', 'value']),
       storage: relationText(variant.storage, ['value']),
-      sim: relationText(variant.sim, ['label', 'value']) || simValues.get(String(variant.sim)),
+      sim: relationText(variant.sim, ['label', 'value', 'name'], simValues),
       ram: relationText(variant.ramOption, ['key', 'label']) || (typeof variant.ram === 'string' ? variant.ram : undefined),
       size: relationText(variant.sizeOption, ['key', 'label']) || (typeof variant.size === 'string' ? variant.size : undefined),
       screenSize: relationText(variant.screenSizeOption, ['key', 'label']) || (typeof variant.screenSize === 'string' ? variant.screenSize : undefined),

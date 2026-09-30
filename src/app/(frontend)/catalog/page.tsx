@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { getBrandCatalogNavigation, getProducts, getProductsByProductGroup, getSiteSettings, readCatalogParams } from '@/lib/cms'
+import { findBrandNavigationRoot, getBrandCatalogNavigation, getProducts, getProductsByProductGroup, getSiteSettings, readCatalogParams, visibleNavigationChildren } from '@/lib/cms'
 import { ProductGrid } from '@/components/ProductGrid'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
 import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
@@ -25,16 +25,21 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const query = await searchParams
   const filters = readCatalogParams(query)
   const groupSlug = filters.productGroup
+  const brandNavigation = await getBrandCatalogNavigation()
+  const brandRoot = findBrandNavigationRoot(brandNavigation, filters)
+  const brandChildren = visibleNavigationChildren(brandRoot)
+  if (brandRoot && brandChildren.length > 0 && !filters.placement) {
+    return <section className="page-section"><div className="container catalog-categories-page"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>{brandRoot.title}</span></nav><h1 className="catalog-category-title">{brandRoot.title}</h1><div className="catalog-cat-grid">{brandChildren.map((child) => <CatalogGroupCard key={child.key} slug={child.key} label={child.title} href={child.href} coverImage={child.coverImage || null} compact />)}</div></div></section>
+  }
   if (filters.placement) {
     const products = await getProducts({ filters })
-    const brandNavigation = await getBrandCatalogNavigation()
     const child = brandNavigation.flatMap((group) => group.children || []).find((item) => item.key === filters.placement)
     return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={child?.title || 'Каталог'} categorySlug="other" products={products} phone="+7 (917) 954-64-64" breadcrumbBrand={brandNavigation.find((group) => group.children?.some((item) => item.key === filters.placement))?.title} breadcrumbChild={child?.title} /></div></section>
   }
   if (groupSlug) {
-    const [{ group, products }, brandNavigation] = await Promise.all([
+    const [{ group, products }] = await Promise.all([
       getProductsByProductGroup(groupSlug, filters),
-      getBrandCatalogNavigation(),
+      Promise.resolve(brandNavigation),
     ])
     const { default: GroupCatalogPage } = await import('@/components/GroupCatalogPage')
     const placement = resolveProductCatalogPlacement({ productGroup: groupSlug, brand: filters.brand, productLine: filters.line })
@@ -49,20 +54,15 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   }
   if (filters.brand || filters.line) {
     if (filters.brand && !filters.line) {
-      const brandNavigation = await getBrandCatalogNavigation()
-      const group = brandNavigation.find((item) => item.filter?.brand === filters.brand)
-      if (group?.children?.length) {
-        return <section className="page-section"><div className="container catalog-categories-page"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>{group.title}</span></nav><h1 className="catalog-category-title">{group.title}</h1><div className="catalog-cat-grid">{group.children.filter((child) => child.isVisible !== false).map((child) => <CatalogGroupCard key={child.key} slug={child.key} label={child.title} href={child.href} coverImage={child.coverImage || null} compact />)}</div></div></section>
-      }
+      // Brand roots are rendered above from the CMS tree.
     }
-    const [products, brandNavigation] = await Promise.all([getProducts({ filters }), getBrandCatalogNavigation()])
+    const products = await getProducts({ filters })
     const title = filters.line || filters.brand || 'Каталог'
     const placement = resolveProductCatalogPlacement({ productGroup: filters.productGroup, brand: filters.brand, productLine: filters.line })
     const menuGroup = placement ? brandNavigation.find((item) => item.key === placement.groupKey) : undefined
     const childOrder = menuGroup?.children?.map((item) => item.key)
     return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" placementTabs={getCatalogPlacementTabs({ productGroup: filters.productGroup, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories, childOrder })} activePlacement={placement} breadcrumbBrand={placement && filters.brand ? filters.brand : undefined} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} /></div></section>
   }
-  const brandNavigation = await getBrandCatalogNavigation()
   return (
     <section className="page-section">
       <div className="container catalog-categories-page">

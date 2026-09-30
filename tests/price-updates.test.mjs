@@ -88,7 +88,7 @@ test('iPhone SIM supplier fixture matches only the corresponding CMS SIM variant
 test('numeric Payload SIM relation resolves through the SIM dictionary', () => {
   const source = readFileSync(new URL('../src/payload/price-updates/endpoints.ts', import.meta.url), 'utf8')
   assert.match(source, /collection: 'sim-options'/)
-  assert.match(source, /simValues\.get\(String\(variant\.sim\)\)/)
+  assert.match(source, /relationText\(variant\.sim, \['label', 'value', 'name'\], simValues\)/)
   const catalog = [{ id: 18, name: 'iPhone 18 Pro', model: 'iPhone 18 Pro', variants: [
     { id: 'esim', sku: 'ESIM', storage: '256GB', color: 'Black', sim: { id: 2 } },
     { id: 'sim', sku: 'SIM', storage: '256GB', color: 'Black', sim: { id: 1 } },
@@ -96,6 +96,24 @@ test('numeric Payload SIM relation resolves through the SIM dictionary', () => {
   const resolved = catalog[0].variants.map((variant) => ({ ...variant, sim: { id: variant.sim.id, value: variant.sim.id === 1 ? 'SIM_ESIM' : 'ESIM' } }))
   const parsed = parseFreeformPriceList('18 Pro 256GB Black (1SIM) - 144180')
   assert.equal(matchCatalogItem(parsed.items[0], [{ ...catalog[0], variants: resolved }]).status, 'matched')
+})
+
+test('all Payload SIM relation shapes preserve strict SIM matching semantics', () => {
+  const parsed = parseFreeformPriceList([
+    '18 Pro 256GB Black (eSIM) - 132300',
+    '18 Pro 256GB Black (1SIM) - 144180',
+  ].join('\n'))
+  const variants = [
+    { id: 'numeric-esim', sku: 'NUMERIC-ESIM', storage: '256GB', color: 'Black', sim: { id: 2, value: 'ESIM' } },
+    { id: 'string-sim', sku: 'STRING-SIM', storage: '256GB', color: 'Black', sim: 'SIM_ESIM' },
+    { id: 'object-esim', sku: 'OBJECT-ESIM', storage: '256GB', color: 'Black', sim: { id: 2, label: 'eSIM' } },
+    { id: 'raw-sim', sku: 'RAW-SIM', storage: '256GB', color: 'Black', sim: 'SIM + eSIM' },
+  ]
+  const catalog = [{ id: 18, name: 'iPhone 18 Pro', model: 'iPhone 18 Pro', variants }]
+  assert.equal(matchCatalogItem(parsed.items[0], catalog).status, 'ambiguous')
+  assert.equal(matchCatalogItem(parsed.items[1], catalog).status, 'ambiguous')
+  assert.equal(matchCatalogItem(parsed.items[1], [{ ...catalog[0], variants: [variants[0]] }]).status, 'not_found')
+  assert.equal(matchCatalogItem(parsed.items[0], [{ ...catalog[0], variants: [variants[1], variants[3]] }]).status, 'not_found')
 })
 import { classifyVariantForNormalization } from '../src/payload/catalog-normalization/dry-run.ts'
 import {
