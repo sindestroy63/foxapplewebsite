@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server'
 import { getProducts } from '@/lib/cms'
 import { getCatalogPrice, getCatalogPriceVariant } from '@/lib/pricing'
+import { getMediaUrl, isVideoMedia } from '@/lib/media'
 
 function getSearchThumbnail(product: Awaited<ReturnType<typeof getProducts>>[number]) {
-  const media = product.images?.find((image) => image && typeof image === 'object')
-  if (!media || typeof media !== 'object' || media.mimeType?.startsWith('video/')) return undefined
-
+  const selectedVariant = getCatalogPriceVariant(product)
+  const candidates = [
+    ...(selectedVariant?.images || []),
+    ...(product.images || []),
+    ...(product.colorImages || []).flatMap((group) => group.images || []),
+  ]
+  const media = candidates.find((image) => image && typeof image === 'object' && !isVideoMedia(image))
+  if (!media || typeof media !== 'object') return undefined
+  const url = getMediaUrl(media, 'thumbnail')
+  if (!url) return undefined
   const thumbnail = media.sizes?.thumbnail
-  const filename = thumbnail?.filename || media.filename
-  if (!filename) return undefined
-
-  return {
-    url: `/api/media/file/${encodeURIComponent(filename)}`,
-    width: thumbnail?.width || media.width || 400,
-    height: thumbnail?.height || media.height || 300,
-  }
+  return { url, width: thumbnail?.width || media.width || 400, height: thumbnail?.height || media.height || 300 }
 }
 
 export async function GET(request: Request) {

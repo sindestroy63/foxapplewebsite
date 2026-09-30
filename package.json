@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run payload -- generate:importmap && next build",
+    "build": "cross-env NODE_ENV=production npm run payload -- generate:importmap && cross-env NODE_ENV=production next build",
     "start": "next start",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit",

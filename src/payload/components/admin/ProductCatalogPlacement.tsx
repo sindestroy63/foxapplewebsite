@@ -50,8 +50,15 @@ export default function ProductCatalogPlacement() {
 
   React.useEffect(() => {
     let active = true
-    fetch('/api/brand-catalog-navigation')
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Не удалось загрузить разделы каталога')))
+    const endpoint = '/api/brand-catalog-navigation'
+    fetch(endpoint, { credentials: 'same-origin' })
+      .then(async (response) => {
+        if (response.ok) return response.json()
+        const payload = await response.json().catch(() => ({}))
+        const reason = typeof payload.reason === 'string' ? payload.reason : ''
+        if (process.env.NODE_ENV !== 'production') console.warn('[product-catalog-placement]', endpoint, response.status, reason || response.statusText)
+        throw new Error(response.status === 401 ? 'Сессия истекла. Войдите в админку заново.' : response.status === 403 ? 'Недостаточно прав для загрузки разделов каталога.' : 'Не удалось загрузить разделы каталога')
+      })
       .then((payload) => { if (active) setGroups(Array.isArray(payload.groups) ? payload.groups : []) })
       .catch((error) => { if (active) setStatus(error instanceof Error ? error.message : 'Не удалось загрузить разделы каталога') })
     return () => { active = false }

@@ -275,16 +275,16 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
     path: "/brand-catalog-navigation",
     method: "get",
     handler: async (req) => {
-      const value = (await req.payload.findGlobal({
-        slug: "brand-catalog-navigation",
-        depth: 1,
-        req,
-      })) as unknown as InputItem;
-      const raw =
-        Array.isArray(value.groups) && value.groups.length >= defaults.length
-          ? value.groups
-          : defaults;
       try {
+        const value = (await req.payload.findGlobal({
+          slug: "brand-catalog-navigation",
+          depth: 1,
+          req,
+        })) as unknown as InputItem;
+        const raw =
+          Array.isArray(value.groups) && value.groups.length >= defaults.length
+            ? value.groups
+            : defaults;
         const groups = normalizeBrandCatalogGroups(raw).sort(
             (a, b) => a.sortOrder - b.sortOrder,
           );
@@ -307,7 +307,7 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
           })),
         })) });
       } catch (error) {
-        return errorResponse(error);
+        return errorResponse(error, { field: "read" });
       }
     },
   },

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
@@ -82,6 +83,19 @@ test('iPhone SIM supplier fixture matches only the corresponding CMS SIM variant
   assert.equal(matchCatalogItem({ ...parsed.items[0], modelText: '18 Pro Max' }, catalog).status, 'not_found')
   assert.equal(matchCatalogItem({ ...parsed.items[4], storage: '512GB' }, catalog).status, 'not_found')
   assert.equal(matchCatalogItem({ ...parsed.items[0], color: 'Silver' }, catalog).status, 'not_found')
+})
+
+test('numeric Payload SIM relation resolves through the SIM dictionary', () => {
+  const source = readFileSync(new URL('../src/payload/price-updates/endpoints.ts', import.meta.url), 'utf8')
+  assert.match(source, /collection: 'sim-options'/)
+  assert.match(source, /simValues\.get\(String\(variant\.sim\)\)/)
+  const catalog = [{ id: 18, name: 'iPhone 18 Pro', model: 'iPhone 18 Pro', variants: [
+    { id: 'esim', sku: 'ESIM', storage: '256GB', color: 'Black', sim: { id: 2 } },
+    { id: 'sim', sku: 'SIM', storage: '256GB', color: 'Black', sim: { id: 1 } },
+  ] }]
+  const resolved = catalog[0].variants.map((variant) => ({ ...variant, sim: { id: variant.sim.id, value: variant.sim.id === 1 ? 'SIM_ESIM' : 'ESIM' } }))
+  const parsed = parseFreeformPriceList('18 Pro 256GB Black (1SIM) - 144180')
+  assert.equal(matchCatalogItem(parsed.items[0], [{ ...catalog[0], variants: resolved }]).status, 'matched')
 })
 import { classifyVariantForNormalization } from '../src/payload/catalog-normalization/dry-run.ts'
 import {

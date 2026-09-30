@@ -409,7 +409,7 @@ function relationText(value: unknown, keys: string[]): string | undefined {
   return undefined
 }
 
-function catalogProduct(product: Record<string, any>): CatalogProduct {
+function catalogProduct(product: Record<string, any>, simValues = new Map<string, string>()): CatalogProduct {
   return {
     id: product.id,
     name: String(product.name || ''),
@@ -430,7 +430,7 @@ function catalogProduct(product: Record<string, any>): CatalogProduct {
       price: Number(variant.price),
       color: relationText(variant.color, ['englishLabel', 'russianLabel', 'value']),
       storage: relationText(variant.storage, ['value']),
-      sim: relationText(variant.sim, ['label', 'value']),
+      sim: relationText(variant.sim, ['label', 'value']) || simValues.get(String(variant.sim)),
       ram: relationText(variant.ramOption, ['key', 'label']) || (typeof variant.ram === 'string' ? variant.ram : undefined),
       size: relationText(variant.sizeOption, ['key', 'label']) || (typeof variant.size === 'string' ? variant.size : undefined),
       screenSize: relationText(variant.screenSizeOption, ['key', 'label']) || (typeof variant.screenSize === 'string' ? variant.screenSize : undefined),
@@ -459,10 +459,22 @@ async function loadManualModelAliases(req: PayloadRequest, author: number): Prom
 }
 
 async function loadCatalog(req: PayloadRequest): Promise<CatalogProduct[]> {
-  const result = await req.payload.find({
+  const [result, simOptions] = await Promise.all([
+    req.payload.find({
     collection: 'products', depth: 2, limit: MAX_LINES, pagination: false, overrideAccess: true, req,
-  })
-  return (result.docs as Record<string, any>[]).map(catalogProduct)
+    }),
+    req.payload.find({ collection: 'sim-options', depth: 0, limit: 100, pagination: false, overrideAccess: true, req }),
+  ])
+  const simValues = new Map<string, string>()
+  for (const option of simOptions.docs as Record<string, any>[]) {
+    const value = typeof option.value === 'string' ? option.value : ''
+    const label = typeof option.label === 'string' ? option.label : ''
+    if (!value) continue
+    simValues.set(String(option.id), value)
+    simValues.set(value, value)
+    if (label) simValues.set(label, value)
+  }
+  return (result.docs as Record<string, any>[]).map((product) => catalogProduct(product, simValues))
 }
 
 function importItemResponse(item: Record<string, any>) {

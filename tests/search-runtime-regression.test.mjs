@@ -112,8 +112,10 @@ test('specific Apple Watch queries remain precise', () => {
 test('live search uses a compact generated thumbnail DTO with a stable fallback URL', () => {
   const route = readFileSync('src/app/api/catalog-search/route.ts', 'utf8')
   assert.match(route, /sizes\?\.thumbnail/)
-  assert.match(route, /thumbnail\?\.filename \|\| media\.filename/)
-  assert.match(route, /\/api\/media\/file\//)
+  assert.match(route, /getMediaUrl\(media, 'thumbnail'\)/)
   assert.match(route, /return \{ id: product\.id, name: product\.name, slug: product\.slug, href:/)
   assert.doesNotMatch(route, /return \{\.\.\.product/)
+  assert.match(route, /selectedVariant\?\.images/)
+  assert.match(route, /colorImages/)
+  assert.match(route, /getMediaUrl\(media, 'thumbnail'\)/)
 })
