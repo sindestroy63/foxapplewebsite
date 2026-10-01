@@ -19,6 +19,10 @@ function normalized(value: unknown): string {
   return typeof value === 'string' ? value.trim().toUpperCase() : ''
 }
 
+function variantIdentity(variant: { id?: string; sku?: string | null }): string {
+  return normalized(variant.sku) || (variant.id ? `VARIANT-${variant.id}` : '')
+}
+
 export function prepareProductPriceUpdate(product: ProductSnapshot, target: PriceUpdateTarget): ApplyResult {
   if (target.matchType === 'product') {
     if (Number(product.price) !== Number(target.oldCashPrice)) {
@@ -29,7 +33,7 @@ export function prepareProductPriceUpdate(product: ProductSnapshot, target: Pric
 
   const variants = Array.isArray(product.variants) ? product.variants : []
   const variant = variants.find((entry) => String(entry.id) === String(target.variantId))
-  if (!variant || normalized(variant.sku) !== normalized(target.sku) || Number(variant.price) !== Number(target.oldCashPrice)) {
+  if (!variant || variantIdentity(variant) !== normalized(target.sku) || Number(variant.price) !== Number(target.oldCashPrice)) {
     return { conflict: true, error: 'Вариант или его цена изменились после предпросмотра.' }
   }
 

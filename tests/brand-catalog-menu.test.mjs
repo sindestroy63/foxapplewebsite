@@ -60,9 +60,9 @@ test('catalog renders brand cards and Trade-in card without changing product rou
 })
 
 test('Global navigation restores filtered child hrefs instead of falling back to the unfiltered catalog', () => {
-  assert.match(cms, /hrefFromFilter\(filter\)/)
-  assert.match(cms, /href\.trim\(\) === '\/catalog'/)
-  assert.match(cms, /resolveBrandHref\(String\(child\.key\), child\.href, child\.filter\)/)
+  assert.match(cms, /catalogNavigationHref\(\{[^}]*filter/)
+  assert.match(cms, /catalogNavigationHref/)
+  assert.match(cms, /menuChildFilter\(child, group\)/)
 })
 
 test('placement mapping provides confirmed product fields without guessing product lines', () => {
@@ -77,4 +77,12 @@ test('submenu products use exclusive most-specific placement and product new fla
   assert.match(cms, /productsForMenuChild/)
   assert.match(cms, /const best = Math\.max/)
   assert.match(cms, /isNew: Boolean\(product\.isNew\)/)
+})
+
+test('header uses canonical placement links and never guesses identity from child titles', () => {
+  const url = fs.readFileSync('src/lib/catalog-navigation-url.ts', 'utf8')
+  assert.match(url, /encodeURIComponent\(node\.key\)/)
+  assert.match(cms, /function menuChildFilter\(child: any, group: any\)/)
+  assert.doesNotMatch(cms, /q: String\(child\.title \|\| child\.key\)/)
+  assert.match(cms, /href: productHref\(product\)/)
 })

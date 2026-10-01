@@ -29,7 +29,7 @@ function variantRam(variant?: CatalogVariant): string {
   return match ? `${match[1]}GB` : ''
 }
 function candidateFor(product: CatalogProduct, variant?: CatalogVariant): MatchCandidate | null {
-  const sku = variant?.sku || product.sku
+  const sku = variant?.sku || (variant?.id ? `VARIANT-${variant.id}` : product.sku)
   if (!sku) return null
   return { productId: product.id, productName: product.name, matchType: variant ? 'variant' : 'product', variantId: variant?.id, sku, storage: variant?.storage, ram: variantRam(variant) || undefined, color: variant?.color, sim: variant?.sim, region: variant?.region, size: variant?.size, screenSize: variant?.screenSize, connectivity: variant?.connectivity, generation: variant?.generation, chip: variant?.chip, manufacturerModelNumber: variant?.manufacturerModelNumber, reason: 'Точное совпадение' }
 }

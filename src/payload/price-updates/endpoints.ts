@@ -148,7 +148,7 @@ async function previewFromSourceText(req: PayloadRequest, sourceText: string, ve
     const sku = normalizeSku(product.sku)
     if (sku) productBySku.set(sku, product)
     for (const variant of (product.variants || []) as Record<string, any>[]) {
-      const variantSku = normalizeSku(variant.sku)
+      const variantSku = normalizeSku(variant.sku) || `VARIANT-${variant.id}`
       if (variantSku) variantBySku.set(variantSku, { product, variant })
     }
   }
@@ -444,7 +444,7 @@ function catalogProduct(product: Record<string, any>, simValues = new Map<string
       manufacturerModelNumber: typeof variant.manufacturerModelNumber === 'string' ? variant.manufacturerModelNumber : undefined,
       region: typeof variant.region === 'string' ? variant.region : undefined,
       hasTouchId: variant.hasTouchId === true,
-    })).filter((variant) => Boolean(variant.sku)),
+    })),
   }
 }
 
@@ -632,7 +632,7 @@ async function currentStoredCandidate(req: PayloadRequest, candidate: StoredCand
   if (candidate.matchType === 'product') {
     return current.sku === candidate.sku ? { ...candidate, productName: current.name, displayPath: formatPriceUpdateTarget(current) } : null
   }
-  const variant = current.variants.find((entry) => entry.id === candidate.variantId && entry.sku === candidate.sku)
+  const variant = current.variants.find((entry) => entry.id === candidate.variantId && normalizeSku(entry.sku || `VARIANT-${entry.id}`) === normalizeSku(candidate.sku))
   return variant ? { ...candidate, productName: current.name, storage: variant.storage, ram: variant.ram, color: variant.color, sim: variant.sim, displayPath: formatPriceUpdateTarget(current, variant) } : null
 }
 

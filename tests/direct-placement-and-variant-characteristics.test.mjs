@@ -31,10 +31,12 @@ test('placement navigation reads the CMS global through the Payload-compatible r
   assert.doesNotMatch(placement, /localhost/)
 })
 
-test('variant characteristics are selectable and carried into cart identity', () => {
-  assert.match(detail, /key: 'material'/)
-  assert.match(detail, /key: 'strapSize'/)
-  assert.match(detail, /if \(!isDisabled\)/)
+test('band characteristics are informational and carried into cart identity', () => {
+  assert.doesNotMatch(detail, /\{ key: 'material', title:/)
+  assert.doesNotMatch(detail, /\{ key: 'strapSize', title:/)
+  assert.match(detail, /activeVariant\?\.material/)
+  assert.match(detail, /activeVariant\?\.strapSize/)
+  assert.match(detail, /variant-details/)
   assert.match(cart, /mat:\$\{variant\.material\}/)
   assert.match(cart, /strap:\$\{variant\.strapSize\}/)
 })

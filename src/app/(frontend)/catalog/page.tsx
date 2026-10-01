@@ -29,12 +29,20 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const brandRoot = findBrandNavigationRoot(brandNavigation, filters)
   const brandChildren = visibleNavigationChildren(brandRoot)
   if (brandRoot && brandChildren.length > 0 && !filters.placement) {
-    return <section className="page-section"><div className="container catalog-categories-page"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>{brandRoot.title}</span></nav><h1 className="catalog-category-title">{brandRoot.title}</h1><div className="catalog-cat-grid">{brandChildren.map((child) => <CatalogGroupCard key={child.key} slug={child.key} label={child.title} href={child.href} coverImage={child.coverImage || null} compact />)}</div></div></section>
+    return <section className="page-section"><div className="container catalog-categories-page"><nav className="breadcrumbs" aria-label="Навигация"><a href="/">Главная</a><span className="breadcrumbs-sep">›</span><a href="/catalog">Каталог</a><span className="breadcrumbs-sep">›</span><span>{brandRoot.title}</span></nav><h1 className="catalog-category-title">{brandRoot.title}</h1><div className="catalog-cat-grid">{brandChildren.map((child) => <CatalogGroupCard key={child.key} slug={child.key} label={child.title} href={child.href} navigationNode={child} coverImage={child.coverImage || null} compact />)}</div></div></section>
   }
   if (filters.placement) {
     const products = await getProducts({ filters })
-    const child = brandNavigation.flatMap((group) => group.children || []).find((item) => item.key === filters.placement)
-    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={child?.title || 'Каталог'} categorySlug="other" products={products} phone="+7 (917) 954-64-64" breadcrumbBrand={brandNavigation.find((group) => group.children?.some((item) => item.key === filters.placement))?.title} breadcrumbChild={child?.title} /></div></section>
+    const findPlacement = (nodes: typeof brandNavigation, groupTitle?: string): { child?: typeof brandNavigation[number]; groupTitle?: string } => {
+      for (const node of nodes) {
+        if (node.key === filters.placement) return { child: node, groupTitle }
+        const nested = findPlacement(node.children || [], groupTitle || node.title)
+        if (nested.child) return nested
+      }
+      return {}
+    }
+    const placementNode = findPlacement(brandNavigation)
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placementNode.child?.title || 'Каталог'} categorySlug="other" products={products} phone="+7 (917) 954-64-64" breadcrumbBrand={placementNode.groupTitle} breadcrumbChild={placementNode.child?.title} /></div></section>
   }
   if (groupSlug) {
     const [{ group, products }] = await Promise.all([
@@ -77,7 +85,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
         <div className="catalog-cat-grid">
           {brandNavigation.map((group) => (
-            <CatalogGroupCard key={group.key} slug={group.key} label={group.title} href={group.href} coverImage={group.coverImage || null} compact />
+            <CatalogGroupCard key={group.key} slug={group.key} label={group.title} href={group.href} navigationNode={group} coverImage={group.coverImage || null} compact />
           ))}
         </div>
       </div>

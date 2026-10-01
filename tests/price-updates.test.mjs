@@ -15,6 +15,7 @@ test('normalization keeps Fold 8, storage, RAM, colors and SIM configurations di
   assert.equal(normalizeSim('eSIM'), 'esim')
   assert.equal(normalizeSim('esIM'), 'esim')
   assert.equal(normalizeSim('(1SIM)'), 'sim+esim')
+  assert.equal(normalizeSim('1SIM+eSIM'), 'sim+esim')
   assert.equal(normalizeSim({ value: 'SIM_ESIM', label: 'SIM + eSIM' }), 'sim+esim')
   assert.equal(normalizeSim({ value: 'ESIM', label: 'eSIM' }), 'esim')
 
@@ -85,15 +86,66 @@ test('iPhone SIM supplier fixture matches only the corresponding CMS SIM variant
   assert.equal(matchCatalogItem({ ...parsed.items[0], color: 'Silver' }, catalog).status, 'not_found')
 })
 
+test('iPhone 18 supplier lines preserve the distinct production SIM options', () => {
+  const lines = [
+    '18 Pro 256GB Black (eSIM) - 132300',
+    '18 Pro 256GB Black (1SIM) - 144180',
+    '18 Pro Max 512GB Black (esIM) - 170290',
+    '18 Pro Max 512GB Black (1SIM) - 180640',
+    '18 Pro Max 2TB Burgundy (1SIM) - 265860',
+  ].join('\n')
+  const parsed = parseFreeformPriceList(lines)
+  assert.equal(parsed.errors.length, 0)
+  assert.deepEqual(parsed.items.map((item) => [item.modelText, item.storage, item.color, item.sim, item.price]), [
+    ['18 Pro', '256GB', 'Black', 'eSIM', 132300],
+    ['18 Pro', '256GB', 'Black', 'SIM + eSIM', 144180],
+    ['18 Pro Max', '512GB', 'Black', 'eSIM', 170290],
+    ['18 Pro Max', '512GB', 'Black', 'SIM + eSIM', 180640],
+    ['18 Pro Max', '2TB', 'Burgundy', 'SIM + eSIM', 265860],
+  ])
+
+  const relation = (value, label) => ({ value, label })
+  const catalog = [
+    {
+      id: 18,
+      name: 'iPhone 18 Pro',
+      model: 'iPhone 18 Pro',
+      variants: [
+        { id: '18p-esim', sku: '18P-256-BLACK-ESIM', price: 158000, storage: '256GB', color: 'black', sim: relation('ESIM', 'eSIM') },
+        { id: '18p-sim', sku: '18P-256-BLACK-SIM', price: 168000, storage: '256GB', color: 'black', sim: relation('SIM_ESIM', 'SIM + eSIM') },
+      ],
+    },
+    {
+      id: 19,
+      name: 'iPhone 18 Pro Max',
+      model: 'iPhone 18 Pro Max',
+      variants: [
+        { id: '18pm-512-esim', sku: '18PM-512-BLACK-ESIM', price: 171000, storage: '512GB', color: 'black', sim: relation('ESIM', 'eSIM') },
+        { id: '18pm-512-sim', sku: '18PM-512-BLACK-SIM', price: 180500, storage: '512GB', color: 'black', sim: relation('SIM_ESIM', 'SIM + eSIM') },
+        { id: '18pm-2tb-sim', sku: '18PM-2TB-BURGUNDY-SIM', price: 290000, storage: '2TB', color: 'Burgundy', sim: relation('SIM_ESIM', 'SIM + eSIM') },
+      ],
+    },
+  ]
+  const results = parsed.items.map((item) => matchCatalogItem(item, catalog))
+  assert.deepEqual(results.map((result) => result.selected?.sku), [
+    '18P-256-BLACK-ESIM',
+    '18P-256-BLACK-SIM',
+    '18PM-512-BLACK-ESIM',
+    '18PM-512-BLACK-SIM',
+    '18PM-2TB-BURGUNDY-SIM',
+  ])
+  assert.ok(results.every((result) => result.status === 'matched'))
+})
+
 test('numeric Payload SIM relation resolves through the SIM dictionary', () => {
   const source = readFileSync(new URL('../src/payload/price-updates/endpoints.ts', import.meta.url), 'utf8')
   assert.match(source, /collection: 'sim-options'/)
   assert.match(source, /relationText\(variant\.sim, \['label', 'value', 'name'\], simValues\)/)
   const catalog = [{ id: 18, name: 'iPhone 18 Pro', model: 'iPhone 18 Pro', variants: [
     { id: 'esim', sku: 'ESIM', storage: '256GB', color: 'Black', sim: { id: 2 } },
-    { id: 'sim', sku: 'SIM', storage: '256GB', color: 'Black', sim: { id: 1 } },
+     { id: 'sim', sku: 'SIM', storage: '256GB', color: 'Black', sim: { id: 1 } },
   ] }]
-  const resolved = catalog[0].variants.map((variant) => ({ ...variant, sim: { id: variant.sim.id, value: variant.sim.id === 1 ? 'SIM_ESIM' : 'ESIM' } }))
+   const resolved = catalog[0].variants.map((variant) => ({ ...variant, sim: { id: variant.sim.id, value: variant.sim.id === 1 ? 'SIM_ESIM' : 'ESIM' } }))
   const parsed = parseFreeformPriceList('18 Pro 256GB Black (1SIM) - 144180')
   assert.equal(matchCatalogItem(parsed.items[0], [{ ...catalog[0], variants: resolved }]).status, 'matched')
 })
@@ -105,15 +157,51 @@ test('all Payload SIM relation shapes preserve strict SIM matching semantics', (
   ].join('\n'))
   const variants = [
     { id: 'numeric-esim', sku: 'NUMERIC-ESIM', storage: '256GB', color: 'Black', sim: { id: 2, value: 'ESIM' } },
-    { id: 'string-sim', sku: 'STRING-SIM', storage: '256GB', color: 'Black', sim: 'SIM_ESIM' },
+     { id: 'string-sim', sku: 'STRING-SIM', storage: '256GB', color: 'Black', sim: 'SIM_ESIM' },
     { id: 'object-esim', sku: 'OBJECT-ESIM', storage: '256GB', color: 'Black', sim: { id: 2, label: 'eSIM' } },
-    { id: 'raw-sim', sku: 'RAW-SIM', storage: '256GB', color: 'Black', sim: 'SIM + eSIM' },
+     { id: 'raw-sim', sku: 'RAW-SIM', storage: '256GB', color: 'Black', sim: 'SIM + eSIM' },
   ]
   const catalog = [{ id: 18, name: 'iPhone 18 Pro', model: 'iPhone 18 Pro', variants }]
   assert.equal(matchCatalogItem(parsed.items[0], catalog).status, 'ambiguous')
   assert.equal(matchCatalogItem(parsed.items[1], catalog).status, 'ambiguous')
   assert.equal(matchCatalogItem(parsed.items[1], [{ ...catalog[0], variants: [variants[0]] }]).status, 'not_found')
   assert.equal(matchCatalogItem(parsed.items[0], [{ ...catalog[0], variants: [variants[1], variants[3]] }]).status, 'not_found')
+})
+
+test('production-shaped no-SKU SIM variants remain distinct and use synthetic identities', () => {
+  const parsed = parseFreeformPriceList([
+    '18 Pro 256GB Black (eSIM) - 132300',
+    '18 Pro 256GB Black (1SIM) - 144180',
+  ].join('\n'))
+  const catalog = [{
+    id: 160,
+    name: 'iPhone 18 Pro',
+    variants: [
+      { id: '6ab0d250f97b6eb436366220', sku: 'VAR-IPHONE-18-PRO-C866OG-V001', storage: '256GB', color: 'Black', sim: { value: 'ESIM', label: 'eSIM' }, price: 158000 },
+      { id: '6aa2d7456a437cd0987e8250', sku: null, storage: '256GB', color: 'Black', sim: { value: 'SIM_ESIM', label: 'SIM + eSIM' }, price: 168000 },
+    ],
+  }]
+  const results = parsed.items.map((item) => matchCatalogItem(item, catalog))
+  assert.deepEqual(results.map((result) => result.selected?.variantId), ['6ab0d250f97b6eb436366220', '6aa2d7456a437cd0987e8250'])
+  assert.equal(results[0].selected?.sku, 'VAR-IPHONE-18-PRO-C866OG-V001')
+  assert.equal(results[1].selected?.sku, 'VARIANT-6aa2d7456a437cd0987e8250')
+})
+
+test('no-SKU synthetic candidate survives preview validation and resolves to the exact database variant', () => {
+  const id = '6aa2d7456a437cd0987e8250'
+  const sku = `VARIANT-${id}`
+  const product = { id: 160, name: 'iPhone 18 Pro', price: 168000, variants: [{ id, sku, price: 168000 }] }
+  const rows = buildVerifiedPreviewRows([{
+    id: 'item-1', itemNumber: 1, sourceLine: '18 Pro 256GB Black (1SIM)', price: 144180,
+    resolution: 'automatic', selectedCandidateKey: 'candidate-1', selectedSku: sku,
+    candidates: [{ key: 'candidate-1', productId: 160, productName: 'iPhone 18 Pro', matchType: 'variant', variantId: id, sku }],
+  }], [product])
+  assert.equal(rows[0].sku, sku.toUpperCase())
+  assert.equal(rows[0].variantId, id)
+  const applied = prepareProductPriceUpdate(product, { matchType: 'variant', sku, variantId: id, oldCashPrice: 168000, newCashPrice: 144180 })
+  assert.equal(applied.conflict, false)
+  assert.equal(applied.data.variants[0].id, id)
+  assert.equal(applied.data.variants[0].price, 144180)
 })
 import { classifyVariantForNormalization } from '../src/payload/catalog-normalization/dry-run.ts'
 import {
@@ -983,7 +1071,7 @@ iPhone 17`
   const fixtureCatalog = [
     { id: 201, name: 'iPhone 17e', model: 'iPhone 17e', variants: [
       makeVariant('17E-WHITE-ESIM-JP', '256GB', 'White', 'eSIM', 'Japan'),
-      makeVariant('17E-BLACK-COMBO-KW', '256GB', 'Black', 'SIM + eSIM', 'Kuwait'),
+       makeVariant('17E-BLACK-COMBO-KW', '256GB', 'Black', 'SIM + eSIM', 'Kuwait'),
       makeVariant('17E-SOFT-PINK-ESIM', '512GB', 'Soft Pink', 'eSIM'),
     ] },
     { id: 202, name: 'iPhone Air', model: 'iPhone Air', variants: [
@@ -993,21 +1081,21 @@ iPhone 17`
       makeVariant('AIR-BLACK-1TB', '1TB', 'Space Black', 'eSIM'),
     ] },
     { id: 203, name: 'iPhone 17', model: 'iPhone 17', variants: [
-      makeVariant('17-WHITE', '256GB', 'White', 'SIM + eSIM', 'United States'),
-      makeVariant('17-BLACK', '256GB', 'Black', 'SIM + eSIM'),
-      makeVariant('17-MIST', '256GB', 'Mist Blue', 'SIM + eSIM', 'Europe'),
-      makeVariant('17-SAGE', '256GB', 'Sage', 'SIM + eSIM', 'South Korea'),
-      makeVariant('17-LAV', '256GB', 'Lavender', 'SIM + eSIM', 'China'),
+       makeVariant('17-WHITE', '256GB', 'White', 'SIM + eSIM', 'United States'),
+       makeVariant('17-BLACK', '256GB', 'Black', 'SIM + eSIM'),
+       makeVariant('17-MIST', '256GB', 'Mist Blue', 'SIM + eSIM', 'Europe'),
+       makeVariant('17-SAGE', '256GB', 'Sage', 'SIM + eSIM', 'South Korea'),
+       makeVariant('17-LAV', '256GB', 'Lavender', 'SIM + eSIM', 'China'),
     ] },
     { id: 204, name: 'iPhone 17 Pro', model: 'iPhone 17 Pro', variants: [
       makeVariant('17P-ORANGE', '256GB', 'Cosmic Orange', 'eSIM'),
       makeVariant('17P-BLUE', '256GB', 'Deep Blue', 'eSIM'),
-      makeVariant('17P-SILVER', '256GB', 'Silver', 'SIM + eSIM'),
+       makeVariant('17P-SILVER', '256GB', 'Silver', 'SIM + eSIM'),
     ] },
     { id: 205, name: 'iPhone 17 Pro Max', model: 'iPhone 17 Pro Max', variants: [
       makeVariant('17PM-ORANGE', '2TB', 'Cosmic Orange', 'eSIM'),
-      makeVariant('17PM-BLUE', '2TB', 'Deep Blue', 'SIM + eSIM'),
-      makeVariant('17PM-SILVER', '2TB', 'Silver', 'SIM + eSIM'),
+       makeVariant('17PM-BLUE', '2TB', 'Deep Blue', 'SIM + eSIM'),
+       makeVariant('17PM-SILVER', '2TB', 'Silver', 'SIM + eSIM'),
     ] },
   ]
   const parsed = parseFreeformPriceList(fixture)
@@ -1017,23 +1105,23 @@ iPhone 17`
   assert.equal(parsed.items.some((item) => item.modelText === 'iPhone'), false)
   assert.deepEqual(parsed.items.map(({ modelText, storage, color, sim, region, price }) => ({ modelText, storage, color, sim, region, price })), [
     { modelText: '17e', storage: '256GB', color: 'White', sim: 'eSIM', region: 'Japan', price: 56300 },
-    { modelText: '17e', storage: '256GB', color: 'Black', sim: 'SIM + eSIM', region: 'Kuwait', price: 56300 },
+     { modelText: '17e', storage: '256GB', color: 'Black', sim: 'SIM + eSIM', region: 'Kuwait', price: 56300 },
     { modelText: '17e', storage: '512GB', color: 'Pink', sim: 'eSIM', region: '', price: 104200 },
     { modelText: 'Air', storage: '256GB', color: 'Sky Blue', sim: 'eSIM', region: '', price: 73600 },
     { modelText: 'Air', storage: '256GB', color: 'Light Gold', sim: 'eSIM', region: 'Europe', price: 74600 },
     { modelText: 'Air', storage: '256GB', color: 'Cloud White', sim: 'eSIM', region: 'United States', price: 75600 },
     { modelText: 'Air', storage: '1TB', color: 'Space Black', sim: 'eSIM', region: '', price: 1000000 },
-    { modelText: '17', storage: '256GB', color: 'White', sim: 'SIM + eSIM', region: 'United States', price: 60000 },
+     { modelText: '17', storage: '256GB', color: 'White', sim: 'SIM + eSIM', region: 'United States', price: 60000 },
     { modelText: '17', storage: '256GB', color: 'Black', sim: 'SIM + eSIM', region: '', price: 60100 },
     { modelText: '17', storage: '256GB', color: 'Mist Blue', sim: 'SIM + eSIM', region: 'Europe', price: 60200 },
-    { modelText: '17', storage: '256GB', color: 'Sage', sim: 'SIM + eSIM', region: 'South Korea', price: 60300 },
-    { modelText: '17', storage: '256GB', color: 'Lavender', sim: 'SIM + eSIM', region: 'China', price: 60400 },
+     { modelText: '17', storage: '256GB', color: 'Sage', sim: 'SIM + eSIM', region: 'South Korea', price: 60300 },
+     { modelText: '17', storage: '256GB', color: 'Lavender', sim: 'SIM + eSIM', region: 'China', price: 60400 },
     { modelText: '17 Pro', storage: '256GB', color: 'Cosmic Orange', sim: 'eSIM', region: '', price: 94800 },
     { modelText: '17 Pro', storage: '256GB', color: 'Deep Blue', sim: 'eSIM', region: '', price: 96200 },
-    { modelText: '17 Pro', storage: '256GB', color: 'Silver', sim: 'SIM + eSIM', region: '', price: 97300 },
+     { modelText: '17 Pro', storage: '256GB', color: 'Silver', sim: 'SIM + eSIM', region: '', price: 97300 },
     { modelText: '17 Max', storage: '2TB', color: 'Cosmic Orange', sim: 'eSIM', region: '', price: 148800 },
     { modelText: '17 Pro Max', storage: '2TB', color: 'Deep Blue', sim: 'SIM + eSIM', region: '', price: 149400 },
-    { modelText: '17 Pro Max', storage: '2TB', color: 'Silver', sim: 'SIM + eSIM', region: '', price: 163600 },
+     { modelText: '17 Pro Max', storage: '2TB', color: 'Silver', sim: 'SIM + eSIM', region: '', price: 163600 },
   ])
   const report = parsed.items.map((item) => ({ item, result: matchCatalogItem(item, fixtureCatalog) }))
   assert.equal(report.filter(({ result }) => result.status === 'matched').length, 18)

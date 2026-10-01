@@ -24,7 +24,7 @@ function resolveMedia(items?: Array<Media | string | number>): Media[] {
   return (items || []).filter((m): m is Media => Boolean(m) && typeof m === 'object' && 'id' in m)
 }
 
-type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'revision' | 'packageLabel' | 'material' | 'strapSize'
+type StringKey = 'simType' | 'screenSize' | 'chip' | 'ram' | 'storage' | 'connectivity' | 'size' | 'generation' | 'revision' | 'packageLabel'
 
 function toSortableNumber(s: string): number | null {
   const m = s.match(/^([\d.]+)\s*(TB|ТБ|GB|ГБ|MB|МБ)?$/i)
@@ -100,8 +100,6 @@ const STRING_AXES: { key: StringKey; title: string }[] = [
   { key: 'generation', title: 'Поколение' },
   { key: 'revision', title: 'Ревизия' },
   { key: 'packageLabel', title: 'Комплектация' },
-  { key: 'material', title: 'Материал' },
-  { key: 'strapSize', title: 'Размер ремешка' },
 ]
 
 function displayLabel(key: StringKey, value: string): string {
@@ -162,6 +160,9 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   }, [colors])
 
   const activeVariant = hasVariants ? findVariant(variants, selection, selectedColor) : null
+  const bandMaterial = firstText(activeVariant?.material)
+  const bandSize = firstText(activeVariant?.strapSize)
+  const hasBandDetails = Boolean(bandMaterial || bandSize)
   const displayPrice = activeVariant?.price ?? product.price
   const displayOldPrice = cardPrice(displayPrice)
   const displayStatus = activeVariant?.status ?? product.status
@@ -261,6 +262,23 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                     )
                   })}
                 </div>
+              </div>
+            )}
+
+            {hasBandDetails && (
+              <div className="variant-details" aria-label="Характеристики ремешка выбранного варианта">
+                {bandMaterial && (
+                  <div className="variant-detail-row">
+                    <span className="variant-detail-label">Материал ремешка</span>
+                    <span className="variant-detail-value">{bandMaterial}</span>
+                  </div>
+                )}
+                {bandSize && (
+                  <div className="variant-detail-row">
+                    <span className="variant-detail-label">Размер ремешка</span>
+                    <span className="variant-detail-value">{bandSize}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

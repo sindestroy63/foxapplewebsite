@@ -12,6 +12,7 @@ import { catalogPlacementHref, getCatalogPlacementByChildKey } from './product-c
 import { rankSearchResults } from './search'
 import { sortCatalogProducts } from './catalog-sort.ts'
 import { getCatalogPrice } from './pricing.ts'
+import { catalogNavigationHref } from './catalog-navigation-url'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -151,12 +152,19 @@ export async function getProducts(args?: {
     let placementChild: BrandCatalogNavigationItem | undefined
     let placementChildren: BrandCatalogNavigationItem[] = []
     if (args?.filters?.placement) {
-      const navigation = await payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 0 }) as any
+      const navigation = await payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 1 }) as any
       const groups = Array.isArray(navigation.groups) ? navigation.groups : []
-      placementChild = groups.flatMap((group: any) => Array.isArray(group.children) ? group.children : [])
-        .find((item: any) => String(item.key) === args.filters?.placement)
-      const parent = groups.find((group: any) => Array.isArray(group.children) && group.children.some((item: any) => String(item.key) === args.filters?.placement))
-      placementChildren = (parent?.children || []).filter((item: any) => item.isVisible !== false)
+      const findNode = (nodes: any[], siblings: any[] = []): { node?: any; siblings: any[] } => {
+        for (const node of nodes) {
+          if (String(node.key) === args.filters?.placement) return { node, siblings }
+          const nested = Array.isArray(node.children) ? findNode(node.children, node.children) : undefined
+          if (nested?.node) return nested
+        }
+        return { siblings }
+      }
+      const found = findNode(groups)
+      placementChild = found.node
+      placementChildren = found.siblings.filter((item: any) => item.isVisible !== false)
       directPlacementIds = Array.isArray(placementChild?.products)
         ? placementChild.products.map((item: any) => typeof item === 'object' ? item.id : item).filter(Boolean)
         : []
@@ -168,6 +176,16 @@ export async function getProducts(args?: {
 
     if (args?.categoryId) {
       conditions.push({ category: { equals: args.categoryId } })
+    }
+
+    if (args?.filters?.placement && !directPlacementIds.length && args.filters.query) {
+      conditions.push({
+        or: [
+          { name: { contains: args.filters.query } },
+          { model: { contains: args.filters.query } },
+          { productLine: { contains: args.filters.query } },
+        ],
+      })
     }
 
     if (directPlacementIds.length > 0) {
@@ -478,35 +496,17 @@ export function filterProductsForNavigationChild(products: any[], children: Bran
   })
 }
 
-/** Build a public catalog URL from the normalized filter stored in the Global. */
-function hrefFromFilter(filter: unknown): string | undefined {
-  if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return undefined
-  const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(filter as Record<string, unknown>)) {
-    if (value == null || value === '') continue
-    params.set(key, String(value))
-  }
-  const query = params.toString()
-  return query ? `/catalog?${query}` : undefined
-}
-
 /**
  * Global rows created by older versions may have lost href/filter values.
  * Recover only from the explicit fallback map; never turn an unresolved item
  * into the unfiltered /catalog route.
  */
 function resolveBrandHref(key: string, href: unknown, filter: unknown): string | undefined {
-  const confirmedPlacement = getCatalogPlacementByChildKey(key)
-  if (confirmedPlacement) return catalogPlacementHref(confirmedPlacement)
-  const fromFilter = hrefFromFilter(filter)
-  // A bare /catalog is the legacy placeholder. Prefer the structured filter
-  // whenever one is available so child links never lose their query.
-  if (fromFilter && (typeof href !== 'string' || !href.trim() || href.trim() === '/catalog')) return fromFilter
-  if (typeof href === 'string' && href.trim()) return href
-  if (fromFilter) return fromFilter
-  const fallback = DEFAULT_BRAND_CATALOG_MENU.find((group) => group.key === key)
-    || DEFAULT_BRAND_CATALOG_MENU.flatMap((group) => group.items).find((item) => item.key === key)
-  return fallback?.href
+  return catalogNavigationHref({ key, href: typeof href === 'string' ? href : undefined, filter: filter && typeof filter === 'object' && !Array.isArray(filter) ? filter as Record<string, string> : undefined })
+}
+
+function hrefFromFilter(filter: unknown): string | undefined {
+  return catalogNavigationHref({ filter: filter && typeof filter === 'object' && !Array.isArray(filter) ? filter as Record<string, string> : undefined })
 }
 
 function productMatchesFilter(product: any, filter: Record<string, string> | undefined): boolean {
@@ -537,6 +537,13 @@ function productsForMenuChild(products: any[], children: any[], child: any): any
   })
 }
 
+function menuChildFilter(child: any, group: any): Record<string, string> | undefined {
+  if (child.filter && typeof child.filter === 'object' && !Array.isArray(child.filter)) return child.filter
+  if (child.href) return undefined
+  const parentFilter = group.filter && typeof group.filter === 'object' && !Array.isArray(group.filter) ? group.filter : {}
+  return Object.keys(parentFilter).length > 0 ? parentFilter : undefined
+}
+
 function productHref(product: any): string {
   const category = product.category && typeof product.category === 'object' ? product.category.slug : null
   return `/catalog/${productGroupSlug(product.productGroup) || category || 'other'}/${product.slug}`
@@ -561,11 +568,15 @@ const getCachedBrandCatalogNavigation = unstable_cache(
       return {
         label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
         coverImage: group.coverImage || null, isVisible: group.isVisible !== false, isNew: group.isNew === true, sortOrder: Number(group.sortOrder ?? 0),
-        items: children.map((child: any) => ({
-          label: String(child.title ?? child.label), key: String(child.key), href: `${resolveBrandHref(String(child.key), child.href, child.filter) || '/catalog'}${String(resolveBrandHref(String(child.key), child.href, child.filter)).includes('?') ? '&' : '?'}placement=${encodeURIComponent(String(child.key))}`, filter: child.filter || undefined,
+        items: children.map((child: any) => {
+          const filter = menuChildFilter(child, group)
+          const href = catalogNavigationHref({ key: String(child.key), href: typeof child.href === 'string' ? child.href : undefined, filter, preserveKey: true })
+          return {
+          label: String(child.title ?? child.label), key: String(child.key), href, filter,
           coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),
           products: productsForMenuChild(products, children, child).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || Number(a.id) - Number(b.id)).map((product) => ({ id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) })),
-        })),
+          }
+        }),
       }
     }) as BrandMenu[])
     return menu.map((group) => ({

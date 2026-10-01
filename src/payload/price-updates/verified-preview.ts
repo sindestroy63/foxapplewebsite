@@ -70,13 +70,14 @@ export function buildVerifiedPreviewRows(
     let currentVariant: Record<string, any> | undefined
     if (candidate.matchType === 'variant') {
       const variant = (product.variants || []).find((entry: any) => String(entry.id) === String(candidate.variantId))
-      if (!variant || normalizeSku(variant.sku) !== normalizeSku(candidate.sku)) {
+      const currentIdentity = variant ? (normalizeSku(variant.sku) || `VARIANT-${variant.id}`).toUpperCase() : ''
+      if (!variant || currentIdentity !== normalizeSku(candidate.sku)) {
         onDiagnostic?.({ ...baseDiagnostic, candidateMatchType: candidate.matchType, currentProductFound: true, currentSkuValid: false, currentPriceFinite: false })
         throw new Error(`Selected variant changed for import item ${item.id}.`)
       }
       oldCashPrice = Number(variant.price)
       variantId = String(variant.id)
-      currentSku = normalizeSku(variant.sku)
+      currentSku = currentIdentity
       currentVariant = variant
     } else {
       currentSku = normalizeSku(product.sku)

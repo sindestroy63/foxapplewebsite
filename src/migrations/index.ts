@@ -155,6 +155,11 @@ export const migrations = [
     name: '20260501_120000_color_images'
   },
   {
+    up: migration_20260519_170000_variant_generation.up,
+    down: migration_20260519_170000_variant_generation.down,
+    name: '20260519_170000_variant_generation'
+  },
+  {
     up: migration_20260601_133000_add_hide_unavailable_colors.up,
     down: migration_20260601_133000_add_hide_unavailable_colors.down,
     name: '20260601_133000_add_hide_unavailable_colors'

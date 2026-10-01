@@ -49,9 +49,11 @@ function stripServiceTokens(line: string): { text: string; sim: string | null; r
     if (normalized === 'esim') {
       esimSeen = true
     } else {
-      if (normalized.includes('1sim')) comboSeen = true
-      if (normalized.includes('sim')) simSeen = true
-      if (normalized.includes('esim')) esimSeen = true
+      const hasSimPart = normalized.includes('sim')
+      const hasEsimPart = normalized.includes('esim')
+      if (hasSimPart) simSeen = true
+      if (hasEsimPart) esimSeen = true
+      if (hasEsimPart && hasSimPart) comboSeen = true
     }
     return ' '
   })
@@ -63,7 +65,7 @@ function stripServiceTokens(line: string): { text: string; sim: string | null; r
       break
     }
   }
-  const sim = comboSeen || (simSeen && esimSeen) ? 'SIM + eSIM' : esimSeen ? 'eSIM' : simSeen ? 'SIM' : null
+  const sim = comboSeen || (simSeen && esimSeen) || line.match(/1\s*sim/iu) ? 'SIM + eSIM' : esimSeen ? 'eSIM' : simSeen ? 'SIM' : null
   return { text: text.replace(/\s+/gu, ' ').trim(), sim, region }
 }
 
