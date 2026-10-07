@@ -7,6 +7,7 @@ import { ensureVariantSkus, validateProductSkus } from '../utils/sku'
 import { productTypeCondition, resolveProductType } from '../products/product-type'
 import { deviceTypeCondition, resolveDeviceType } from '../products/device-type'
 import { validateNewVariantConfigurations } from '../products/variant-validation'
+import { productCanonicalUrl } from '../../lib/product-url'
 
 const createSlugSuffix = () => randomBytes(3).toString('hex')
 
@@ -48,6 +49,44 @@ export const Products: CollectionConfig = {
     delete: admins,
   },
   hooks: {
+    afterChange: [
+      async ({ doc, req }) => {
+        try {
+          const href = productCanonicalUrl({
+            slug: doc.slug,
+            productGroup: doc.productGroup,
+            category: doc.category,
+          })
+          if (!href) return doc
+          const navigation = await req.payload.find({
+            collection: 'catalog-navigation',
+            where: { product: { equals: doc.id } },
+            depth: 0,
+            limit: 100,
+            req,
+            overrideAccess: true,
+          })
+          for (const item of navigation.docs as any[]) {
+            await req.payload.update({
+              collection: 'catalog-navigation',
+              id: item.id,
+              data: {
+                href,
+                productGroup: doc.productGroup || null,
+                brand: doc.brand || null,
+                productLine: doc.productLine || null,
+              },
+              depth: 0,
+              req,
+              overrideAccess: true,
+            })
+          }
+        } catch (error) {
+          req.payload.logger.error({ err: error, productId: doc.id }, 'Product saved but catalog navigation synchronization failed')
+        }
+        return doc
+      },
+    ],
     beforeChange: [
       ({ data, originalDoc, req }) => {
         return data

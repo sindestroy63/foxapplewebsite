@@ -86,14 +86,16 @@ test('portal flyout anchors to the active trigger bottom and left edge', () => {
 test('frontend navigation tests contain no database writes', () => { assert.doesNotMatch(desktop + mobile + cms, /INSERT INTO|UPDATE products|DELETE FROM/i) })
 test('product links use productGroup while legacy category routes remain supported', () => {
   assert.match(card, /productGroupSlug\(product\.productGroup\)/)
-  assert.match(cms, /productGroupSlug\(product\?\.productGroup\)/)
-  assert.match(cms, /productGroup: \{ equals: group!\.slug \}/)
+  assert.match(cms, /productCanonicalUrl\(product\)/)
+  assert.match(cms, /productCanonicalUrl\(matched\)/)
+  assert.match(cms, /productGroup: \{ equals: args\.filters\.productGroup \}/)
 })
-test('retired Marshall category URL is excluded without removing legacy category support', () => {
-  assert.match(cms, /categorySlug === 'drugoe' && matched\.productGroup === 'audio'/)
-  assert.match(cms, /categorySlug === 'drugoe' && \(doc as any\)\.productGroup === 'audio'/)
+test('product routes reject stale category scopes without mutating legacy data', () => {
+  assert.match(cms, /productCanonicalUrl\(matched\)\?\.startsWith\(`\/catalog\/\$\{categorySlug\}\//)
+  assert.match(cms, /return null/)
+  assert.doesNotMatch(cms, /update\(.*products|delete\(.*products|DELETE FROM products/i)
 })
 test('Product 66 aggregate is hidden from catalog reads without deleting its data', () => {
   assert.match(cms, /id: \{ not_equals: 66 \}/)
-  assert.match(cms, /\[49, 61, 66, 70\]\.includes\(Number\(matched\.id\)\)/)
+  assert.doesNotMatch(cms, /DELETE FROM products|delete\(.*products/i)
 })

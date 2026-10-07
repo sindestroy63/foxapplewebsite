@@ -30,7 +30,7 @@
     ,"catalog:generation-product-audit": "tsx scripts/catalog-generation-product-audit.ts"
     ,"catalog:product-split-plan": "tsx scripts/catalog-product-split-plan.ts"
     ,"catalog:product-split-preview": "tsx scripts/catalog-product-split-preview.ts"
-    ,"catalog:integrity:audit": "tsx scripts/catalog-integrity-audit.ts"
+    ,"catalog:integrity:audit": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/catalog-integrity-audit.ts"
     ,"catalog:media:match-plan": "tsx scripts/catalog-media-match-plan.ts"
     ,"catalog:apple-accessories-audit": "cross-env CATALOG_SPECIAL_AUDIT=apple tsx scripts/catalog-special-audit.ts"
     ,"catalog:charging-products-audit": "cross-env CATALOG_SPECIAL_AUDIT=charging tsx scripts/catalog-special-audit.ts"
@@ -49,6 +49,9 @@
     ,"catalog:samsung-navigation:plan": "tsx scripts/catalog-samsung-navigation-plan.ts"
     ,"catalog:samsung-navigation:apply": "tsx scripts/catalog-samsung-navigation-apply.ts"
     ,"users:provision": "tsx scripts/users-provision.ts"
+    ,"catalog:canonical-repair": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/catalog-canonical-repair.ts"
+    ,"catalog:data-repair": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/catalog-data-repair.ts"
+    ,"catalog:navigation:semantic-audit": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/catalog-navigation-semantic-audit.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.84.1",

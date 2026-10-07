@@ -13,6 +13,7 @@ import { rankSearchResults } from './search'
 import { sortCatalogProducts } from './catalog-sort.ts'
 import { getCatalogPrice } from './pricing.ts'
 import { catalogNavigationHref } from './catalog-navigation-url'
+import { productCanonicalUrl } from './product-url'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -350,14 +351,8 @@ export async function getProductsByCategorySlug(
 }
 
 export async function getProductBySlugs(categorySlug: string, productSlug: string) {
-  const category = await getCategoryBySlug(categorySlug)
-  const group = getCatalogGroup(categorySlug)
-  if (!category && !group) return null
-
   try {
     const payload = await getPayloadClient()
-    // Decode a dynamic route parameter once; retain raw and trimmed candidates
-    // for legacy records whose stored slug contains spaces or a trailing space.
     const decodedSlug = (() => {
       try {
         return decodeURIComponent(productSlug)
@@ -365,16 +360,7 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
         return productSlug
       }
     })()
-    // Temporary read-only alias until the duplicate product records are cleaned up manually.
-    // The published URL is preserved; only the product read is resolved to the canonical record.
-    const readOnlyAlias: Record<string, string> = {
-      'iphone-17-pro-gwbejz': 'iphone-17-pro',
-    }
-    const resolvedSlug = readOnlyAlias[productSlug] || readOnlyAlias[decodedSlug] || productSlug
-    const isAliased = resolvedSlug !== productSlug
-    const slugCandidates = isAliased
-      ? [resolvedSlug]
-      : [...new Set([productSlug, decodedSlug, decodedSlug.trim()])]
+    const slugCandidates = [...new Set([productSlug, decodedSlug, decodedSlug.trim()])]
     const result = await payload.find({
       collection: 'products',
       depth: 2,
@@ -382,38 +368,15 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
       where: {
         and: [
           { slug: { in: slugCandidates } },
-          ...(category ? [{ category: { equals: category.id } }] : [{ productGroup: { equals: group!.slug } }]),
           { isAvailable: { equals: true } },
         ],
       },
     })
     if (result.docs[0]) {
       const matched = result.docs[0] as any
-      // The former Marshall category URL was retired after moving the product
-      // to the audio group. Keep the category fallback for other legacy URLs.
-      if ([49, 61, 66, 70].includes(Number(matched.id)) || (categorySlug === 'drugoe' && matched.productGroup === 'audio')) return null
-      return normalizeProduct(matched)
+      return productCanonicalUrl(matched)?.startsWith(`/catalog/${categorySlug}/`) ? normalizeProduct(matched) : null
     }
-
-    // A legacy record may contain a trailing space that cannot survive URL
-    // normalization. Match only the trimmed slug within the same category.
-    const fallback = await payload.find({
-      collection: 'products',
-      depth: 2,
-      limit: 100,
-      where: {
-        and: [
-          ...(category ? [{ category: { equals: category.id } }] : [{ productGroup: { equals: group!.slug } }]),
-          { isAvailable: { equals: true } },
-        ],
-      },
-    })
-    const normalized = decodedSlug.trim()
-    const legacyMatch = fallback.docs.find((doc) => {
-      if (typeof doc.slug !== 'string' || doc.slug.trim() !== normalized) return false
-      return !([49, 61, 66, 70].includes(Number((doc as any).id)) || (categorySlug === 'drugoe' && (doc as any).productGroup === 'audio'))
-    })
-    return legacyMatch ? normalizeProduct(legacyMatch) : null
+    return null
   } catch (error) {
     console.error(`Failed to load product ${productSlug}`, error)
     return null
@@ -674,7 +637,7 @@ export async function getCatalogNavigation(): Promise<CatalogNavNode[]> {
         title: doc.title,
         kind: doc.kind,
         href: doc.kind === 'product' && product?.slug
-          ? `/catalog/${productGroupSlug(product?.productGroup) || category || 'other'}/${product.slug}`
+          ? productCanonicalUrl(product) || doc.href || '/catalog'
           : doc.href || (doc.kind === 'line' && doc.productGroup && doc.brand && doc.productLine
             ? `/catalog?group=${encodeURIComponent(doc.productGroup)}&brand=${encodeURIComponent(doc.brand)}&line=${encodeURIComponent(doc.productLine)}`
             : doc.kind === 'brand' && doc.productGroup && doc.brand

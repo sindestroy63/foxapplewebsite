@@ -110,7 +110,14 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, ph
   const selectedProduct = merged[selectedIndex] || null
 
   if (!merged.length) {
-    return <div className="empty-state">Товары не найдены. Напишите в Telegram, и сотрудник проверит наличие.</div>
+    return <div className="empty-state catalog-empty-state">
+      <h2>Здесь скоро появятся товары</h2>
+      <p>Ассортимент этого раздела обновляется. Уточните наличие у сотрудника магазина.</p>
+      <div className="catalog-empty-state-actions">
+        <a className="button button-primary" href="/catalog">Перейти в каталог</a>
+        {telegramUsername && <a className="button button-secondary" href={`https://t.me/${telegramUsername.replace(/^@/, '')}`}>Уточнить наличие</a>}
+      </div>
+    </div>
   }
 
   return (

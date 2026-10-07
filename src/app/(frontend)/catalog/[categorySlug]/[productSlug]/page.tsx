@@ -5,6 +5,7 @@ import { LeadForm } from '@/components/LeadForm'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
 import { RichText } from '@/components/RichText'
 import { getProductBySlugs, getSiteSettings } from '@/lib/cms'
+import { productCanonicalUrl } from '@/lib/product-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: seoTitle,
     description: seoDescription,
     alternates: {
-      canonical: `/catalog/${categorySlug}/${productSlug}`,
+      canonical: productCanonicalUrl(product) || `/catalog/${categorySlug}/${productSlug}`,
     },
     openGraph: {
       title: seoTitle,

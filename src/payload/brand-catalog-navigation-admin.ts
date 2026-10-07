@@ -262,10 +262,12 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
     const groups = Array.isArray(current.groups) ? current.groups : []
     let found = false
     const nextGroups = groups.map((group: any) => ({ ...group, children: (Array.isArray(group.children) ? group.children : []).map((child: any) => {
-      if (String(child.key) !== String(body.childKey)) return child
-      found = true
       const ids = (Array.isArray(child.products) ? child.products : []).map((item: any) => typeof item === 'object' ? item.id : item).filter(Boolean)
-      return { ...child, products: [...new Set([...ids, body.productId])] }
+      if (String(child.key) === String(body.childKey)) {
+        found = true
+        return { ...child, products: [...new Set([...ids, body.productId])] }
+      }
+      return { ...child, products: ids.filter((id: unknown) => String(id) !== String(body.productId)) }
     }) }))
     if (!found) return Response.json({ error: 'Подраздел каталога не найден' }, { status: 404 })
     const saved = await req.payload.updateGlobal({ slug: 'brand-catalog-navigation', data: { groups: nextGroups }, depth: 0, req })

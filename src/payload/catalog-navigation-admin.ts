@@ -66,17 +66,21 @@ export const catalogNavigationAdminEndpoints: Endpoint[] = [{ path: '/catalog-pl
   const product = await req.payload.findByID({ collection: 'products', id: body.productId, depth: 0, req }) as any
   if (!product) return Response.json({ error: 'Product not found' }, { status: 404 })
   let productUpdated = false
+  let transactionStarted = false
   let generated: any = null
   let previousParent: any = null
   let createdNavigationId: string | number | null = null
   try {
+    transactionStarted = await initTransaction(req as any)
     const placement = await resolvePlacement(req, body.placementId)
     const productGroup = String(placement.productGroup || '')
     if (!productGroup || productGroup === 'used' || productGroup === 'trade-in') throw new Error('Product group is not eligible')
     const updated = await req.payload.update({ collection: 'products', id: product.id, data: { productGroup, brand: placement.brand, productLine: placement.productLine || null } as any, depth: 0, req })
     productUpdated = true
     const nav = await req.payload.find({ collection: 'catalog-navigation', where: { product: { equals: product.id } }, depth: 0, limit: 100, req })
-    generated = (nav.docs as any[]).find((item) => String(item.stableKey || '') === `product:${product.id}` || String(item.generatedBy || '').startsWith('generated'))
+    const generatedCandidates = (nav.docs as any[]).filter((item) => String(item.stableKey || '') === `product:${product.id}` || String(item.generatedBy || '').startsWith('generated'))
+    if (generatedCandidates.length > 1) throw new Error(`Duplicate navigation placements for product ${product.id}: ${generatedCandidates.map((item) => item.id).join(', ')}`)
+    generated = generatedCandidates[0]
     if (generated) {
       previousParent = generated.parent
       await req.payload.update({ collection: 'catalog-navigation', id: generated.id, data: { parent: placement.selected.id }, depth: 0, req })
@@ -84,6 +88,7 @@ export const catalogNavigationAdminEndpoints: Endpoint[] = [{ path: '/catalog-pl
       const created = await req.payload.create({ collection: 'catalog-navigation', data: { title: product.name, kind: 'product', parent: placement.selected.id, product: product.id, href: `/catalog/${productGroup}/${product.slug}`, sortOrder: 100, isVisible: true, isNew: false, stableKey: `product:${product.id}`, generatedBy: 'generated:product-placement' } as any, depth: 0, req })
       createdNavigationId = created.id
     }
+    if (transactionStarted) await commitTransaction(req as any)
     return Response.json({ ok: true, product: updated, placement: { path: placement.docs.map((doc) => doc.title).join(' → '), productGroup, brand: placement.brand, productLine: placement.productLine } })
   } catch (error) {
     try {
@@ -93,6 +98,8 @@ export const catalogNavigationAdminEndpoints: Endpoint[] = [{ path: '/catalog-pl
     } catch (rollbackError) {
       console.error('Catalog placement rollback failed', rollbackError)
     }
+    if (transactionStarted) await killTransaction(req as any)
+    console.error('[catalog-placement] save failed', error)
     return Response.json({ error: error instanceof Error ? error.message : 'Invalid placement' }, { status: 400 })
   }
 }}, { path: '/catalog-navigation-admin', method: 'get', handler: async (req) => {
