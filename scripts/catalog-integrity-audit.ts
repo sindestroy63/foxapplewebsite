@@ -9,7 +9,42 @@ const href = (category: string | null, slug: string | null, productGroup?: strin
 
 async function status(route: string | null) {
   if (!route) return null
-  try { return (await fetch(new URL(route, baseUrl), { redirect: 'manual' })).status } catch { return null }
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout
+    const response = await fetch(new URL(route, baseUrl), {
+      redirect: 'manual',
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    return response.status
+  } catch (err: any) {
+    // Distinguish timeout/network errors from HTTP errors
+    if (err.name === 'AbortError') return 'TIMEOUT' as any
+    if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') return 'NETWORK_ERROR' as any
+    return null
+  }
+}
+
+// Concurrency-limited Promise.all
+async function pLimit<T>(items: T[], limit: number, fn: (item: T, index: number) => Promise<any>): Promise<any[]> {
+  const results: any[] = []
+  let index = 0
+
+  async function worker() {
+    while (index < items.length) {
+      const i = index++
+      const item = items[i]
+      results[i] = await fn(item, i)
+      if ((i + 1) % 10 === 0 || i + 1 === items.length) {
+        process.stdout.write(`\r  Checking routes: ${i + 1}/${items.length}`)
+      }
+    }
+  }
+
+  await Promise.all(Array(Math.min(limit, items.length)).fill(0).map(() => worker()))
+  process.stdout.write('\n')
+  return results
 }
 
 async function main() {
@@ -22,17 +57,22 @@ async function main() {
     const navById = new Map(navigation.map((n) => [String(n.id), n]))
     const ancestry = (item: any) => { const chain: any[] = []; const seen = new Set<string>(); let cur=item; while(cur){ if(seen.has(String(cur.id))) return { chain, cycle:true }; seen.add(String(cur.id)); chain.unshift(cur); cur=cur.parent_id ? navById.get(String(cur.parent_id)) : null } return {chain,cycle:false} }
     const productNav = new Map<string, any[]>(); for(const n of navigation.filter((n) => n.kind==='product')) { const k=String(n.product_id); productNav.set(k,[...(productNav.get(k)||[]),n]) }
-    const productRows = await Promise.all(products.map(async (p) => { const links=productNav.get(String(p.id))||[]; const url=href(p.category_slug,p.slug,p.product_group); const httpStatus=await status(url); const hidden=links.length>0 && links.every((n) => !n.is_visible); const legacyAggregate=p.id===66; const noVariants=p.variant_count===0 || p.available_variant_count===0; return { id:p.id,sku:p.sku,name:p.name,model:p.model,slug:p.slug,category:{id:p.category_id,name:p.category_name,slug:p.category_slug},productGroup:p.product_group,brand:p.brand,productType:p.product_type,productLine:p.product_line,price:p.price,isAvailable:p.is_available,variantCount:p.variant_count,availableVariantCount:p.available_variant_count,mediaCount:p.media_count,navigationProductItems:links.map((n) => ({id:n.id,isVisible:n.is_visible,href:n.href,stableKey:n.stable_key})),inMainNavigation:links.some((n) => n.is_visible),publicUrl:url,httpStatus, status: legacyAggregate ? 'hidden_legacy_aggregate' : hidden && httpStatus===200 ? 'hidden_but_routable' : !links.length ? 'orphan_product' : noVariants && p.is_available ? 'empty_product' : httpStatus!==200 ? 'wrong_navigation' : p.is_available ? 'active_valid' : 'hidden_valid' } }))
+    console.log('Checking product URLs...')
+    const productRows = await pLimit(products, 5, async (p) => { const links=productNav.get(String(p.id))||[]; const url=href(p.category_slug,p.slug,p.product_group); const httpStatus=await status(url); const hidden=links.length>0 && links.every((n) => !n.is_visible); const legacyAggregate=p.id===66; const noVariants=p.variant_count===0 || p.available_variant_count===0; return { id:p.id,sku:p.sku,name:p.name,model:p.model,slug:p.slug,category:{id:p.category_id,name:p.category_name,slug:p.category_slug},productGroup:p.product_group,brand:p.brand,productType:p.product_type,productLine:p.product_line,price:p.price,isAvailable:p.is_available,variantCount:p.variant_count,availableVariantCount:p.available_variant_count,mediaCount:p.media_count,navigationProductItems:links.map((n) => ({id:n.id,isVisible:n.is_visible,href:n.href,stableKey:n.stable_key})),inMainNavigation:links.some((n) => n.is_visible),publicUrl:url,httpStatus, status: legacyAggregate ? 'hidden_legacy_aggregate' : hidden && httpStatus===200 ? 'hidden_but_routable' : !links.length ? 'orphan_product' : noVariants && p.is_available ? 'empty_product' : httpStatus!==200 ? 'wrong_navigation' : p.is_available ? 'active_valid' : 'hidden_valid' } })
     const navigationRows = navigation.map((n) => { const a=ancestry(n); const p=n.product_id ? products.find((x) => String(x.id)===String(n.product_id)) : null; return { id:n.id,kind:n.kind,title:n.title,parentId:n.parent_id,parentPath:a.chain.map((x) => x.title),productId:n.product_id,productSlug:p?.slug||null,href:n.href,isVisible:n.is_visible,stableKey:n.stable_key,generatedBy:n.generated_by,productGroup:n.product_group,brand:n.brand,productLine:n.product_line,httpStatus:n.href ? null : null,hasProduct:Boolean(p),cycle:a.cycle } })
     const legacyPaths=['iphone','ipad','macbook','airpods','apple-watch','playstation','dyson','ray-ban','accessories','used']
-    const legacyRoutes=await Promise.all(legacyPaths.map(async (slug)=>({route:`/catalog/${slug}`,httpStatus:await status(`/catalog/${slug}`),action:['accessories','used'].includes(slug)?'manual_review':'keep'})))
+    console.log('Checking legacy routes...')
+    const legacyRoutes=await pLimit(legacyPaths, 5, async (slug)=>({route:`/catalog/${slug}`,httpStatus:await status(`/catalog/${slug}`),action:['accessories','used'].includes(slug)?'manual_review':'keep'}))
     const oldUrl='/catalog/drugoe/Аксессуары Apple'; const checkedRoutes=[oldUrl,'/catalog?group=other','/catalog?group=other&brand=Apple','/','/catalog','/admin','/admin/price-updates']
-    const routeChecks=await Promise.all(checkedRoutes.map(async (route)=>({route,httpStatus:await status(route)})))
+    console.log('Checking additional routes...')
+    const routeChecks=await pLimit(checkedRoutes, 5, async (route)=>({route,httpStatus:await status(route)}))
     const groups=['smartphones','tablets','laptops','smart-watches','audio','gaming-consoles','home-appliances','smart-devices','other']
     const groupRows=groups.map((group)=>{const ps=products.filter((p)=>p.product_group===group || group==='other'&&p.product_group==='accessories'); const ns=navigation.filter((n)=>n.product_group===group&&n.is_visible); return {group,productCount:ps.length,visibleProducts:ps.filter((p)=>p.is_available).length,navigationCount:ns.length,brands:[...new Set(ps.map((p)=>p.brand).filter(Boolean))],products:ps.map((p)=>p.name),productsWithoutNavigation:ps.filter((p)=>!(productNav.get(String(p.id))||[]).length).map((p)=>p.id)}})
     const hiddenButRoutable=productRows.filter((p)=>p.status==='hidden_but_routable'||p.status==='hidden_legacy_aggregate')
     const emptyProducts=productRows.filter((p)=>p.status==='empty_product'||p.variantCount===0||p.availableVariantCount===0)
-    const report={generatedAt:new Date().toISOString(),readOnly:true,writesPerformed:0,baseUrl,summary:{products:products.length,variants:variants.length,navigation:navigation.length,productsWithoutNavigation:productRows.filter((p)=>p.status==='orphan_product').length,navigationWithoutProduct:navigationRows.filter((n)=>n.kind==='product'&&!n.hasProduct).length,workingProductUrls:productRows.filter((p)=>p.httpStatus===200).length,brokenProductUrls:productRows.filter((p)=>p.httpStatus!==200).length,emptyProducts:emptyProducts.length,hiddenButRoutable:hiddenButRoutable.length,productsWithoutVariants:productRows.filter((p)=>p.variantCount===0).length,productsWithoutMedia:productRows.filter((p)=>p.mediaCount===0).length,manualDecisions:0},products:productRows,variants, categories:[],groups:groupRows,brands:[...new Set(products.map((p)=>p.brand).filter(Boolean))],lines:[...new Set(products.map((p)=>p.product_line).filter(Boolean))],navigation:navigationRows,legacyRoutes,productRoutes:productRows.map((p)=>({id:p.id,url:p.publicUrl,httpStatus:p.httpStatus})),brokenRoutes:productRows.filter((p)=>p.httpStatus!==200),emptyProducts,hiddenButRoutable,orphanProducts:productRows.filter((p)=>p.status==='orphan_product'),orphanNavigation:navigationRows.filter((n)=>n.kind==='product'&&!n.hasProduct),duplicates:{productIds:[],slugs:[],navigationProductIds:[...new Set([...productNav].filter(([,items])=>items.length>1).map(([id])=>id))]},staleArtifacts:[{type:'legacy_aggregate',productId:66,url:oldUrl,action:'redirect_or_compatibility_page',status:'manual_review'}],appleAccessories:{product66:productRows.find((p)=>p.id===66),newProducts:productRows.filter((p)=>[115,116,117,118].includes(p.id))},routeChecks,proposedActions:[{target:oldUrl,options:['redirect to /catalog?group=other&brand=Apple','redirect to /catalog/drugoe','compatibility catalog page'],recommended:'manual_review'},{target:'Product 66',action:'keep until backlinks/cart/leads/SEO audit completes'}]}
+    const timeoutCount=productRows.filter((p)=>p.httpStatus==='TIMEOUT').length
+    const networkErrorCount=productRows.filter((p)=>p.httpStatus==='NETWORK_ERROR').length
+    const report={generatedAt:new Date().toISOString(),readOnly:true,writesPerformed:0,baseUrl,summary:{products:products.length,variants:variants.length,navigation:navigation.length,productsWithoutNavigation:productRows.filter((p)=>p.status==='orphan_product').length,navigationWithoutProduct:navigationRows.filter((n)=>n.kind==='product'&&!n.hasProduct).length,workingProductUrls:productRows.filter((p)=>p.httpStatus===200).length,brokenProductUrls:productRows.filter((p)=>typeof p.httpStatus==='number'&&p.httpStatus!==200).length,timeoutUrls:timeoutCount,networkErrorUrls:networkErrorCount,emptyProducts:emptyProducts.length,hiddenButRoutable:hiddenButRoutable.length,productsWithoutVariants:productRows.filter((p)=>p.variantCount===0).length,productsWithoutMedia:productRows.filter((p)=>p.mediaCount===0).length,manualDecisions:0},products:productRows,variants, categories:[],groups:groupRows,brands:[...new Set(products.map((p)=>p.brand).filter(Boolean))],lines:[...new Set(products.map((p)=>p.product_line).filter(Boolean))],navigation:navigationRows,legacyRoutes,productRoutes:productRows.map((p)=>({id:p.id,url:p.publicUrl,httpStatus:p.httpStatus})),brokenRoutes:productRows.filter((p)=>typeof p.httpStatus==='number'&&p.httpStatus!==200),timeoutRoutes:productRows.filter((p)=>p.httpStatus==='TIMEOUT'),networkErrorRoutes:productRows.filter((p)=>p.httpStatus==='NETWORK_ERROR'),emptyProducts,hiddenButRoutable,orphanProducts:productRows.filter((p)=>p.status==='orphan_product'),orphanNavigation:navigationRows.filter((n)=>n.kind==='product'&&!n.hasProduct),duplicates:{productIds:[],slugs:[],navigationProductIds:[...new Set([...productNav].filter(([,items])=>items.length>1).map(([id])=>id))]},staleArtifacts:[{type:'legacy_aggregate',productId:66,url:oldUrl,action:'redirect_or_compatibility_page',status:'manual_review'}],appleAccessories:{product66:productRows.find((p)=>p.id===66),newProducts:productRows.filter((p)=>[115,116,117,118].includes(p.id))},routeChecks,proposedActions:[{target:oldUrl,options:['redirect to /catalog?group=other&brand=Apple','redirect to /catalog/drugoe','compatibility catalog page'],recommended:'manual_review'},{target:'Product 66',action:'keep until backlinks/cart/leads/SEO audit completes'}]}
     const output=path.resolve(process.cwd(),'backups',`catalog-integrity-audit-${stamp()}.json`); await fs.mkdir(path.dirname(output),{recursive:true}); await fs.writeFile(output,`${JSON.stringify(report,null,2)}\n`)
     console.log(JSON.stringify({...report.summary,legacyErrors:legacyRoutes.filter((r)=>r.httpStatus!==200).length,output},null,2))
     for(const p of hiddenButRoutable) console.log(`HIDDEN_ROUTABLE ${p.id} ${p.name}: ${p.publicUrl} ${p.httpStatus}`)

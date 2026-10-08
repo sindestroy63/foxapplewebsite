@@ -1,5 +1,6 @@
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
+import { cache } from 'react'
 import { getPayload } from 'payload'
 
 import { CATEGORY_SEED, CONTACTS } from './constants'
@@ -350,7 +351,7 @@ export async function getProductsByCategorySlug(
   return { category, products }
 }
 
-export async function getProductBySlugs(categorySlug: string, productSlug: string) {
+export const getProductBySlugs = cache(async function getProductBySlugs(categorySlug: string, productSlug: string) {
   try {
     const payload = await getPayloadClient()
     const decodedSlug = (() => {
@@ -360,7 +361,8 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
         return productSlug
       }
     })()
-    const slugCandidates = [...new Set([productSlug, decodedSlug, decodedSlug.trim()])]
+    // Always trim slugs to prevent matching products with trailing/leading whitespace
+    const slugCandidates = [...new Set([productSlug.trim(), decodedSlug.trim()])]
     const result = await payload.find({
       collection: 'products',
       depth: 2,
@@ -381,7 +383,7 @@ export async function getProductBySlugs(categorySlug: string, productSlug: strin
     console.error(`Failed to load product ${productSlug}`, error)
     return null
   }
-}
+})
 
 export type NavCategory = {
   slug: string

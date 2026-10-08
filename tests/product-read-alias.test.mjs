@@ -5,8 +5,9 @@ import test from 'node:test'
 const cms = fs.readFileSync('src/lib/cms.ts', 'utf8')
 
 test('product reads use the canonical URL guard without mutating CMS data', () => {
-  assert.match(cms, /export async function getProductBySlugs\(categorySlug: string, productSlug: string\)/)
-  assert.match(cms, /const slugCandidates = \[\.\.\.new Set\(\[productSlug, decodedSlug, decodedSlug\.trim\(\)\]\)\]/)
+  assert.match(cms, /export const getProductBySlugs = cache\(async function getProductBySlugs\(categorySlug: string, productSlug: string\)|export async function getProductBySlugs\(categorySlug: string, productSlug: string\)/)
+  // Verify slug candidates are trimmed to prevent whitespace matching
+  assert.match(cms, /const slugCandidates = \[\.\.\.new Set\(\[productSlug\.trim\(\), decodedSlug\.trim\(\)\]\)\]/)
   assert.match(cms, /productCanonicalUrl\(matched\)\?\.startsWith\(`\/catalog\/\$\{categorySlug\}\/`\)/)
   assert.match(cms, /: null/)
   assert.doesNotMatch(cms, /update\(.*slug|delete\(.*products|merge.*products/i)
