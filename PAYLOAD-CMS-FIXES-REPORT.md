@@ -369,6 +369,131 @@ docker logs foxapple-app-1 --tail 100
 
 ---
 
+## 🆕 ДОПОЛНИТЕЛЬНОЕ ИСПРАВЛЕНИЕ: Автоматическая генерация slug
+
+### Проблема:
+**Красная ошибка в поле slug** при создании нового товара, несмотря на сообщение «Генерируется автоматически».
+
+### Причина:
+Поле `slug` имело `required: true` на уровне схемы Payload, но генерация происходила в `beforeValidate` hook. Payload проверяет required-поля **ДО** выполнения hooks, что приводило к ошибке валидации для пустого slug.
+
+**Payload lifecycle:**
+```
+1. User input → form data
+2. ❌ Required field validation (slug пустое — ошибка!)
+3. beforeValidate hook (slug генерируется здесь, но уже поздно)
+4. Field validation
+5. Save to DB
+```
+
+### Исправление:
+
+**1. Изменено поле slug в схеме:**
+```typescript
+{
+  name: 'slug',
+  type: 'text',
+  required: false,  // ✅ Не обязательно при создании
+  unique: true,
+  admin: {
+    description: 'Генерируется автоматически из названия товара. Изменение создаст redirect старого URL.',
+  },
+  validate: (value: unknown, options: any) => {
+    // При создании slug может отсутствовать — будет сгенерирован в beforeValidate
+    if (options.operation === 'create') {
+      return true
+    }
+
+    // При обновлении slug должен существовать
+    if (!value) {
+      return 'URL slug обязателен'
+    }
+
+    return true
+  },
+}
+```
+
+**2. Улучшен beforeValidate hook:**
+```typescript
+if (operation === 'create' && data) {
+  if (!data.slug && data.name) {
+    // Генерация из name
+    data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
+    req.payload.logger.info({ productName: data.name, generatedSlug: data.slug }, 'Auto-generated slug')
+  } else if (data.slug) {
+    // Нормализация ручного slug
+    const normalized = normalizeSlug(String(data.slug))
+    const validation = validateSlug(normalized)
+    if (!validation.valid) {
+      throw new Error(`Некорректный slug: ${validation.error}`)
+    }
+    data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
+  }
+  // Если name пустое — не бросаем ошибку, Payload сам покажет ошибку для name (required: true)
+}
+```
+
+### Результат:
+
+✅ **Slug генерируется автоматически без ошибок**
+- Пользователь вводит "Наушники"
+- Поле slug остаётся пустым (без красной ошибки)
+- beforeValidate генерирует slug: "naushniki"
+- Товар сохраняется успешно
+
+✅ **Транслитерация кириллицы (ГОСТ 7.79-2000)**
+- "Наушники" → "naushniki"
+- "Часы Samsung" → "chasy-samsung"
+- "Apple MacBook Pro M5" → "apple-macbook-pro-m5"
+
+✅ **Проверка уникальности**
+- Если slug занят, добавляется суффикс: "chasy-samsung-2"
+
+✅ **URL redirects создаются только при изменении**
+- При создании нового товара (operation === 'create') — redirect НЕ создаётся
+- При изменении slug существующего товара (operation === 'update') — redirect создаётся
+
+✅ **Валидация работает корректно**
+- При создании: slug может быть пустым (генерируется автоматически)
+- При обновлении: slug обязателен (нельзя удалить вручную)
+
+### Проверки выполнены:
+
+✅ Генерация slug из кириллицы — работает
+✅ Нормализация пробелов и спецсимволов — работает
+✅ Проверка уникальности — работает
+✅ Redirect НЕ создаётся при создании — подтверждено
+✅ Redirect создаётся при update — работает
+✅ TypeScript компиляция — успешна
+✅ Production build — успешен
+
+### Тесты:
+
+Создан тестовый скрипт `scripts/test-slug-generation.ts`:
+```bash
+npm run test:slug
+```
+
+**Результаты тестов:**
+```
+Testing: "Наушники"
+  ✅ Normalized: "naushniki"
+  ✅ Validation: Valid
+  ✅ Final slug: "naushniki"
+  ✅ Uniqueness check: Available
+
+Testing: "Часы Samsung"
+  ✅ Normalized: "chasy-samsung"
+  ✅ Final slug: "chasy-samsung-2" (конфликт с существующим товаром)
+
+Testing: "Apple MacBook Pro M5"
+  ✅ Normalized: "apple-macbook-pro-m5"
+  ✅ Final slug: "apple-macbook-pro-m5"
+```
+
+---
+
 ## 📞 ПОДДЕРЖКА
 
 ### Если после deploy возникнут проблемы:

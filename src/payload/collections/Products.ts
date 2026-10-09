@@ -156,6 +156,7 @@ export const Products: CollectionConfig = {
             if (!data.slug && data.name) {
               // Генерация из name
               data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
+              req.payload.logger.info({ productName: data.name, generatedSlug: data.slug }, 'Auto-generated slug for new product')
             } else if (data.slug) {
               // Нормализация ручного slug
               const normalized = normalizeSlug(String(data.slug))
@@ -167,9 +168,10 @@ export const Products: CollectionConfig = {
 
               // Проверка уникальности
               data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
-            } else {
-              throw new Error('Название товара обязательно для генерации slug')
+              req.payload.logger.info({ originalSlug: data.slug, normalizedSlug: data.slug }, 'Normalized manual slug')
             }
+            // Если ни slug, ни name не заданы — не генерируем slug
+            // Payload сам покажет ошибку для обязательного поля name
           }
 
           // 2. Validate slug на update (если изменён вручную)
@@ -249,11 +251,25 @@ export const Products: CollectionConfig = {
       name: 'slug',
       type: 'text',
       label: 'URL slug',
-      required: true,
+      required: false,  // ✅ Не обязательно при создании — генерируется автоматически
       unique: true,
       index: true,
       admin: {
-        description: 'Генерируется автоматически. Изменение создаст redirect старого URL.',
+        description: 'Генерируется автоматически из названия товара. Изменение создаст redirect старого URL.',
+        readOnly: false,
+      },
+      validate: (value: unknown, options: any) => {
+        // При создании slug может отсутствовать — будет сгенерирован в beforeValidate
+        if (options.operation === 'create') {
+          return true
+        }
+
+        // При обновлении slug должен существовать
+        if (!value) {
+          return 'URL slug обязателен'
+        }
+
+        return true
       },
     },
     {
