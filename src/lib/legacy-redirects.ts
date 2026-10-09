@@ -15,8 +15,12 @@ export const LEGACY_REDIRECTS = new Map<string, string>([
   ['/catalog/tablets/Apple iPad Pro (M5, 2025)', '/catalog/tablets/apple-ipad-pro-m5-2025'],
   ['/catalog/tablets/Apple-iPad-Air-(M4, 2026)', '/catalog/tablets/apple-ipad-air-m4-2026'],
   ['/catalog/gaming-consoles/Геймпады-PS5', '/catalog/gaming-consoles/geympady-ps5'],
+  ['/catalog/playstation/Геймпады-PS5', '/catalog/gaming-consoles/geympady-ps5'],
   ['/catalog/home-appliances/Выпрямитель-Dyson-HT01 ', '/catalog/home-appliances/vypryamitel-dyson-ht01'],
   ['/catalog/laptops/Apple MacBook Neo (A18 Pro, 2026)', '/catalog/laptops/apple-macbook-neo-a18-pro-2026'],
   ['/catalog/gaming-consoles/umnye-ochki', '/catalog/smart-devices/umnye-ochki'],
   ['/catalog/drugoe/umnye-ochki', '/catalog/smart-devices/umnye-ochki'],
+  ['/catalog/gaming-consoles/ray-ban-display-uq0icl', '/catalog/smart-devices/ray-ban-display-uq0icl'],
+  ['/catalog/gaming-consoles/ray-ban-skyler-gen-2-rw4014-cfnorf', '/catalog/smart-devices/ray-ban-skyler-gen-2-rw4014-cfnorf'],
+  ['/catalog/gaming-consoles/ray-ban-starfire-kylie-edition-classic-8i4rw8', '/catalog/smart-devices/ray-ban-starfire-kylie-edition-classic-8i4rw8'],
 ])

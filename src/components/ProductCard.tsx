@@ -9,31 +9,18 @@ import {
   telegramLinkProps,
 } from '@/lib/format'
 import { getProductImage } from '@/lib/media'
-import type { Category, Product, SiteSettings } from '@/lib/types'
+import type { Product, SiteSettings } from '@/lib/types'
 import { ProductPill } from './ProductPill'
 import { ImageWithFallback } from './ImageWithFallback'
-import { productGroupSlug } from '@/lib/catalog-groups'
 import { getCatalogPrice } from '@/lib/pricing'
+import { buildProductUrl } from '@/lib/product-url-builder'
 
 function productHref(product: Product): string {
-  const category = product.category
-  const categorySlug = productGroupSlug(product.productGroup) || (
-    category && typeof category === 'object' && 'slug' in category
-      ? (category as Category).slug
-      : null
-  )
-
-  return categorySlug ? `/catalog/${categorySlug}/${product.slug}` : '/catalog'
+  return buildProductUrl(product)
 }
 
 function getDisplayPrice(product: Product): number {
   return getCatalogPrice(product)
-}
-
-function getCategorySlug(product: Product): string | null {
-  const cat = product.category
-  if (cat && typeof cat === 'object' && 'slug' in cat) return (cat as Category).slug
-  return null
 }
 
 export function ProductCard({ product, settings }: { product: Product; settings: SiteSettings }) {
@@ -41,7 +28,7 @@ export function ProductCard({ product, settings }: { product: Product; settings:
   const phone = settings.phone || '+7 (917) 954-64-64'
   const tone = statusTone(product.status)
   const price = getDisplayPrice(product)
-  const isUsed = getCategorySlug(product) === 'used'
+  const isUsed = product.productGroup === 'trade-in'
 
   return (
     <article className="product-card">

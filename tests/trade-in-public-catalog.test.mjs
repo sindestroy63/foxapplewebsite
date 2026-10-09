@@ -43,7 +43,8 @@ test('catalog category card sends Trade-in visitors to the public Trade-in catal
   assert.match(catalogCard, /href \|\| `\/catalog\?group=\$\{slug\}`/)
 })
 
-test('Trade-in product cards retain the existing product-group URL route', () => {
-  assert.match(productCard, /productGroupSlug\(product\.productGroup\)/)
-  assert.match(productCard, /`\/catalog\/\$\{categorySlug\}\/\$\{product\.slug\}`/)
+test('Product cards use buildProductUrl for unified URL construction', () => {
+  assert.match(productCard, /buildProductUrl/)
+  assert.match(productCard, /from '@\/lib\/product-url-builder'/)
+  assert.doesNotMatch(productCard, /productGroupSlug\(product\.productGroup\)/)
 })

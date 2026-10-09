@@ -25,6 +25,7 @@ import { PriceUpdateItems } from './payload/collections/PriceUpdateItems'
 import { SimOptions } from './payload/collections/SimOptions'
 import { StorageOptions } from './payload/collections/StorageOptions'
 import { Users } from './payload/collections/Users'
+import { UrlRedirects } from './payload/collections/UrlRedirects'
 import { SiteAppearance } from './payload/globals/SiteAppearance'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { BrandCatalogNavigation } from './payload/globals/BrandCatalogNavigation'
@@ -105,7 +106,7 @@ export default buildConfig({
     },
   },
   collections: [
-    Users, Media, Categories, Products, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
+    Users, Media, Categories, Products, UrlRedirects, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
     Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
   ],
   endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...brandCatalogNavigationEndpoints, ...tradeInAdminEndpoints],

@@ -84,8 +84,8 @@ test('portal flyout anchors to the active trigger bottom and left edge', () => {
   assert.match(css, /\.catalog-flyout--portal\s*\{\s*position:\s*fixed/s)
 })
 test('frontend navigation tests contain no database writes', () => { assert.doesNotMatch(desktop + mobile + cms, /INSERT INTO|UPDATE products|DELETE FROM/i) })
-test('product links use productGroup while legacy category routes remain supported', () => {
-  assert.match(card, /productGroupSlug\(product\.productGroup\)/)
+test('product links use unified buildProductUrl system', () => {
+  assert.match(card, /buildProductUrl/)
   assert.match(cms, /productCanonicalUrl\(product\)/)
   assert.match(cms, /productCanonicalUrl\(matched\)/)
   assert.match(cms, /productGroup: \{ equals: args\.filters\.productGroup \}/)

@@ -30,8 +30,19 @@ export function isVideoMedia(media?: Media | string | number | null): boolean {
   return media.mimeType?.startsWith('video/') === true
 }
 
-export function getProductImage(product: Product, preferred = 'card'): { url: string | null; alt: string } {
-  const first = product.images?.find((image) => image && typeof image === 'object')
+/**
+ * Получает изображение товара с учётом выбранного варианта.
+ * Приоритет: selectedVariant.images → product.images → placeholder
+ */
+export function getProductImage(
+  product: Product,
+  preferred = 'card',
+  selectedVariant?: { images?: Array<Media | string | number> } | null
+): { url: string | null; alt: string } {
+  // Используем изображения варианта, если есть
+  const images = selectedVariant?.images || product.images
+  const first = images?.find((image) => image && typeof image === 'object')
+
   return {
     url: getMediaUrl(first, preferred),
     alt: typeof first === 'object' && first.alt ? first.alt : product.name,

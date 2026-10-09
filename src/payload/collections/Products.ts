@@ -8,6 +8,8 @@ import { productTypeCondition, resolveProductType } from '../products/product-ty
 import { deviceTypeCondition, resolveDeviceType } from '../products/device-type'
 import { validateNewVariantConfigurations } from '../products/variant-validation'
 import { productCanonicalUrl } from '../../lib/product-url'
+import { normalizeSlug, validateSlug, generateUniqueSlug } from '../../lib/slug-generator'
+import { saveUrlRedirect, buildProductPath, hasProductUrlChanged } from '../../lib/url-redirect-manager'
 
 const createSlugSuffix = () => randomBytes(3).toString('hex')
 
@@ -50,14 +52,31 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     afterChange: [
-      async ({ doc, req }) => {
+      async ({ doc, req, previousDoc, operation }) => {
         try {
+          // 1. Сохранить redirect при изменении URL
+          if (operation === 'update' && previousDoc) {
+            const oldPath = buildProductPath(previousDoc.productGroup, previousDoc.slug)
+            const newPath = buildProductPath(doc.productGroup, doc.slug)
+
+            if (oldPath && newPath && oldPath !== newPath) {
+              try {
+                await saveUrlRedirect(req.payload, oldPath, newPath)
+                req.payload.logger.info({ productId: doc.id, from: oldPath, to: newPath }, 'URL redirect saved')
+              } catch (redirectError: any) {
+                req.payload.logger.error({ err: redirectError, productId: doc.id }, 'Failed to save URL redirect')
+              }
+            }
+          }
+
+          // 2. Синхронизация navigation
           const href = productCanonicalUrl({
             slug: doc.slug,
             productGroup: doc.productGroup,
             category: doc.category,
           })
           if (!href) return doc
+
           const navigation = await req.payload.find({
             collection: 'catalog-navigation',
             where: { product: { equals: doc.id } },
@@ -66,6 +85,7 @@ export const Products: CollectionConfig = {
             req,
             overrideAccess: true,
           })
+
           for (const item of navigation.docs as any[]) {
             await req.payload.update({
               collection: 'catalog-navigation',
@@ -82,7 +102,7 @@ export const Products: CollectionConfig = {
             })
           }
         } catch (error) {
-          req.payload.logger.error({ err: error, productId: doc.id }, 'Product saved but catalog navigation synchronization failed')
+          req.payload.logger.error({ err: error, productId: doc.id }, 'Product saved but post-processing failed')
         }
         return doc
       },
@@ -94,9 +114,41 @@ export const Products: CollectionConfig = {
     ],
     beforeValidate: [
       async ({ data, operation, originalDoc, req }) => {
+        // 1. Auto-generate slug на создании
         if (operation === 'create' && data) {
-          data.slug = await ensureUniqueSlugOnCreate({ name: data.name, requestedSlug: data.slug, req })
+          if (!data.slug && data.name) {
+            // Генерация из name
+            data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
+          } else if (data.slug) {
+            // Нормализация ручного slug
+            const normalized = normalizeSlug(String(data.slug))
+            const validation = validateSlug(normalized)
+
+            if (!validation.valid) {
+              throw new Error(`Invalid slug: ${validation.error}`)
+            }
+
+            // Проверка уникальности
+            data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
+          } else {
+            throw new Error('Product name is required to generate slug')
+          }
         }
+
+        // 2. Validate slug на update (если изменён вручную)
+        if (operation === 'update' && data?.slug && data.slug !== originalDoc?.slug) {
+          const normalized = normalizeSlug(String(data.slug))
+          const validation = validateSlug(normalized)
+
+          if (!validation.valid) {
+            throw new Error(`Invalid slug: ${validation.error}`)
+          }
+
+          // Проверка уникальности (исключая текущий документ)
+          data.slug = await generateUniqueSlug(req.payload, 'products', normalized, originalDoc?.id)
+        }
+
+        // 3. Защита от variant slugs
         if (data?.slug && (operation === 'create' || operation === 'update')) {
           const s = data.slug as string
           const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)/
@@ -154,12 +206,9 @@ export const Products: CollectionConfig = {
       label: 'URL slug',
       required: true,
       unique: true,
-      access: { update: () => false },
       index: true,
       admin: {
-        readOnly: true,
-        components: { Field: '/payload/components/admin/ProductSlugField' },
-        description: 'Формируется автоматически из названия.',
+        description: 'Генерируется автоматически. Изменение создаст redirect старого URL.',
       },
     },
     {
