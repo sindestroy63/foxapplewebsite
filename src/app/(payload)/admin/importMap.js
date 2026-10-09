@@ -1,4 +1,5 @@
 import { BasicsSection as BasicsSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
+import { default as default_5ab4e066ccbe2002df83b263b90826fe } from '../../../payload/components/admin/ReadonlySlugField'
 import { PlacementSection as PlacementSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
 import { default as default_c7d5727c98f0077fcc6d276eb0aa5bde } from '../../../payload/components/admin/ProductCatalogPlacement'
 import { default as default_363abedfd70d6897838379b0e4196a8a } from '../../../payload/components/admin/DeviceTypeField'
@@ -45,6 +46,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 /** @type import('payload').ImportMap */
 export const importMap = {
   "/payload/components/admin/ProductSection#BasicsSection": BasicsSection_0f23eed0731f5cda2046b74e09ae11a5,
+  "/payload/components/admin/ReadonlySlugField#default": default_5ab4e066ccbe2002df83b263b90826fe,
   "/payload/components/admin/ProductSection#PlacementSection": PlacementSection_0f23eed0731f5cda2046b74e09ae11a5,
   "/payload/components/admin/ProductCatalogPlacement#default": default_c7d5727c98f0077fcc6d276eb0aa5bde,
   "/payload/components/admin/DeviceTypeField#default": default_363abedfd70d6897838379b0e4196a8a,

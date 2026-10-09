@@ -192,7 +192,7 @@ export async function up({ db, payload }: MigrateUpArgs): Promise<void> {
             title: 'Фото и видео',
             key: 'other-photo-video',
             href: '/catalog?group=other&subcategory=photo-video',
-            filter: { group: 'other', subcategory: 'photo-video' },
+            filter: undefined,  // НЕ используем фильтр, только явный список products
             sortOrder: children.length,
             isVisible: true,
             isNew: false,
@@ -207,7 +207,7 @@ export async function up({ db, payload }: MigrateUpArgs): Promise<void> {
             ...children[photoVideoIndex],
             title: 'Фото и видео',
             href: '/catalog?group=other&subcategory=photo-video',
-            filter: { group: 'other', subcategory: 'photo-video' },
+            filter: undefined,  // НЕ используем фильтр, только явный список products
             products: [72, 204, 205],  // Обновить список товаров
           }
 

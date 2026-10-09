@@ -71,6 +71,8 @@ export interface Config {
     media: Media;
     categories: Category;
     products: Product;
+    services: Service;
+    'url-redirects': UrlRedirect;
     'price-update-batches': PriceUpdateBatch;
     'price-update-items': PriceUpdateItem;
     'price-import-sessions': PriceImportSession;
@@ -97,6 +99,8 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
+    'url-redirects': UrlRedirectsSelect<false> | UrlRedirectsSelect<true>;
     'price-update-batches': PriceUpdateBatchesSelect<false> | PriceUpdateBatchesSelect<true>;
     'price-update-items': PriceUpdateItemsSelect<false> | PriceUpdateItemsSelect<true>;
     'price-import-sessions': PriceImportSessionsSelect<false> | PriceImportSessionsSelect<true>;
@@ -261,10 +265,7 @@ export interface Product {
   id: number;
   category?: (number | null) | Category;
   name: string;
-  /**
-   * Формируется автоматически из названия.
-   */
-  slug: string;
+  slug?: string | null;
   model?: string | null;
   productGroup?:
     | (
@@ -599,6 +600,59 @@ export interface ConnectivityOption {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  name: string;
+  /**
+   * Автоматически генерируется при создании
+   */
+  slug: string;
+  description?: string | null;
+  images?: (number | Media)[] | null;
+  /**
+   * Оставьте пустым для "Цена по запросу"
+   */
+  price?: number | null;
+  /**
+   * Например: "от 5000 ₽" или "по запросу"
+   */
+  priceLabel?: string | null;
+  isAvailable?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Автоматически создаются при изменении URL товаров
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "url-redirects".
+ */
+export interface UrlRedirect {
+  id: number;
+  /**
+   * Старый URL (например: /catalog/gaming-consoles/umnye-ochki)
+   */
+  from: string;
+  /**
+   * Новый URL (например: /catalog/smart-devices/umnye-ochki)
+   */
+  to: string;
+  /**
+   * 308 Permanent Redirect (рекомендуется для SEO)
+   */
+  permanent?: boolean | null;
+  /**
+   * Источник создания редиректа
+   */
+  source?: ('auto' | 'manual' | 'migration') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Журнал предпросмотров и подтверждений массового обновления цен.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -864,6 +918,14 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
+        relationTo: 'services';
+        value: number | Service;
+      } | null)
+    | ({
+        relationTo: 'url-redirects';
+        value: number | UrlRedirect;
+      } | null)
+    | ({
         relationTo: 'price-update-batches';
         value: number | PriceUpdateBatch;
       } | null)
@@ -1123,6 +1185,34 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   seoTitle?: T;
   seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  images?: T;
+  price?: T;
+  priceLabel?: T;
+  isAvailable?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "url-redirects_select".
+ */
+export interface UrlRedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?: T;
+  permanent?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }
