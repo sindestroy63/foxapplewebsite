@@ -60,6 +60,7 @@ import * as migration_20260930_090000_brand_navigation_relationship_table from '
 import * as migration_20261009_120000_url_redirects from './20261009_120000_url_redirects';
 import * as migration_20261009_130000_products_slug_unique from './20261009_130000_products_slug_unique';
 import * as migration_20261009_140000_services from './20261009_140000_services';
+import * as migration_20261009_150000_photo_video_subcategory from './20261009_150000_photo_video_subcategory';
 
 export const migrations = [
   {
@@ -371,5 +372,10 @@ export const migrations = [
     up: migration_20261009_140000_services.up,
     down: migration_20261009_140000_services.down,
     name: '20261009_140000_services'
+  },
+  {
+    up: migration_20261009_150000_photo_video_subcategory.up,
+    down: migration_20261009_150000_photo_video_subcategory.down,
+    name: '20261009_150000_photo_video_subcategory'
   },
 ];
