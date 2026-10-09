@@ -3,6 +3,7 @@
 import React from 'react'
 import { useDocumentInfo, useField, useFormFields } from '@payloadcms/ui'
 import { getCatalogPlacementByChildKey, resolveProductCatalogPlacement } from '@/lib/product-catalog-placement'
+import { ErrorBoundary } from './ErrorBoundary'
 
 type NavigationItem = {
   title: string
@@ -16,7 +17,7 @@ type NavigationItem = {
 
 const labelForGroup = (key: string, title: string) => key === 'trade-in' ? 'TRADE-IN' : title
 
-export default function ProductCatalogPlacement() {
+function ProductCatalogPlacement() {
   const productGroupField = useField<string>({ path: 'productGroup' })
   const brandField = useField<string>({ path: 'brand' })
   const productLineField = useField<string>({ path: 'productLine' })
@@ -35,32 +36,63 @@ export default function ProductCatalogPlacement() {
 
   // Hydrate the visual path from Payload's form state without mutating the document.
   React.useEffect(() => {
-    if (!groups.length) return
-    const placement = resolveProductCatalogPlacement(values)
-    const direct = productId ? groups.find((group) => group.children?.some((child) => (child.products || []).some((product: any) => String(typeof product === 'object' ? product.id : product) === String(productId)))) : undefined
-    const directChild = direct?.children?.find((child: NavigationItem) => (child.products || []).some((product: any) => String(typeof product === 'object' ? product.id : product) === String(productId)))
-    if (direct && directChild) {
-      setGroupKey((current) => current || direct.key)
-      setChildKey((current) => current || directChild.key)
-    } else if (placement) {
-      setGroupKey((current) => current || placement.groupKey)
-      setChildKey((current) => current || placement.childKey || '')
+    try {
+      if (!groups.length) return
+      const placement = resolveProductCatalogPlacement(values)
+      const direct = productId ? groups.find((group) => group.children?.some((child) => (child.products || []).some((product: any) => String(typeof product === 'object' ? product.id : product) === String(productId)))) : undefined
+      const directChild = direct?.children?.find((child: NavigationItem) => (child.products || []).some((product: any) => String(typeof product === 'object' ? product.id : product) === String(productId)))
+      if (direct && directChild) {
+        setGroupKey((current) => current || direct.key)
+        setChildKey((current) => current || directChild.key)
+      } else if (placement) {
+        setGroupKey((current) => current || placement.groupKey)
+        setChildKey((current) => current || placement.childKey || '')
+      }
+    } catch (error) {
+      console.error('[ProductCatalogPlacement] Error hydrating path:', error)
+      // Не блокируем UI при ошибке
     }
   }, [groups, productId, values.productGroup, values.brand, values.productLine, values.condition])
 
   React.useEffect(() => {
     let active = true
     const endpoint = '/api/brand-catalog-navigation'
-    fetch(endpoint, { credentials: 'same-origin' })
-      .then(async (response) => {
-        if (response.ok) return response.json()
-        const payload = await response.json().catch(() => ({}))
-        const reason = typeof payload.reason === 'string' ? payload.reason : ''
-        if (process.env.NODE_ENV !== 'production') console.warn('[product-catalog-placement]', endpoint, response.status, reason || response.statusText)
-        throw new Error(response.status === 401 ? 'Сессия истекла. Войдите в админку заново.' : response.status === 403 ? 'Недостаточно прав для загрузки разделов каталога.' : 'Не удалось загрузить разделы каталога')
-      })
-      .then((payload) => { if (active) setGroups(Array.isArray(payload.groups) ? payload.groups : []) })
-      .catch((error) => { if (active) setStatus(error instanceof Error ? error.message : 'Не удалось загрузить разделы каталога') })
+
+    const loadGroups = async () => {
+      try {
+        const response = await fetch(endpoint, { credentials: 'same-origin' })
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}))
+          const reason = typeof payload.reason === 'string' ? payload.reason : ''
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('[product-catalog-placement]', endpoint, response.status, reason || response.statusText)
+          }
+
+          const errorMessage = response.status === 401
+            ? 'Сессия истекла. Войдите в админку заново.'
+            : response.status === 403
+            ? 'Недостаточно прав для загрузки разделов каталога.'
+            : 'Не удалось загрузить разделы каталога'
+
+          throw new Error(errorMessage)
+        }
+
+        const payload = await response.json()
+        if (active) {
+          setGroups(Array.isArray(payload.groups) ? payload.groups : [])
+        }
+      } catch (error) {
+        if (active) {
+          const message = error instanceof Error ? error.message : 'Не удалось загрузить разделы каталога'
+          setStatus(message)
+          console.error('[ProductCatalogPlacement] Load error:', error)
+        }
+      }
+    }
+
+    loadGroups()
+
     return () => { active = false }
   }, [])
 
@@ -143,4 +175,13 @@ export default function ProductCatalogPlacement() {
       {status && <small role="status">{status}</small>}
     </div>
   </>)
+}
+
+// Обернём компонент в ErrorBoundary для защиты от полного краша админки
+export default function ProductCatalogPlacementWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <ProductCatalogPlacement />
+    </ErrorBoundary>
+  )
 }

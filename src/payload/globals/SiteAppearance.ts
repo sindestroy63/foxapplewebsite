@@ -5,7 +5,7 @@ import { admins, anyone } from '../access'
 export const SiteAppearance: GlobalConfig = {
   slug: 'site-appearance',
   label: 'Оформление сайта',
-  admin: { hidden: false },
+  admin: { hidden: true },
   access: {
     read: anyone,
     update: admins,

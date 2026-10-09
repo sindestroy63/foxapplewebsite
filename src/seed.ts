@@ -292,7 +292,7 @@ export const script = async (config: SanitizedConfig) => {
   const allProducts = await payload.find({ collection: 'products', depth: 0, limit: 10000 })
   let removed = 0
   for (const doc of allProducts.docs) {
-    if (!canonicalSlugs.has(doc.slug)) {
+    if (doc.slug && !canonicalSlugs.has(doc.slug)) {
       await payload.delete({ collection: 'products', id: doc.id })
       removed++
     }

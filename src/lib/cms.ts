@@ -91,7 +91,7 @@ export async function getBestOffers(): Promise<Product[]> {
       // Перезагрузить товары напрямую с полным depth для разрешения изображений
       const result = await payload.find({
         collection: 'products',
-        depth: 2,
+        depth: 3,
         limit: productIds.length,
         where: {
           and: [

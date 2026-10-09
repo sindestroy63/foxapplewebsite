@@ -8,6 +8,7 @@ export const Services: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'price', 'isAvailable', 'sortOrder'],
+    hidden: true,
   },
   fields: [
     {

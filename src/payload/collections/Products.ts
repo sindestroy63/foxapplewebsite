@@ -72,9 +72,84 @@ export const Products: CollectionConfig = {
           }
 
           req.payload.logger.info({ productId: id, navigationDeleted: navigation.totalDocs }, 'Deleted related navigation entries before product deletion')
+
+          // 2. Удалить товар из BrandCatalogNavigation
+          try {
+            const brandNav = await req.payload.findGlobal({
+              slug: 'brand-catalog-navigation',
+              depth: 0,
+              overrideAccess: true,
+            })
+
+            let updated = false
+            const groups = (brandNav?.groups || []) as any[]
+
+            for (const group of groups) {
+              const children = group.children || []
+              for (const child of children) {
+                const products = child.products || []
+                const filtered = products.filter((p: any) => {
+                  const pid = typeof p === 'object' ? p.id : p
+                  return String(pid) !== String(id)
+                })
+                if (filtered.length !== products.length) {
+                  child.products = filtered
+                  updated = true
+                }
+              }
+            }
+
+            if (updated) {
+              await req.payload.updateGlobal({
+                slug: 'brand-catalog-navigation',
+                data: { groups },
+                depth: 0,
+                overrideAccess: true,
+              })
+              req.payload.logger.info({ productId: id }, 'Removed product from BrandCatalogNavigation')
+            }
+          } catch (brandNavError: any) {
+            req.payload.logger.error({ err: brandNavError, productId: id }, 'Failed to cleanup BrandCatalogNavigation')
+          }
+
+          // 3. Удалить redirects ведущие на этот товар
+          try {
+            const product = await req.payload.findByID({
+              collection: 'products',
+              id,
+              depth: 0,
+              overrideAccess: true,
+            })
+
+            if (product?.slug && product?.productGroup) {
+              const targetPath = `/catalog/${product.productGroup}/${product.slug}`
+              const redirects = await (req.payload as any).find({
+                collection: 'url-redirects',
+                where: { to: { equals: targetPath } },
+                depth: 0,
+                limit: 100,
+                overrideAccess: true,
+              })
+
+              for (const redirect of redirects.docs) {
+                await (req.payload as any).delete({
+                  collection: 'url-redirects',
+                  id: redirect.id,
+                  overrideAccess: true,
+                })
+              }
+
+              if (redirects.totalDocs > 0) {
+                req.payload.logger.info({ productId: id, redirectsDeleted: redirects.totalDocs }, 'Deleted redirects pointing to deleted product')
+              }
+            }
+          } catch (redirectError: any) {
+            req.payload.logger.error({ err: redirectError, productId: id }, 'Failed to cleanup redirects')
+          }
+
         } catch (error: any) {
-          req.payload.logger.error({ err: error, productId: id }, 'Failed to cleanup navigation before product deletion')
-          // Не бросаем ошибку — позволяем удалить товар даже если navigation не удалилась
+          req.payload.logger.error({ err: error, productId: id }, 'Failed to cleanup before product deletion')
+          // Не бросаем ошибку — позволяем удалить товар даже если cleanup не удался
         }
       },
     ],
@@ -255,8 +330,10 @@ export const Products: CollectionConfig = {
       unique: true,
       index: true,
       admin: {
-        description: 'Генерируется автоматически из названия товара. Изменение создаст redirect старого URL.',
-        readOnly: false,
+        readOnly: true,
+        components: {
+          Field: '/payload/components/admin/ReadonlySlugField',
+        },
       },
       validate: (value: unknown, options: any) => {
         // При создании slug может отсутствовать — будет сгенерирован в beforeValidate

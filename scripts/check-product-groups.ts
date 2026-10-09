@@ -27,7 +27,7 @@ async function checkProductGroups() {
     console.log(`  Issue: ${item.issue}`)
     console.log(`  isAvailable: ${product.isAvailable}`)
     if (item.id === 51) {
-      console.log(`  Slug: "${product.slug}" (has trailing space: ${product.slug !== product.slug.trim()})`)
+      console.log(`  Slug: "${product.slug || ''}" (has trailing space: ${product.slug ? product.slug !== product.slug.trim() : false})`)
     }
     console.log()
   }

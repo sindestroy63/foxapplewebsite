@@ -72,6 +72,8 @@ async function fixAllSlugs() {
 
   // First pass: identify all fixes and check for conflicts
   for (const product of products) {
+    if (!product.slug) continue
+
     const hasTrailingSpace = product.slug.endsWith(' ')
     const hasInternalSpace = /\s/.test(product.slug.trim())
     const hasCyrillic = /[А-Яа-яЁё]/.test(product.slug)
