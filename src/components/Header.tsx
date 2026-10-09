@@ -12,6 +12,7 @@ import type { BrandMenu } from '@/lib/brand-catalog-menu'
 import { catalogNavigationHref } from '@/lib/catalog-navigation-url'
 
 const secondaryNav = [
+  { href: '/services', label: 'Услуги' },
   { href: '/trade-in', label: 'Trade-In' },
   { href: '/warranty', label: 'Гарантия и возврат' },
   { href: '/contacts', label: 'Контакты' },

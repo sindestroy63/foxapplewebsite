@@ -80,7 +80,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 export async function getBestOffers(): Promise<Product[]> {
   try {
     const payload = await getPayloadClient()
-    const appearance = await payload.findGlobal({ slug: 'site-appearance', depth: 2 }) as SiteAppearance
+    const appearance = await payload.findGlobal({ slug: 'site-appearance', depth: 3 }) as SiteAppearance
     const selected = (appearance.bestOffers || [])
       .filter((product): product is Product => typeof product === 'object' && product !== null && 'id' in product)
       .filter((product) => product.isAvailable !== false)
