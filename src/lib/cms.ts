@@ -80,12 +80,35 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 export async function getBestOffers(): Promise<Product[]> {
   try {
     const payload = await getPayloadClient()
-    const appearance = await payload.findGlobal({ slug: 'site-appearance', depth: 3 }) as SiteAppearance
-    const selected = (appearance.bestOffers || [])
-      .filter((product): product is Product => typeof product === 'object' && product !== null && 'id' in product)
-      .filter((product) => product.isAvailable !== false)
+    const appearance = await payload.findGlobal({ slug: 'site-appearance', depth: 1 }) as SiteAppearance
 
-    if (selected.length > 0) return normalizeProducts(selected)
+    // Получить ID товаров из site-appearance
+    const productIds = (appearance.bestOffers || [])
+      .map((product) => typeof product === 'object' && product !== null && 'id' in product ? product.id : product)
+      .filter((id): id is string | number => id != null)
+
+    if (productIds.length > 0) {
+      // Перезагрузить товары напрямую с полным depth для разрешения изображений
+      const result = await payload.find({
+        collection: 'products',
+        depth: 2,
+        limit: productIds.length,
+        where: {
+          and: [
+            { id: { in: productIds } },
+            { isAvailable: { equals: true } },
+          ],
+        },
+      })
+
+      // Сохранить порядок из site-appearance
+      const productsMap = new Map(result.docs.map((doc) => [String(doc.id), doc]))
+      const ordered = productIds
+        .map((id) => productsMap.get(String(id)))
+        .filter((product): product is any => product != null)
+
+      if (ordered.length > 0) return normalizeProducts(ordered)
+    }
   } catch (error) {
     console.error('Failed to load best offers', error)
   }

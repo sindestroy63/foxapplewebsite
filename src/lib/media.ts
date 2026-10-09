@@ -41,10 +41,12 @@ export function getProductImage(
 ): { url: string | null; alt: string } {
   // Используем изображения варианта, если есть
   const images = selectedVariant?.images || product.images
-  const first = images?.find((image) => image && typeof image === 'object')
+
+  // Найти первое изображение (объект Media или ID/строка)
+  const first = images?.find((image) => image != null) as Media | undefined
 
   return {
     url: getMediaUrl(first, preferred),
-    alt: typeof first === 'object' && first.alt ? first.alt : product.name,
+    alt: typeof first === 'object' && first?.alt ? first.alt : product.name,
   }
 }
