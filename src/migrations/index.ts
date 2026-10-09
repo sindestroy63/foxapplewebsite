@@ -57,6 +57,8 @@ import * as migration_20260919_120000_variant_revision from './20260919_120000_v
 import * as migration_20260928_120000_remove_media_blocks from './20260928_120000_remove_media_blocks';
 import * as migration_20260929_120000_brand_navigation_direct_products from './20260929_120000_brand_navigation_direct_products';
 import * as migration_20260930_090000_brand_navigation_relationship_table from './20260930_090000_brand_navigation_relationship_table';
+import * as migration_20261009_120000_url_redirects from './20261009_120000_url_redirects';
+import * as migration_20261009_130000_products_slug_unique from './20261009_130000_products_slug_unique';
 
 export const migrations = [
   {
@@ -353,5 +355,15 @@ export const migrations = [
     up: migration_20260930_090000_brand_navigation_relationship_table.up,
     down: migration_20260930_090000_brand_navigation_relationship_table.down,
     name: '20260930_090000_brand_navigation_relationship_table'
+  },
+  {
+    up: migration_20261009_120000_url_redirects.up,
+    down: migration_20261009_120000_url_redirects.down,
+    name: '20261009_120000_url_redirects'
+  },
+  {
+    up: migration_20261009_130000_products_slug_unique.up,
+    down: migration_20261009_130000_products_slug_unique.down,
+    name: '20261009_130000_products_slug_unique'
   },
 ];
