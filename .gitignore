@@ -32,3 +32,10 @@ tmp/
 # TypeScript cache
 *.tsbuildinfo
 foxstore_site_icons/
+
+# Media files
+media/
+
+# Audit reports
+*-audit-report.json
+*-report-*.json

@@ -48,30 +48,30 @@ describe('Slug Repair Integration Tests', () => {
   let planData = null
 
   before(async () => {
-    // Load latest dry-run plan
+    // Load latest slug repair report (after APPLY) instead of dry-run plan
     const backupsDir = path.resolve(process.cwd(), 'backups')
     const files = await fs.readdir(backupsDir)
-    const planFiles = files.filter(f => f.startsWith('slug-repair-plan-'))
+    const reportFiles = files.filter(f => f.startsWith('slug-repair-report-'))
 
-    if (planFiles.length > 0) {
-      const latestPlan = planFiles.sort().reverse()[0]
-      const planPath = path.join(backupsDir, latestPlan)
-      const content = await fs.readFile(planPath, 'utf-8')
+    if (reportFiles.length > 0) {
+      const latestReport = reportFiles.sort().reverse()[0]
+      const reportPath = path.join(backupsDir, latestReport)
+      const content = await fs.readFile(reportPath, 'utf-8')
       planData = JSON.parse(content)
-      console.log(`\nLoaded plan: ${latestPlan}`)
+      console.log(`\nLoaded report: ${latestReport}`)
       console.log(`Total fixes: ${planData.totalFixes}`)
       console.log(`Critical: ${planData.criticalFixes}, Non-critical: ${planData.nonCriticalFixes}\n`)
     }
   })
 
   describe('Dry-run plan validation', () => {
-    it('should have generated a dry-run plan', () => {
-      assert.ok(planData, 'No slug-repair-plan-*.json found in backups/')
+    it('should have generated a repair report', () => {
+      assert.ok(planData, 'No slug-repair-report-*.json found in backups/')
     })
 
     it('should match expected number of fixes', () => {
-      assert.ok(planData.totalFixes >= EXPECTED_FIXES.length,
-        `Expected at least ${EXPECTED_FIXES.length} fixes, got ${planData.totalFixes}`)
+      assert.strictEqual(planData.totalFixes, EXPECTED_FIXES.length,
+        `Expected ${EXPECTED_FIXES.length} fixes, got ${planData.totalFixes}`)
     })
 
     it('should have no slug conflicts', () => {
