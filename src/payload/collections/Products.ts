@@ -51,8 +51,36 @@ export const Products: CollectionConfig = {
     delete: admins,
   },
   hooks: {
+    beforeDelete: [
+      async ({ req, id }) => {
+        try {
+          // 1. Удалить связанные catalog-navigation записи
+          const navigation = await req.payload.find({
+            collection: 'catalog-navigation',
+            where: { product: { equals: id } },
+            depth: 0,
+            limit: 100,
+            overrideAccess: true,
+          })
+
+          for (const item of navigation.docs) {
+            await req.payload.delete({
+              collection: 'catalog-navigation',
+              id: item.id,
+              overrideAccess: true,
+            })
+          }
+
+          req.payload.logger.info({ productId: id, navigationDeleted: navigation.totalDocs }, 'Deleted related navigation entries before product deletion')
+        } catch (error: any) {
+          req.payload.logger.error({ err: error, productId: id }, 'Failed to cleanup navigation before product deletion')
+          // Не бросаем ошибку — позволяем удалить товар даже если navigation не удалилась
+        }
+      },
+    ],
     afterChange: [
       async ({ doc, req, previousDoc, operation }) => {
+        // Обернуть весь hook в try-catch, чтобы ошибки не ломали UI
         try {
           // 1. Сохранить redirect при изменении URL
           if (operation === 'update' && previousDoc) {
@@ -65,6 +93,7 @@ export const Products: CollectionConfig = {
                 req.payload.logger.info({ productId: doc.id, from: oldPath, to: newPath }, 'URL redirect saved')
               } catch (redirectError: any) {
                 req.payload.logger.error({ err: redirectError, productId: doc.id }, 'Failed to save URL redirect')
+                // Не бросаем ошибку выше — товар уже сохранён
               }
             }
           }
@@ -75,35 +104,42 @@ export const Products: CollectionConfig = {
             productGroup: doc.productGroup,
             category: doc.category,
           })
-          if (!href) return doc
 
-          const navigation = await req.payload.find({
-            collection: 'catalog-navigation',
-            where: { product: { equals: doc.id } },
-            depth: 0,
-            limit: 100,
-            req,
-            overrideAccess: true,
-          })
-
-          for (const item of navigation.docs as any[]) {
-            await req.payload.update({
+          if (href) {
+            const navigation = await req.payload.find({
               collection: 'catalog-navigation',
-              id: item.id,
-              data: {
-                href,
-                productGroup: doc.productGroup || null,
-                brand: doc.brand || null,
-                productLine: doc.productLine || null,
-              },
+              where: { product: { equals: doc.id } },
               depth: 0,
-              req,
+              limit: 100,
               overrideAccess: true,
             })
+
+            for (const item of navigation.docs as any[]) {
+              try {
+                await req.payload.update({
+                  collection: 'catalog-navigation',
+                  id: item.id,
+                  data: {
+                    href,
+                    productGroup: doc.productGroup || null,
+                    brand: doc.brand || null,
+                    productLine: doc.productLine || null,
+                  },
+                  depth: 0,
+                  overrideAccess: true,
+                })
+              } catch (navError: any) {
+                req.payload.logger.error({ err: navError, productId: doc.id, navId: item.id }, 'Failed to update navigation item')
+                // Продолжаем обработку других элементов навигации
+              }
+            }
           }
-        } catch (error) {
+        } catch (error: any) {
+          // Логируем критические ошибки, но не бросаем исключение
           req.payload.logger.error({ err: error, productId: doc.id }, 'Product saved but post-processing failed')
         }
+
+        // ВСЕГДА возвращаем doc, даже если были ошибки
         return doc
       },
     ],
@@ -114,69 +150,78 @@ export const Products: CollectionConfig = {
     ],
     beforeValidate: [
       async ({ data, operation, originalDoc, req }) => {
-        // 1. Auto-generate slug на создании
-        if (operation === 'create' && data) {
-          if (!data.slug && data.name) {
-            // Генерация из name
-            data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
-          } else if (data.slug) {
-            // Нормализация ручного slug
+        try {
+          // 1. Auto-generate slug на создании
+          if (operation === 'create' && data) {
+            if (!data.slug && data.name) {
+              // Генерация из name
+              data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
+            } else if (data.slug) {
+              // Нормализация ручного slug
+              const normalized = normalizeSlug(String(data.slug))
+              const validation = validateSlug(normalized)
+
+              if (!validation.valid) {
+                throw new Error(`Некорректный slug: ${validation.error}`)
+              }
+
+              // Проверка уникальности
+              data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
+            } else {
+              throw new Error('Название товара обязательно для генерации slug')
+            }
+          }
+
+          // 2. Validate slug на update (если изменён вручную)
+          if (operation === 'update' && data?.slug && data.slug !== originalDoc?.slug) {
             const normalized = normalizeSlug(String(data.slug))
             const validation = validateSlug(normalized)
 
             if (!validation.valid) {
-              throw new Error(`Invalid slug: ${validation.error}`)
+              throw new Error(`Некорректный slug: ${validation.error}`)
             }
 
-            // Проверка уникальности
-            data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
-          } else {
-            throw new Error('Product name is required to generate slug')
-          }
-        }
-
-        // 2. Validate slug на update (если изменён вручную)
-        if (operation === 'update' && data?.slug && data.slug !== originalDoc?.slug) {
-          const normalized = normalizeSlug(String(data.slug))
-          const validation = validateSlug(normalized)
-
-          if (!validation.valid) {
-            throw new Error(`Invalid slug: ${validation.error}`)
+            // Проверка уникальности (исключая текущий документ)
+            data.slug = await generateUniqueSlug(req.payload, 'products', normalized, originalDoc?.id)
           }
 
-          // Проверка уникальности (исключая текущий документ)
-          data.slug = await generateUniqueSlug(req.payload, 'products', normalized, originalDoc?.id)
-        }
+          // 3. Защита от variant slugs
+          if (data?.slug && (operation === 'create' || operation === 'update')) {
+            const s = data.slug as string
+            const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)/
+            if (variantParts.test(s)) {
+              throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
+            }
+          }
 
-        // 3. Защита от variant slugs
-        if (data?.slug && (operation === 'create' || operation === 'update')) {
-          const s = data.slug as string
-          const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)/
-          if (variantParts.test(s)) {
-            throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
+          if (data) {
+            const completeData = { ...(originalDoc || {}), ...data }
+            if (typeof completeData.productType !== 'string' || !completeData.productType.trim()) {
+              data.productType = resolveProductType(completeData)
+            }
+            if (!completeData.deviceType) data.deviceType = resolveDeviceType(completeData)
+            if (Array.isArray(data.variants)) {
+              data.variants = ensureVariantSkus(
+                String(data.slug || originalDoc?.slug || 'product'),
+                data.variants as Array<Record<string, any>>,
+                (originalDoc?.variants || []) as Array<Record<string, any>>,
+              )
+            }
+            const validationError = validateNewVariantConfigurations(data as Record<string, unknown>, originalDoc as Record<string, unknown> | null)
+            if (validationError) throw new Error(validationError)
           }
+
+          return validateProductSkus({
+            data: data as Record<string, unknown>,
+            originalDoc: originalDoc as Record<string, unknown> | null,
+            req,
+          })
+        } catch (error: any) {
+          // Улучшенное сообщение об ошибке для пользователя
+          const message = error.message || 'Неизвестная ошибка валидации'
+          req.payload.logger.error({ err: error, operation, productId: originalDoc?.id }, 'Product validation failed')
+          throw new Error(`Ошибка валидации товара: ${message}`)
         }
-        if (data) {
-          const completeData = { ...(originalDoc || {}), ...data }
-          if (typeof completeData.productType !== 'string' || !completeData.productType.trim()) {
-            data.productType = resolveProductType(completeData)
-          }
-          if (!completeData.deviceType) data.deviceType = resolveDeviceType(completeData)
-          if (Array.isArray(data.variants)) {
-            data.variants = ensureVariantSkus(
-              String(data.slug || originalDoc?.slug || 'product'),
-              data.variants as Array<Record<string, any>>,
-              (originalDoc?.variants || []) as Array<Record<string, any>>,
-            )
-          }
-          const validationError = validateNewVariantConfigurations(data as Record<string, unknown>, originalDoc as Record<string, unknown> | null)
-          if (validationError) throw new Error(validationError)
-        }
-        return validateProductSkus({
-          data: data as Record<string, unknown>,
-          originalDoc: originalDoc as Record<string, unknown> | null,
-          req,
-        })
       },
     ],
   },

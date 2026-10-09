@@ -1,7 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
-import { admins, anyone, authenticated } from '../access'
+import { admins, anyone } from '../access'
 
+/**
+ * Colors Collection - Справочник цветов
+ *
+ * Системный справочник, скрыт из UI
+ * Пополняется только владельцем проекта через seed-скрипты
+ */
 export const Colors: CollectionConfig = {
   slug: 'colors',
   labels: { singular: 'Цвет', plural: 'Цвета' },
@@ -9,12 +15,13 @@ export const Colors: CollectionConfig = {
     useAsTitle: 'englishLabel',
     defaultColumns: ['englishLabel', 'russianLabel', 'primaryHex', 'deviceTypes'],
     group: 'Справочники',
+    hidden: true,  // ✅ Скрыто из бокового меню
   },
   access: {
-    read: anyone,
-    create: admins,
-    update: authenticated,
-    delete: admins,
+    read: anyone,  // ✅ Чтение для всех (нужно для relationship)
+    create: () => false,  // ❌ Только через seed/миграции
+    update: () => false,  // ❌ Только через seed/миграции
+    delete: () => false,  // ❌ Только через seed/миграции
   },
   fields: [
     {
