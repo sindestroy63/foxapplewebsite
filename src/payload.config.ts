@@ -65,7 +65,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     components: {
-      afterNavLinks: ['/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/TradeInNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
+      afterNavLinks: ['/payload/components/admin/BestOffersNavLink', '/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/TradeInNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
       graphics: {
         Icon: '/payload/components/admin/Branding#NavIcon',
         Logo: '/payload/components/admin/Branding#LoginLogo',
