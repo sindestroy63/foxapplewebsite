@@ -20,7 +20,7 @@ export async function getServices(): Promise<Service[]> {
     const payload = await getPayload({ config })
     const result = await payload.find({
       collection: 'services' as any,
-      depth: 2,
+      depth: 3,
       where: {
         isAvailable: { equals: true },
       },
@@ -39,7 +39,7 @@ export async function getService(slug: string): Promise<Service | null> {
     const payload = await getPayload({ config })
     const result = await payload.find({
       collection: 'services' as any,
-      depth: 2,
+      depth: 3,
       where: {
         slug: { equals: slug },
       },

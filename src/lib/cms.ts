@@ -240,9 +240,7 @@ export async function getProducts(args?: {
       if (!directPlacementIds.length) conditions.push({ brand: { equals: args.filters.brand } })
     }
     if (args?.filters?.line) {
-      if (directPlacementIds.length) {
-        // Direct CMS placement is authoritative for a selected subsection.
-      } else {
+      // Always apply productLine filter, even when directPlacementIds exist
       // Apple Mac and MacBook are two menu branches over the shared laptops
       // group. Their stored productLine values contain the concrete model
       // name (for example "Apple MacBook Pro ..."), so exact matching would
@@ -255,7 +253,6 @@ export async function getProducts(args?: {
         { productLine: { like: 'Mac Pro' } },
       ] })
       else conditions.push({ productLine: { equals: args.filters.line } })
-      }
     }
     if (args?.filters?.appleAccessories) {
       conditions.push({
@@ -523,9 +520,14 @@ function productsForMenuChild(products: any[], children: any[], child: any): any
     candidate.isVisible !== false && productMatchesFilter(product, candidate.filter || undefined))
   const specificity = (candidate: any) => Object.values(candidate.filter || {}).filter((value) => value !== '' && value != null).length
   return products.filter((product) => {
-    if (directIds.has(String(product.id))) return true
+    // Always check filter match, even for manually added products
     const matches = matchingChildren(product)
     if (!matches.some((candidate) => String(candidate.key) === String(child.key))) return false
+
+    // If manually added, prioritize it regardless of specificity
+    if (directIds.has(String(product.id))) return true
+
+    // Otherwise, use specificity to determine the best match
     const best = Math.max(...matches.map(specificity))
     return specificity(child) === best
   })
