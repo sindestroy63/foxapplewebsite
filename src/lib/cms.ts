@@ -277,7 +277,7 @@ export async function getProducts(args?: {
 
     const result = await payload.find({
       collection: 'products',
-      depth: 2,
+      depth: 3,
       limit: args?.filters?.query ? 1000 : (args?.limit || 100),
       pagination: false,
       sort: 'sortOrder',
@@ -344,7 +344,7 @@ export async function getTradeInProducts(): Promise<Product[]> {
     const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'products',
-      depth: 2,
+      depth: 3,
       limit: 100,
       sort: 'sortOrder',
       where: {
@@ -394,7 +394,7 @@ export const getProductBySlugs = cache(async function getProductBySlugs(category
     const slugCandidates = [...new Set([productSlug.trim(), decodedSlug.trim()])]
     const result = await payload.find({
       collection: 'products',
-      depth: 2,
+      depth: 3,
       limit: 1,
       where: {
         and: [
