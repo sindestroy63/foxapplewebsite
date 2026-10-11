@@ -9,39 +9,52 @@ import type { Payload } from 'payload'
  * 2. Установить productLine для аксессуаров PS5 → "Аксессуары для PS5"
  * 3. Обновить brand-catalog-navigation: добавить подраздел "Аксессуары для PS5"
  *
- * Товары PlayStation 5 (консоли):
- * - PlayStation 5 Pro
- * - PlayStation 5 Slim Disc
- * - PlayStation 5 Slim Digital
- * - PlayStation 5 Slim Disc Ghost of Yotei Limited Edition
+ * Production данные (12 товаров gaming-consoles):
  *
- * Товары Аксессуары для PS5:
- * - Дисковод Sony Disc Drive
- * - Игровые наушники PlayStation PULSE Explore
- * - Наушники PlayStation PULSE 3D (CFI-ZWH1)
- * - Шлем VR Sony PlayStation VR2
- * - Портативная консоль PS Portal Remote Player
- * - Подставка Vertical Stand
- * - Зарядная станция Sony DualSense
+ * Консоли (4):
+ * - ID 35 — PlayStation 5 Pro (brand: Sony)
+ * - ID 36 — PlayStation 5 Slim Disk (brand: Sony)
+ * - ID 37 — PlayStation 5 Slim Digital (brand: Sony)
+ * - ID 180 — PlayStation 5 Slim Disk Ghost of Yotei Limited Edition (brand: Sony)
+ *
+ * Аксессуары (7):
+ * - ID 59 — Зарядная станция Sony Dualsense (brand: Sony)
+ * - ID 166 — Дисковод Sony Disc Drive (brand: пустой)
+ * - ID 167 — Игровые наушники PlayStation PULSE Explore (brand: пустой)
+ * - ID 168 — Наушники PlayStation PULSE 3D (brand: пустой)
+ * - ID 169 — Шлем VR Sony PlayStation VR2 (brand: пустой)
+ * - ID 170 — Портативная консоль PS Portal Remote Player (brand: пустой)
+ * - ID 179 — Подставка Vertical Stand (brand: Sony)
+ *
+ * Геймпад (1):
+ * - ID 55 — DualSense PS5 (brand: Sony)
+ *
+ * Важно: 5 аксессуаров имеют пустой brand, поэтому фильтр только по brand='Sony' не работает
  */
 
-// Ключевые паттерны для консолей PS5 (поддержка вариаций Disc/Disk)
+// Ключевые паттерны для консолей PS5 (по реальным названиям production)
 const PS5_CONSOLE_PATTERNS = [
-  /^PlayStation 5 Pro/i,
-  /^PlayStation 5 Slim Dis[ck]/i,  // Поддержка "Disc" и "Disk"
-  /^PlayStation 5 Slim Digital/i,
-  /^PlayStation 5 Slim Dis[ck].*Ghost of (Y|Yo)tei/i,  // Поддержка "Yotei" и "Yōtei"
+  /^PlayStation 5 Pro$/i,
+  /^PlayStation 5 Slim Dis[ck]$/i,  // "Disk" или "Disc"
+  /^PlayStation 5 Slim Digital$/i,
+  /^PlayStation 5 Slim Dis[ck].*Ghost of (Y|Yo)tei/i,
 ]
 
-// Ключевые слова для аксессуаров (гибкий поиск по ключевым словам)
+// Паттерны для аксессуаров (по реальным названиям production)
 const PS5_ACCESSORY_PATTERNS = [
-  { keyword: 'Дисковод', variants: ['Disc Drive', 'Disk Drive'] },
-  { keyword: 'PULSE Explore', variants: ['PULSE Explore'] },
-  { keyword: 'PULSE 3D', variants: ['PULSE 3D', 'PULSE3D'] },
-  { keyword: 'PlayStation VR2', variants: ['VR2', 'VR 2', 'PlayStation VR2'] },
-  { keyword: 'PS Portal', variants: ['Portal', 'PS Portal'] },
-  { keyword: 'Vertical Stand', variants: ['Vertical Stand', 'Stand'] },
-  { keyword: 'Зарядная станция', variants: ['Зарядная станция', 'Зарядка'] },
+  /Зарядная станция.*Dualsense/i,  // ID 59
+  /Дисковод.*Disc Drive/i,          // ID 166
+  /PULSE Explore/i,                  // ID 167
+  /PULSE 3D/i,                       // ID 168
+  /VR.*PlayStation VR2/i,            // ID 169
+  /PS Portal/i,                      // ID 170
+  /Vertical Stand/i,                 // ID 179
+]
+
+// Паттерны для геймпадов (исключить из аксессуаров)
+const PS5_GAMEPAD_PATTERNS = [
+  /^DualSense/i,
+  /Геймпад.*PS5/i,
 ]
 
 // Проверка, является ли товар консолью PS5 (гибкое совпадение)
@@ -53,6 +66,17 @@ function isPS5Console(name: string, productLine: string | null): boolean {
   return PS5_CONSOLE_PATTERNS.some((pattern) => pattern.test(name))
 }
 
+// Проверка, является ли товар геймпадом
+function isGamepad(name: string, productLine: string | null): boolean {
+  // Уже имеет productLine геймпада
+  if (productLine === 'Геймпады PS5') return true
+
+  // Проверить по паттернам геймпадов (исключая "Зарядная станция")
+  if (name.includes('Зарядная станция')) return false
+
+  return PS5_GAMEPAD_PATTERNS.some((pattern) => pattern.test(name))
+}
+
 // Проверка, является ли товар аксессуаром PS5 (не геймпадом!)
 function isPS5Accessory(name: string, productLine: string | null): boolean {
   // Если уже является геймпадом или консолью, то НЕ аксессуар
@@ -62,41 +86,19 @@ function isPS5Accessory(name: string, productLine: string | null): boolean {
   // Если уже имеет productLine аксессуаров - оставить как аксессуар
   if (productLine === 'Аксессуары для PS5') return true
 
-  // Проверить по ключевым словам (гибкий поиск)
-  return PS5_ACCESSORY_PATTERNS.some(({ keyword, variants }) => {
-    // Проверить основное ключевое слово
-    if (name.includes(keyword)) return true
-    // Проверить варианты
-    return variants.some((variant) => name.includes(variant))
-  })
-}
-
-// Проверка, является ли товар геймпадом
-function isGamepad(name: string, productLine: string | null): boolean {
-  // Уже имеет productLine геймпада
-  if (productLine === 'Геймпады PS5') return true
-
-  // Содержит "Геймпад" но НЕ содержит "Зарядная станция"
-  if (name.includes('Геймпад') && !name.includes('Зарядная станция')) return true
-
-  // Содержит "DualSense" но НЕ "Зарядная станция"
-  if (name.includes('DualSense') && !name.includes('Зарядная станция')) return true
-
-  return false
+  // Проверить по паттернам аксессуаров
+  return PS5_ACCESSORY_PATTERNS.some((pattern) => pattern.test(name))
 }
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
   payload.logger.info('Starting PlayStation menu structure migration...')
 
   try {
-    // Получить все товары Sony gaming-consoles
+    // Получить все товары gaming-consoles (не только Sony, т.к. у некоторых аксессуаров brand пустой)
     const allPlayStationProducts = await payload.find({
       collection: 'products',
       where: {
-        and: [
-          { productGroup: { equals: 'gaming-consoles' } },
-          { brand: { equals: 'Sony' } },
-        ],
+        productGroup: { equals: 'gaming-consoles' },
       },
       limit: 1000,
       depth: 0,
@@ -159,23 +161,21 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
       unknown.forEach((p) => payload.logger.warn(`  - ${p.name} (ID: ${p.id}, productLine: ${p.productLine})`))
     }
 
-    // Проверка: должно быть минимум консолей и аксессуаров
-    if (consolesToUpdate.length < 2) {
-      payload.logger.error(`Expected at least 2 consoles, found ${consolesToUpdate.length}. Aborting migration.`)
-      throw new Error(`PlayStation migration: Expected at least 2 consoles, found ${consolesToUpdate.length}`)
-    }
-
-    if (accessoriesToUpdate.length < 1) {
-      payload.logger.warn(`Expected at least 1 accessory, found ${accessoriesToUpdate.length}. Continuing migration.`)
-    }
-
-    // Предупреждение если найдено неожиданное количество
+    // Строгая проверка: должно быть ровно 4 консоли и 7 аксессуаров (по production данным)
     if (consolesToUpdate.length !== 4) {
-      payload.logger.warn(`Expected 4 consoles, but found ${consolesToUpdate.length}. Continuing anyway.`)
+      payload.logger.error(`Expected exactly 4 consoles, found ${consolesToUpdate.length}. Aborting migration.`)
+      payload.logger.error('Migration requires all known consoles to be classified correctly.')
+      throw new Error(`PlayStation migration: Expected exactly 4 consoles, found ${consolesToUpdate.length}`)
     }
 
-    if (accessoriesToUpdate.length !== 7 && accessoriesToUpdate.length > 0) {
-      payload.logger.warn(`Expected 7 accessories, but found ${accessoriesToUpdate.length}. Continuing anyway.`)
+    if (accessoriesToUpdate.length !== 7) {
+      payload.logger.error(`Expected exactly 7 accessories, found ${accessoriesToUpdate.length}. Aborting migration.`)
+      payload.logger.error('Migration requires all known accessories to be classified correctly.')
+      throw new Error(`PlayStation migration: Expected exactly 7 accessories, found ${accessoriesToUpdate.length}`)
+    }
+
+    if (gamepads.length !== 1) {
+      payload.logger.warn(`Expected 1 gamepad, found ${gamepads.length}. This is not critical, continuing.`)
     }
 
     // Обновить productLine для консолей
