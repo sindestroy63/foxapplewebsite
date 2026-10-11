@@ -55,23 +55,39 @@ export const Products: CollectionConfig = {
       async ({ req, id }) => {
         try {
           // 1. Удалить связанные catalog-navigation записи
-          const navigation = await req.payload.find({
-            collection: 'catalog-navigation',
-            where: { product: { equals: id } },
-            depth: 0,
-            limit: 100,
-            overrideAccess: true,
-          })
+          // Используем прямой SQL запрос для поиска связей через catalog_navigation_rels
+          try {
+            const db = req.payload.db
+            if (db && typeof (db as any).drizzle !== 'undefined') {
+              // PostgreSQL через Drizzle
+              const drizzle = (db as any).drizzle
+              const navigationRels = await drizzle.execute({
+                sql: 'SELECT parent_id FROM catalog_navigation_rels WHERE products_id = $1',
+                args: [id],
+              })
 
-          for (const item of navigation.docs) {
-            await req.payload.delete({
-              collection: 'catalog-navigation',
-              id: item.id,
-              overrideAccess: true,
-            })
+              const navigationIds = navigationRels?.rows?.map((row: any) => row.parent_id).filter(Boolean) || []
+
+              for (const navId of navigationIds) {
+                try {
+                  await req.payload.delete({
+                    collection: 'catalog-navigation',
+                    id: navId,
+                    overrideAccess: true,
+                  })
+                } catch (navDeleteError: any) {
+                  req.payload.logger.error({ err: navDeleteError, navId, productId: id }, 'Failed to delete navigation item')
+                }
+              }
+
+              if (navigationIds.length > 0) {
+                req.payload.logger.info({ productId: id, navigationDeleted: navigationIds.length }, 'Deleted related navigation entries')
+              }
+            }
+          } catch (navError: any) {
+            req.payload.logger.error({ err: navError, productId: id }, 'Failed to cleanup catalog navigation')
+            // Продолжаем - база должна обработать ON DELETE SET NULL сама
           }
-
-          req.payload.logger.info({ productId: id, navigationDeleted: navigation.totalDocs }, 'Deleted related navigation entries before product deletion')
 
           // 2. Удалить товар из BrandCatalogNavigation
           try {
@@ -332,7 +348,7 @@ export const Products: CollectionConfig = {
       admin: {
         readOnly: true,
         components: {
-          Field: '/payload/components/admin/ReadonlySlugField',
+          Field: '/payload/components/admin/ProductSlugField',
         },
       },
       validate: (value: unknown, options: any) => {

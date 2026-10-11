@@ -60,7 +60,11 @@ import * as migration_20260930_090000_brand_navigation_relationship_table from '
 import * as migration_20261009_120000_url_redirects from './20261009_120000_url_redirects';
 import * as migration_20261009_130000_products_slug_unique from './20261009_130000_products_slug_unique';
 import * as migration_20261009_140000_services from './20261009_140000_services';
-import * as migration_20261009_150000_photo_video_subcategory from './20261009_150000_photo_video_subcategory';
+// import * as migration_20261009_150000_photo_video_subcategory from './20261009_150000_photo_video_subcategory';
+import * as migration_20261010_100000_add_services_to_locked_docs from './20261010_100000_add_services_to_locked_docs';
+import * as migration_20261010_101500_add_url_redirects_to_locked_docs from './20261010_101500_add_url_redirects_to_locked_docs';
+import * as migration_20261010_sync_locked_documents_rels from './20261010_sync_locked_documents_rels';
+import * as migration_20261011_100000_fix_playstation_menu_structure from './20261011_100000_fix_playstation_menu_structure';
 
 export const migrations = [
   {
@@ -373,9 +377,29 @@ export const migrations = [
     down: migration_20261009_140000_services.down,
     name: '20261009_140000_services'
   },
+  // {
+  //   up: migration_20261009_150000_photo_video_subcategory.up,
+  //   down: migration_20261009_150000_photo_video_subcategory.down,
+  //   name: '20261009_150000_photo_video_subcategory'
+  // },
   {
-    up: migration_20261009_150000_photo_video_subcategory.up,
-    down: migration_20261009_150000_photo_video_subcategory.down,
-    name: '20261009_150000_photo_video_subcategory'
+    up: migration_20261010_100000_add_services_to_locked_docs.up,
+    down: migration_20261010_100000_add_services_to_locked_docs.down,
+    name: '20261010_100000_add_services_to_locked_docs'
+  },
+  {
+    up: migration_20261010_101500_add_url_redirects_to_locked_docs.up,
+    down: migration_20261010_101500_add_url_redirects_to_locked_docs.down,
+    name: '20261010_101500_add_url_redirects_to_locked_docs'
+  },
+  {
+    up: migration_20261010_sync_locked_documents_rels.up,
+    down: migration_20261010_sync_locked_documents_rels.down,
+    name: '20261010_sync_locked_documents_rels'
+  },
+  {
+    up: migration_20261011_100000_fix_playstation_menu_structure.up,
+    down: migration_20261011_100000_fix_playstation_menu_structure.down,
+    name: '20261011_100000_fix_playstation_menu_structure'
   },
 ];

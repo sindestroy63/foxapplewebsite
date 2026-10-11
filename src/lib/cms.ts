@@ -87,6 +87,8 @@ export async function getBestOffers(): Promise<Product[]> {
       .map((product) => typeof product === 'object' && product !== null && 'id' in product ? product.id : product)
       .filter((id): id is string | number => id != null)
 
+    console.log('[getBestOffers] productIds from site-appearance:', productIds)
+
     if (productIds.length > 0) {
       // Перезагрузить товары напрямую с полным depth для разрешения изображений
       const result = await payload.find({
@@ -107,12 +109,16 @@ export async function getBestOffers(): Promise<Product[]> {
         .map((id) => productsMap.get(String(id)))
         .filter((product): product is any => product != null)
 
-      if (ordered.length > 0) return normalizeProducts(ordered)
+      if (ordered.length > 0) {
+        console.log('[getBestOffers] returning ordered products:', ordered.length)
+        return normalizeProducts(ordered)
+      }
     }
   } catch (error) {
     console.error('Failed to load best offers', error)
   }
 
+  console.log('[getBestOffers] falling back to featured products')
   return getProducts({ featuredOnly: true, limit: 6 })
 }
 

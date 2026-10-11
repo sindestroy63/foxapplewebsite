@@ -34,6 +34,9 @@ export default async function HomePage() {
   ])
   const bestOffers = featuredProducts
 
+  console.log('[HomePage] bestOffers count:', bestOffers.length)
+  console.log('[HomePage] bestOffers names:', bestOffers.map(p => p.name))
+
   const phone = settings.phone || '+7 (917) 954-64-64'
 
 

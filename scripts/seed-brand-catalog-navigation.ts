@@ -30,12 +30,15 @@ const defaults: SeedItem[] = [
     child('Фены Dyson', 'dyson-hair-dryers', { group: 'home-appliances', brand: 'Dyson', line: 'Фен Dyson' }, 0), child('Стайлеры Dyson', 'dyson-stylers', { group: 'home-appliances', brand: 'Dyson', line: 'Стайлеры Dyson' }, 1), child('Выпрямители Dyson', 'dyson-straighteners', { group: 'home-appliances', brand: 'Dyson', line: 'Выпрямитель Dyson' }, 2), child('Очистители Dyson', 'dyson-purifiers', { group: 'home-appliances', brand: 'Dyson', line: 'Очистители Dyson' }, 3), child('Пылесосы Dyson', 'dyson-vacuums', { group: 'home-appliances', brand: 'Dyson', line: 'Пылесосы Dyson' }, 4),
   ]),
   group('PLAYSTATION', 'playstation', { group: 'gaming-consoles', brand: 'Sony' }, 3, [
-    child('PlayStation 5', 'playstation-5', { group: 'gaming-consoles', brand: 'Sony' }, 0), child('Геймпады PS5', 'gamepads-ps5', { group: 'gaming-consoles', brand: 'Sony', line: 'Геймпады PS5' }, 1),
+    child('PlayStation 5', 'playstation-5', { group: 'gaming-consoles', brand: 'Sony', line: 'PlayStation 5' }, 0),
+    child('Аксессуары для PS5', 'ps5-accessories', { group: 'gaming-consoles', brand: 'Sony', line: 'Аксессуары для PS5' }, 1),
+    child('Геймпады PS5', 'gamepads-ps5', { group: 'gaming-consoles', brand: 'Sony', line: 'Геймпады PS5' }, 2),
   ]),
   group('ДРУГОЕ', 'other', { group: 'other' }, 4, [
     child('Marshall', 'other-marshall', { group: 'audio', brand: 'Marshall' }, 0), child('GoPro', 'other-gopro', { group: 'other', q: 'GoPro' }, 1), child('Защитные стёкла', 'other-screen-protectors', { group: 'other', q: 'Защитное стекло' }, 2),
   ]),
   group('TRADE-IN', 'trade-in', null, 5),
+  group('УСЛУГИ', 'services', null, 6),
 ]
 
 const mergeItem = (existing: any, fallback: SeedItem, sortOrder: number): any => {

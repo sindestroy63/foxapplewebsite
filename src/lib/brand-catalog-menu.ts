@@ -62,6 +62,7 @@ export const DEFAULT_BRAND_CATALOG_MENU: BrandMenu[] = [
   ] },
   { label: 'PLAYSTATION', key: 'playstation', href: catalogHref({ group: 'gaming-consoles', brand: 'Sony' }), filter: { group: 'gaming-consoles', brand: 'Sony' }, isVisible: true, coverImage: null, items: [
     mappedItem('PlayStation 5', 'playstation-5'),
+    mappedItem('Аксессуары для PS5', 'ps5-accessories'),
     mappedItem('Геймпады PS5', 'gamepads-ps5'),
   ] },
   { label: 'ДРУГОЕ', key: 'other', href: catalogHref({ group: 'other' }), filter: { group: 'other' }, isVisible: true, coverImage: null, items: [
@@ -70,6 +71,7 @@ export const DEFAULT_BRAND_CATALOG_MENU: BrandMenu[] = [
     mappedItem('Защитные стёкла', 'other-screen-protectors'),
   ] },
   { label: 'TRADE-IN', key: 'trade-in', href: '/trade-in/catalog', isVisible: true, coverImage: null, items: [] },
+  { label: 'УСЛУГИ', key: 'services', href: '/services', isVisible: true, coverImage: null, items: [] },
 ]
 
 export const BRAND_CATALOG_MENU = DEFAULT_BRAND_CATALOG_MENU
