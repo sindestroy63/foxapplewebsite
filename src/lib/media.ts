@@ -42,8 +42,8 @@ export function getProductImage(
   // Используем изображения варианта, если есть
   const images = selectedVariant?.images || product.images
 
-  // Найти первое изображение (объект Media или ID/строка)
-  const first = images?.find((image) => image != null) as Media | undefined
+  // Найти первое изображение, которое является объектом Media (не ID)
+  const first = images?.find((image) => image != null && typeof image === 'object') as Media | undefined
 
   return {
     url: getMediaUrl(first, preferred),
