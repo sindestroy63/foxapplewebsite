@@ -5,7 +5,7 @@ import { admins, anyone } from '../access'
 export const SiteAppearance: GlobalConfig = {
   slug: 'site-appearance',
   label: 'Оформление сайта',
-  admin: { hidden: true },
+  admin: { hidden: false },  // ✅ Показываем в админке для управления Best Offers
   access: {
     read: anyone,
     update: admins,
