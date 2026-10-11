@@ -57,7 +57,7 @@ export const PRODUCT_CATALOG_PLACEMENTS: CatalogPlacementDefinition[] = [
   placement('dyson', 'DYSON', 'dyson-vacuums', 'Пылесосы Dyson', 'home-appliances', 'Dyson', 'Пылесосы Dyson'),
 
   placement('playstation', 'PLAYSTATION', 'playstation-5', 'PlayStation 5', 'gaming-consoles', 'Sony', 'PlayStation 5'),
-  placement('playstation', 'PLAYSTATION', 'ps5-accessories', 'Аксессуары для PS5', 'gaming-consoles', 'Sony', 'Аксессуары для PS5'),
+  placement('playstation', 'PLAYSTATION', 'ps5-accessories', 'Аксессуары для PS5', 'gaming-consoles', '', 'Аксессуары для PS5'),
   placement('playstation', 'PLAYSTATION', 'gamepads-ps5', 'Геймпады PS5', 'gaming-consoles', 'Sony', 'Геймпады PS5'),
 
   placement('other', 'ДРУГОЕ', 'other-marshall', 'Marshall', 'audio', 'Marshall'),
