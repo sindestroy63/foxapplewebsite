@@ -2,13 +2,17 @@ import { CollectionConfig } from 'payload'
 
 export const Services: CollectionConfig = {
   slug: 'services',
+  labels: {
+    singular: 'Услуга',
+    plural: 'Услуги',
+  },
   access: {
     read: () => true,
   },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'price', 'isAvailable', 'sortOrder'],
-    hidden: true,
+    hidden: false,  // ✅ Показываем в админке
   },
   fields: [
     {
