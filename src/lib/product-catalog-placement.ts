@@ -48,6 +48,8 @@ export const PRODUCT_CATALOG_PLACEMENTS: CatalogPlacementDefinition[] = [
   placement('samsung', 'SAMSUNG', 'samsung-watches', 'Часы', 'smart-watches', 'Samsung'),
   placement('samsung', 'SAMSUNG', 'samsung-audio', 'Наушники', 'audio', 'Samsung'),
 
+  placement('google', 'GOOGLE', 'google-pixel', 'Google Pixel', 'smartphones', 'Google'),
+
   placement('dyson', 'DYSON', 'dyson-hair-dryers', 'Фены Dyson', 'home-appliances', 'Dyson', 'Фен Dyson'),
   placement('dyson', 'DYSON', 'dyson-stylers', 'Стайлеры Dyson', 'home-appliances', 'Dyson', 'Стайлеры Dyson'),
   placement('dyson', 'DYSON', 'dyson-straighteners', 'Выпрямители Dyson', 'home-appliances', 'Dyson', 'Выпрямитель Dyson'),

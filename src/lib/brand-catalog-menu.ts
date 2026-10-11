@@ -53,6 +53,9 @@ export const DEFAULT_BRAND_CATALOG_MENU: BrandMenu[] = [
     mappedItem('Часы', 'samsung-watches'),
     mappedItem('Наушники', 'samsung-audio'),
   ] },
+  { label: 'GOOGLE', key: 'google', href: catalogHref({ brand: 'Google' }), filter: { brand: 'Google' }, isVisible: true, coverImage: null, items: [
+    mappedItem('Google Pixel', 'google-pixel'),
+  ] },
   { label: 'DYSON', key: 'dyson', href: catalogHref({ brand: 'Dyson' }), filter: { brand: 'Dyson' }, isVisible: true, coverImage: null, items: [
     mappedItem('Фены Dyson', 'dyson-hair-dryers'),
     mappedItem('Стайлеры Dyson', 'dyson-stylers'),
