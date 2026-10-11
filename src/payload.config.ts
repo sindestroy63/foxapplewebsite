@@ -14,7 +14,6 @@ import { VariantSizeOptions } from './payload/collections/VariantSizeOptions'
 import { ScreenSizeOptions } from './payload/collections/ScreenSizeOptions'
 import { ConnectivityOptions } from './payload/collections/ConnectivityOptions'
 import { CatalogNavigation } from './payload/collections/CatalogNavigation'
-import { Leads } from './payload/collections/Leads'
 import { Media } from './payload/collections/Media'
 import { Pages } from './payload/collections/Pages'
 import { PriceImportItems } from './payload/collections/PriceImportItems'
@@ -108,7 +107,7 @@ export default buildConfig({
   },
   collections: [
     Users, Media, Categories, Products, Services, UrlRedirects, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
-    Leads, Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
+    Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
   ],
   endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...brandCatalogNavigationEndpoints, ...tradeInAdminEndpoints],
   globals: [SiteSettings, SiteAppearance, BrandCatalogNavigation],
