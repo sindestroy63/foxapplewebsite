@@ -35,6 +35,7 @@ import { default as default_b5b131095d52421d2a0942d2135f4a23 } from '../../../pa
 import { default as default_50e108fbf1d801da66d76e1dca79dd25 } from '../../../payload/components/admin/BestOffersField'
 import { NavIcon as NavIcon_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { LoginLogo as LoginLogo_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
+import { default as default_ca949f8f6193ba30f0631b21a631f5e1 } from '../../../payload/components/admin/BestOffersNavLink'
 import { default as default_ec5053350bda77791279610b7dbe999f } from '../../../payload/components/admin/PriceUpdateNavLink'
 import { default as default_fb2e118bae473c01606aa87efac53d6b } from '../../../payload/components/admin/TradeInNavLink'
 import { default as default_075e1f6d8a1452089a59e3491038ddc1 } from '../../../payload/components/admin/CatalogNavigationNavLink'
@@ -82,6 +83,7 @@ export const importMap = {
   "/payload/components/admin/BestOffersField#default": default_50e108fbf1d801da66d76e1dca79dd25,
   "/payload/components/admin/Branding#NavIcon": NavIcon_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/Branding#LoginLogo": LoginLogo_9af2d0fe85839e313d2e5c5821154635,
+  "/payload/components/admin/BestOffersNavLink#default": default_ca949f8f6193ba30f0631b21a631f5e1,
   "/payload/components/admin/PriceUpdateNavLink#default": default_ec5053350bda77791279610b7dbe999f,
   "/payload/components/admin/TradeInNavLink#default": default_fb2e118bae473c01606aa87efac53d6b,
   "/payload/components/admin/CatalogNavigationNavLink#default": default_075e1f6d8a1452089a59e3491038ddc1,
