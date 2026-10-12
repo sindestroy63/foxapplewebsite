@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createReadStream } from 'fs'
+import { createReadStream, readFileSync } from 'fs'
 import { stat } from 'fs/promises'
 import { Readable } from 'stream'
 import path from 'path'
+import sharp from 'sharp'
+import convert from 'heic-convert'
 
 // Content-Type mapping by file extension
 const CONTENT_TYPES: Record<string, string> = {
@@ -13,6 +15,8 @@ const CONTENT_TYPES: Record<string, string> = {
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.mp4': 'video/mp4',
+  '.heic': 'image/heic',
+  '.HEIC': 'image/heic',
 }
 
 /**
@@ -47,6 +51,14 @@ function getContentType(filename: string): string {
   return CONTENT_TYPES[ext] || 'application/octet-stream'
 }
 
+/**
+ * Check if file is HEIC format that needs conversion
+ */
+function isHEIC(filename: string): boolean {
+  const ext = path.extname(filename).toLowerCase()
+  return ext === '.heic'
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
@@ -71,6 +83,37 @@ export async function GET(
   try {
     const fileStats = await stat(filePath)
 
+    // Convert HEIC to WebP for browser compatibility
+    if (isHEIC(safeFilename)) {
+      try {
+        // Read HEIC file and convert using heic-convert
+        const inputBuffer = readFileSync(filePath)
+        const outputBuffer = await convert({
+          buffer: inputBuffer,
+          format: 'JPEG',
+          quality: 0.9,
+        })
+
+        // Optionally optimize with Sharp
+        const webpBuffer = await sharp(Buffer.from(outputBuffer))
+          .webp({ quality: 85 })
+          .toBuffer()
+
+        return new NextResponse(webpBuffer as unknown as BodyInit, {
+          status: 200,
+          headers: {
+            'Content-Type': 'image/webp',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Content-Length': webpBuffer.length.toString(),
+            'X-Converted-From': 'heic',
+          },
+        })
+      } catch (conversionError) {
+        console.error(`[MediaRoute] HEIC conversion failed for ${safeFilename}:`, conversionError)
+        // Fall through to return original file
+      }
+    }
+
     // Determine Content-Type
     const contentType = getContentType(safeFilename)
 
@@ -84,8 +127,71 @@ export async function GET(
       },
     })
   } catch (error) {
-    // File not found or other read error
+    // File not found locally - try production fallback
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // In development, try to fetch from production
+      if (process.env.NODE_ENV === 'development') {
+        const productionUrl = process.env.PRODUCTION_MEDIA_URL || 'https://foxapple.ru'
+        const mediaUrl = `${productionUrl}/api/media/file/${encodeURIComponent(safeFilename)}`
+
+        try {
+          const response = await fetch(mediaUrl, {
+            cache: 'force-cache',
+            next: { revalidate: 86400 } // 24 hours
+          })
+
+          if (response.ok) {
+            // Clone response before consuming it for HEIC conversion attempt
+            const clonedResponse = response.clone()
+
+            // Convert HEIC from production to WebP
+            if (isHEIC(safeFilename)) {
+              try {
+                const buffer = await clonedResponse.arrayBuffer()
+
+                // Use heic-convert for HEIC decoding
+                const jpegBuffer = await convert({
+                  buffer: Buffer.from(buffer),
+                  format: 'JPEG',
+                  quality: 0.9,
+                })
+
+                // Optimize to WebP with Sharp
+                const webpBuffer = await sharp(Buffer.from(jpegBuffer))
+                  .webp({ quality: 85 })
+                  .toBuffer()
+
+                return new NextResponse(webpBuffer as unknown as BodyInit, {
+                  status: 200,
+                  headers: {
+                    'Content-Type': 'image/webp',
+                    'Cache-Control': 'public, max-age=86400',
+                    'X-Media-Source': 'production-proxy',
+                    'X-Converted-From': 'heic',
+                  },
+                })
+              } catch (conversionError) {
+                console.warn(`[MediaRoute] HEIC conversion not supported, returning original: ${safeFilename}`)
+                // Return original response (not cloned, as conversion failed)
+              }
+            }
+
+            const contentType = response.headers.get('content-type') || getContentType(safeFilename)
+
+            return new NextResponse(response.body, {
+              status: 200,
+              headers: {
+                'Content-Type': contentType,
+                'Cache-Control': 'public, max-age=86400', // 24 hours for proxied images
+                'X-Media-Source': 'production-proxy',
+              },
+            })
+          }
+        } catch (fetchError) {
+          console.error(`[MediaRoute] Production fallback failed for ${safeFilename}:`, fetchError)
+        }
+      }
+
       return new NextResponse('File not found', { status: 404 })
     }
 

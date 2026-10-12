@@ -40,7 +40,15 @@ export function getProductImage(
   selectedVariant?: { images?: Array<Media | string | number> } | null
 ): { url: string | null; alt: string } {
   // Используем изображения варианта, если есть
-  const images = selectedVariant?.images || product.images
+  let images = selectedVariant?.images || product.images
+
+  // Fallback: если product.images пустой, попробовать взять первый colorImage
+  if ((!images || images.length === 0) && product.colorImages && product.colorImages.length > 0) {
+    const firstColorImage = product.colorImages[0]
+    if (firstColorImage && typeof firstColorImage === 'object' && 'images' in firstColorImage) {
+      images = firstColorImage.images
+    }
+  }
 
   // Найти первое изображение, которое является объектом Media (не ID)
   const first = images?.find((image) => image != null && typeof image === 'object') as Media | undefined

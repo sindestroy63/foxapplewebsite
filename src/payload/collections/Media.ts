@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import path from 'path'
 
 import { admins, anyone } from '../access'
+import { convertHEICBeforeValidate } from '../hooks/convertHEIC'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -14,6 +15,9 @@ export const Media: CollectionConfig = {
     create: admins,
     update: admins,
     delete: admins,
+  },
+  hooks: {
+    beforeValidate: [convertHEICBeforeValidate],
   },
   upload: {
     staticDir: path.resolve(process.cwd(), 'media'),
