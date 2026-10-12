@@ -503,6 +503,15 @@ function hrefFromFilter(filter: unknown): string | undefined {
 function productMatchesFilter(product: any, filter: Record<string, string> | undefined): boolean {
   if (!filter) return false
   if (filter.group && product.productGroup !== filter.group) return false
+
+  // For PS5 accessories and gamepads: ignore brand requirement
+  // Many legitimate PS products don't have brand field
+  if ((filter.line === 'Аксессуары для PS5' || filter.line === 'Геймпады PS5') && filter.brand) {
+    const filterWithoutBrand = { ...filter }
+    delete filterWithoutBrand.brand
+    return productMatchesFilter(product, filterWithoutBrand)
+  }
+
   if (filter.brand && product.brand !== filter.brand) return false
   if (filter.line) {
     if (filter.line === 'MacBook' && !String(product.productLine || '').includes('MacBook')) return false
@@ -519,15 +528,30 @@ function productsForMenuChild(products: any[], children: any[], child: any): any
   const matchingChildren = (product: any) => children.filter((candidate) =>
     candidate.isVisible !== false && productMatchesFilter(product, candidate.filter || undefined))
   const specificity = (candidate: any) => Object.values(candidate.filter || {}).filter((value) => value !== '' && value != null).length
+
   return products.filter((product) => {
-    // Always check filter match, even for manually added products
+    // For manually added products
+    if (directIds.has(String(product.id))) {
+      // If child has a filter, manually added product must match it
+      if (child.filter && Object.keys(child.filter).length > 0) {
+        // Special case: PS5 accessories and gamepads don't require brand match
+        // because many accessories don't have brand field but are legitimate PS products
+        if (child.key === 'ps5-accessories' || child.key === 'gamepads-ps5' || child.key === 'playstation-6') {
+          const filterWithoutBrand = { ...child.filter }
+          delete filterWithoutBrand.brand
+          return productMatchesFilter(product, filterWithoutBrand)
+        }
+        return productMatchesFilter(product, child.filter)
+      }
+      // If no filter, allow manually added product
+      return true
+    }
+
+    // For auto-matched products, check filter match and specificity
     const matches = matchingChildren(product)
     if (!matches.some((candidate) => String(candidate.key) === String(child.key))) return false
 
-    // If manually added, prioritize it regardless of specificity
-    if (directIds.has(String(product.id))) return true
-
-    // Otherwise, use specificity to determine the best match
+    // Use specificity to determine the best match
     const best = Math.max(...matches.map(specificity))
     return specificity(child) === best
   })
@@ -546,16 +570,12 @@ function productHref(product: any): string {
 }
 
 export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
-  return getCachedBrandCatalogNavigation()
-}
-
-const getCachedBrandCatalogNavigation = unstable_cache(
-  async (): Promise<BrandCatalogNavigationItem[]> => {
+  // Temporarily disable caching to ensure PlayStation fixes are applied
   try {
     const payload = await getPayloadClient()
     const [value, productResult] = await Promise.all([
       payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 1 }),
-      payload.find({ collection: 'products', depth: 0, limit: 1000, pagination: false, where: { isAvailable: { equals: true } } }),
+      payload.find({ collection: 'products', depth: 1, limit: 1000, pagination: false, where: { isAvailable: { equals: true } } }),
     ]) as [any, any]
     const products = productResult.docs as any[]
     const source = Array.isArray(value.groups) && value.groups.length >= 6 ? value.groups : DEFAULT_BRAND_CATALOG_MENU
@@ -586,10 +606,7 @@ const getCachedBrandCatalogNavigation = unstable_cache(
       children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: null, isVisible: true, sortOrder: child.sortOrder })),
     }))
   }
-  },
-  ['brand-catalog-navigation'],
-  { revalidate: 60 },
-)
+}
 
 export { sortProductsByPriority }
 

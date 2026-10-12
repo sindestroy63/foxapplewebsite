@@ -63,7 +63,7 @@ export const DEFAULT_BRAND_CATALOG_MENU: BrandMenu[] = [
     mappedItem('Очистители Dyson', 'dyson-purifiers'),
     mappedItem('Пылесосы Dyson', 'dyson-vacuums'),
   ] },
-  { label: 'PLAYSTATION', key: 'playstation', href: catalogHref({ group: 'gaming-consoles', brand: 'Sony' }), filter: { group: 'gaming-consoles', brand: 'Sony' }, isVisible: true, coverImage: null, items: [
+  { label: 'PLAYSTATION', key: 'playstation', href: catalogHref({ group: 'gaming-consoles' }), filter: { group: 'gaming-consoles' }, isVisible: true, coverImage: null, items: [
     mappedItem('PlayStation 5', 'playstation-5'),
     mappedItem('Аксессуары для PS5', 'ps5-accessories'),
     mappedItem('Геймпады PS5', 'gamepads-ps5'),
@@ -81,8 +81,26 @@ export const BRAND_CATALOG_MENU = DEFAULT_BRAND_CATALOG_MENU
 export const BRAND_CATALOG_CARDS = DEFAULT_BRAND_CATALOG_MENU.map(({ key, label, href, coverImage }) => ({ slug: key, label, href, coverImage }))
 
 export function visibleBrandMenu(groups: BrandMenu[]): BrandMenu[] {
-  return groups.filter((group) => group.isVisible !== false).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)).map((group) => ({
-    ...group,
-    items: (group.items || []).filter((child) => child.isVisible !== false).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)),
-  }))
+  return groups.filter((group) => group.isVisible !== false).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)).map((group) => {
+    // Filter items and deduplicate by title (keep first occurrence)
+    const seenTitles = new Set<string>()
+    const items = (group.items || [])
+      .filter((child) => child.isVisible !== false)
+      .filter((child) => {
+        // Deduplicate PlayStation accessories: keep ps5-accessories, hide playstation-6
+        if (group.key === 'playstation' && child.label === 'Аксессуары для PS5') {
+          if (child.key === 'playstation-6') return false // Hide old duplicate
+          if (seenTitles.has(child.label)) return false // Hide any other duplicates
+          seenTitles.add(child.label)
+          return true
+        }
+        return true
+      })
+      .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0))
+
+    return {
+      ...group,
+      items,
+    }
+  })
 }
