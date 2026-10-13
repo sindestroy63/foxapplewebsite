@@ -106,26 +106,25 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < targetSkus.length; i += CHUNK_SIZE) {
       const chunk = targetSkus.slice(i, i + CHUNK_SIZE)
-      const [prodDocs, varDocs] = await Promise.all([
-        payload.find({
-          collection: 'products',
-          depth: 0,
-          limit: CHUNK_SIZE * 2,
-          pagination: false,
-          overrideAccess: true,
-          where: { sku: { in: chunk } },
-        }),
-        payload.find({
-          collection: 'products',
-          depth: 0,
-          limit: CHUNK_SIZE * 2,
-          pagination: false,
-          overrideAccess: true,
-          where: { 'variants.sku': { in: chunk } },
-        }),
-      ])
+      const numericIds = chunk.map((s) => Number(s)).filter((n) => Number.isInteger(n) && n > 0)
+      const orConditions: any[] = [
+        { sku: { in: chunk } },
+        { 'variants.sku': { in: chunk } },
+        { 'variants.id': { in: chunk } },
+      ]
+      if (numericIds.length > 0) {
+        orConditions.push({ id: { in: numericIds } })
+      }
+      const foundDocs = await payload.find({
+        collection: 'products',
+        depth: 0,
+        limit: CHUNK_SIZE * 4,
+        pagination: false,
+        overrideAccess: true,
+        where: { or: orConditions },
+      })
 
-      for (const doc of [...prodDocs.docs, ...varDocs.docs] as any[]) {
+      for (const doc of foundDocs.docs as any[]) {
         productsMap.set(doc.id, doc)
       }
     }
@@ -142,15 +141,22 @@ export async function POST(request: NextRequest) {
       let updatedVariants = hasVariants ? [...product.variants] : []
 
       if (hasVariants) {
-        updatedVariants = updatedVariants.map((variant: any) => {
+        updatedVariants = updatedVariants.map((variant: any, idx: number) => {
           const vSku = normalizeSku(variant.sku)
-          if (vSku && skuPriceMap.has(vSku)) {
-            const targetPrice = skuPriceMap.get(vSku)!
-            if (Number(variant.price) !== targetPrice) {
-              productChanged = true
-              updatedVariantsInProduct++
-              return { ...variant, price: targetPrice }
-            }
+          const vId = normalizeSku(variant.id)
+          const combo1 = product.sku ? normalizeSku(`${product.sku}-${variant.id || idx + 1}`) : ''
+          const combo2 = normalizeSku(`OFFER-${product.id}-${variant.id || idx + 1}`)
+
+          let targetPrice: number | undefined
+          if (vSku && skuPriceMap.has(vSku)) targetPrice = skuPriceMap.get(vSku)
+          else if (vId && skuPriceMap.has(vId)) targetPrice = skuPriceMap.get(vId)
+          else if (combo1 && skuPriceMap.has(combo1)) targetPrice = skuPriceMap.get(combo1)
+          else if (combo2 && skuPriceMap.has(combo2)) targetPrice = skuPriceMap.get(combo2)
+
+          if (targetPrice != null && Number(variant.price) !== targetPrice) {
+            productChanged = true
+            updatedVariantsInProduct++
+            return { ...variant, price: targetPrice }
           }
           return variant
         })
@@ -169,13 +175,18 @@ export async function POST(request: NextRequest) {
         }
       } else {
         const pSku = normalizeSku(product.sku)
-        if (pSku && skuPriceMap.has(pSku)) {
-          const targetPrice = skuPriceMap.get(pSku)!
-          if (newProductPrice !== targetPrice) {
-            newProductPrice = targetPrice
-            productChanged = true
-            totalUpdatedPositions++
-          }
+        const pId = normalizeSku(product.id)
+        const comboOffer = normalizeSku(`OFFER-${product.id}`)
+
+        let targetPrice: number | undefined
+        if (pSku && skuPriceMap.has(pSku)) targetPrice = skuPriceMap.get(pSku)
+        else if (pId && skuPriceMap.has(pId)) targetPrice = skuPriceMap.get(pId)
+        else if (comboOffer && skuPriceMap.has(comboOffer)) targetPrice = skuPriceMap.get(comboOffer)
+
+        if (targetPrice != null && newProductPrice !== targetPrice) {
+          newProductPrice = targetPrice
+          productChanged = true
+          totalUpdatedPositions++
         }
       }
 
