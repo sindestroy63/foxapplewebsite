@@ -84,7 +84,14 @@ export async function POST(request: NextRequest) {
       const price = parsePrice(rawPrice)
 
       if (sku && price !== null) {
-        skuPriceMap.set(sku, Math.round(price))
+        const rounded = Math.round(price)
+        skuPriceMap.set(sku, rounded)
+        skuPriceMap.set(sku.toLowerCase(), rounded)
+        const hex = rawSku != null ? String(rawSku).match(/[a-f0-9]{24}/i)?.[0] : null
+        if (hex) {
+          skuPriceMap.set(hex.toLowerCase(), rounded)
+          skuPriceMap.set(hex.toUpperCase(), rounded)
+        }
       }
     }
 
@@ -101,6 +108,67 @@ export async function POST(request: NextRequest) {
     const targetSkus = Array.from(skuPriceMap.keys())
     const productsMap = new Map<number | string, any>()
     const CHUNK_SIZE = 200
+
+    const drizzle = (payload.db as any)?.drizzle
+    const matchedProductIds = new Set<number>()
+
+    if (drizzle && targetSkus.length > 0) {
+      for (let i = 0; i < targetSkus.length; i += CHUNK_SIZE) {
+        const chunk = targetSkus.slice(i, i + CHUNK_SIZE)
+        const lowerList = chunk.map((s) => s.toLowerCase())
+        const hexIds = chunk
+          .map((s) => s.match(/[a-f0-9]{24}/i)?.[0]?.toLowerCase())
+          .filter((id): id is string => Boolean(id))
+        const numIds = chunk
+          .map((s) => {
+            const m = s.match(/^offer-(\d+)/i)
+            return m ? Number(m[1]) : Number(s)
+          })
+          .filter((n) => Number.isInteger(n) && n > 0)
+
+        try {
+          const pRes = await drizzle.execute({
+            sql: 'SELECT id FROM "products" WHERE LOWER("sku") = ANY($1)',
+            args: [lowerList],
+          })
+          for (const r of (pRes.rows || pRes) as any[]) {
+            if (r.id != null) matchedProductIds.add(Number(r.id))
+          }
+
+          const vRes = await drizzle.execute({
+            sql: 'SELECT "_parent_id" AS id FROM "products_variants" WHERE LOWER("sku") = ANY($1) OR LOWER("id") = ANY($2)',
+            args: [lowerList, hexIds.length > 0 ? hexIds : lowerList],
+          })
+          for (const r of (vRes.rows || vRes) as any[]) {
+            if (r.id != null) matchedProductIds.add(Number(r.id))
+          }
+
+          if (numIds.length > 0) {
+            const numRes = await drizzle.execute({
+              sql: 'SELECT id FROM "products" WHERE id = ANY($1)',
+              args: [numIds],
+            })
+            for (const r of (numRes.rows || numRes) as any[]) {
+              if (r.id != null) matchedProductIds.add(Number(r.id))
+            }
+          }
+        } catch {}
+      }
+    }
+
+    if (matchedProductIds.size > 0) {
+      const pDocs = await payload.find({
+        collection: 'products',
+        depth: 0,
+        limit: matchedProductIds.size,
+        pagination: false,
+        overrideAccess: true,
+        where: { id: { in: Array.from(matchedProductIds) } },
+      })
+      for (const doc of pDocs.docs as any[]) {
+        productsMap.set(doc.id, doc)
+      }
+    }
 
     for (let i = 0; i < targetSkus.length; i += CHUNK_SIZE) {
       const chunk = targetSkus.slice(i, i + CHUNK_SIZE)
@@ -140,27 +208,29 @@ export async function POST(request: NextRequest) {
 
     for (const product of productsMap.values()) {
       let productChanged = false
-      let updatedVariantsInProduct = 0
+      const modifiedVariantRows: Array<{ id: string; price: number }> = []
 
       const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
       let updatedVariants = hasVariants ? [...product.variants] : []
 
       if (hasVariants) {
         updatedVariants = updatedVariants.map((variant: any, idx: number) => {
-          const vSku = normalizeSku(variant.sku)
-          const vId = normalizeSku(variant.id)
+          const vSkuNorm = normalizeSku(variant.sku)
+          const vSkuLower = String(variant.sku || '').trim().toLowerCase()
+          const vId = String(variant.id || '').trim().toLowerCase()
           const combo1 = product.sku ? normalizeSku(`${product.sku}-${variant.id || idx + 1}`) : ''
           const combo2 = normalizeSku(`OFFER-${product.id}-${variant.id || idx + 1}`)
 
           let targetPrice: number | undefined
-          if (vSku && skuPriceMap.has(vSku)) targetPrice = skuPriceMap.get(vSku)
+          if (vSkuNorm && skuPriceMap.has(vSkuNorm)) targetPrice = skuPriceMap.get(vSkuNorm)
+          else if (vSkuLower && skuPriceMap.has(vSkuLower)) targetPrice = skuPriceMap.get(vSkuLower)
           else if (vId && skuPriceMap.has(vId)) targetPrice = skuPriceMap.get(vId)
           else if (combo1 && skuPriceMap.has(combo1)) targetPrice = skuPriceMap.get(combo1)
           else if (combo2 && skuPriceMap.has(combo2)) targetPrice = skuPriceMap.get(combo2)
 
           if (targetPrice != null && Number(variant.price) !== targetPrice) {
             productChanged = true
-            updatedVariantsInProduct++
+            modifiedVariantRows.push({ id: String(variant.id), price: targetPrice })
             return { ...variant, price: targetPrice }
           }
           return variant
@@ -179,12 +249,14 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        const pSku = normalizeSku(product.sku)
-        const pId = normalizeSku(product.id)
+        const pSkuNorm = normalizeSku(product.sku)
+        const pSkuLower = String(product.sku || '').trim().toLowerCase()
+        const pId = String(product.id || '').trim().toLowerCase()
         const comboOffer = normalizeSku(`OFFER-${product.id}`)
 
         let targetPrice: number | undefined
-        if (pSku && skuPriceMap.has(pSku)) targetPrice = skuPriceMap.get(pSku)
+        if (pSkuNorm && skuPriceMap.has(pSkuNorm)) targetPrice = skuPriceMap.get(pSkuNorm)
+        else if (pSkuLower && skuPriceMap.has(pSkuLower)) targetPrice = skuPriceMap.get(pSkuLower)
         else if (pId && skuPriceMap.has(pId)) targetPrice = skuPriceMap.get(pId)
         else if (comboOffer && skuPriceMap.has(comboOffer)) targetPrice = skuPriceMap.get(comboOffer)
 
@@ -196,27 +268,34 @@ export async function POST(request: NextRequest) {
       }
 
       if (productChanged) {
-        totalUpdatedPositions += updatedVariantsInProduct
+        totalUpdatedPositions += modifiedVariantRows.length
         productsUpdatedCount++
 
-        const drizzle = (payload.db as any)?.drizzle
-        if (drizzle && hasVariants) {
-          for (const variant of updatedVariants) {
-            const vSku = normalizeSku(variant.sku)
-            const vId = normalizeSku(variant.id)
-            if ((vSku && skuPriceMap.has(vSku)) || (vId && skuPriceMap.has(vId))) {
-              await drizzle.execute(sql`UPDATE "products_variants" SET "price" = ${variant.price} WHERE "id" = ${variant.id}`)
+        if (drizzle) {
+          try {
+            for (const row of modifiedVariantRows) {
+              await drizzle.execute({
+                sql: 'UPDATE "products_variants" SET "price" = $1 WHERE "id" = $2',
+                args: [row.price, row.id],
+              })
             }
+            await drizzle.execute({
+              sql: 'UPDATE "products" SET "price" = $1, "updated_at" = NOW() WHERE "id" = $2',
+              args: [newProductPrice, product.id],
+            })
+          } catch {
+            const updateData: Record<string, any> = { price: newProductPrice }
+            if (hasVariants) updateData.variants = updatedVariants
+            await payload.update({
+              collection: 'products',
+              id: product.id,
+              overrideAccess: true,
+              data: updateData,
+            })
           }
-          await drizzle.execute(sql`UPDATE "products" SET "price" = ${newProductPrice}, "updated_at" = NOW() WHERE "id" = ${product.id}`)
         } else {
-          const updateData: Record<string, any> = {
-            price: newProductPrice,
-          }
-          if (hasVariants) {
-            updateData.variants = updatedVariants
-          }
-
+          const updateData: Record<string, any> = { price: newProductPrice }
+          if (hasVariants) updateData.variants = updatedVariants
           await payload.update({
             collection: 'products',
             id: product.id,
