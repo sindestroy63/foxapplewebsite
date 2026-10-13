@@ -127,32 +127,40 @@ export async function POST(request: NextRequest) {
           .filter((n) => Number.isInteger(n) && n > 0)
 
         try {
-          const pRes = await drizzle.execute({
-            sql: 'SELECT id FROM "products" WHERE LOWER("sku") = ANY($1)',
-            args: [lowerList],
-          })
-          for (const r of (pRes.rows || pRes) as any[]) {
-            if (r.id != null) matchedProductIds.add(Number(r.id))
-          }
+          if (lowerList.length > 0) {
+            const pRes = await drizzle.execute(sql`
+              SELECT "id" FROM "products" WHERE LOWER("sku") IN (${sql.join(lowerList.map((s) => sql`${s}`), sql`, `)})
+            `)
+            for (const r of (pRes.rows || pRes) as any[]) {
+              if (r.id != null) matchedProductIds.add(Number(r.id))
+            }
 
-          const vRes = await drizzle.execute({
-            sql: 'SELECT "_parent_id" AS id FROM "products_variants" WHERE LOWER("sku") = ANY($1) OR LOWER("id") = ANY($2)',
-            args: [lowerList, hexIds.length > 0 ? hexIds : lowerList],
-          })
-          for (const r of (vRes.rows || vRes) as any[]) {
-            if (r.id != null) matchedProductIds.add(Number(r.id))
+            const vConditions = [
+              sql`LOWER("sku") IN (${sql.join(lowerList.map((s) => sql`${s}`), sql`, `)})`,
+            ]
+            if (hexIds.length > 0) {
+              vConditions.push(sql`LOWER("id") IN (${sql.join(hexIds.map((s) => sql`${s}`), sql`, `)})`)
+            }
+
+            const vRes = await drizzle.execute(sql`
+              SELECT "_parent_id" AS id FROM "products_variants" WHERE ${sql.join(vConditions, sql` OR `)}
+            `)
+            for (const r of (vRes.rows || vRes) as any[]) {
+              if (r.id != null) matchedProductIds.add(Number(r.id))
+            }
           }
 
           if (numIds.length > 0) {
-            const numRes = await drizzle.execute({
-              sql: 'SELECT id FROM "products" WHERE id = ANY($1)',
-              args: [numIds],
-            })
+            const numRes = await drizzle.execute(sql`
+              SELECT "id" FROM "products" WHERE "id" IN (${sql.join(numIds.map((n) => sql`${n}`), sql`, `)})
+            `)
             for (const r of (numRes.rows || numRes) as any[]) {
               if (r.id != null) matchedProductIds.add(Number(r.id))
             }
           }
-        } catch {}
+        } catch (dbErr) {
+          payload.logger.error({ err: dbErr }, 'Drizzle search query failed')
+        }
       }
     }
 
@@ -274,16 +282,15 @@ export async function POST(request: NextRequest) {
         if (drizzle) {
           try {
             for (const row of modifiedVariantRows) {
-              await drizzle.execute({
-                sql: 'UPDATE "products_variants" SET "price" = $1 WHERE "id" = $2',
-                args: [row.price, row.id],
-              })
+              await drizzle.execute(sql`
+                UPDATE "products_variants" SET "price" = ${row.price} WHERE "id" = ${row.id}
+              `)
             }
-            await drizzle.execute({
-              sql: 'UPDATE "products" SET "price" = $1, "updated_at" = NOW() WHERE "id" = $2',
-              args: [newProductPrice, product.id],
-            })
-          } catch {
+            await drizzle.execute(sql`
+              UPDATE "products" SET "price" = ${newProductPrice}, "updated_at" = NOW() WHERE "id" = ${product.id}
+            `)
+          } catch (dbErr) {
+            payload.logger.error({ err: dbErr }, 'Drizzle price update failed, falling back to payload.update')
             const updateData: Record<string, any> = { price: newProductPrice }
             if (hasVariants) updateData.variants = updatedVariants
             await payload.update({
