@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getPayload } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
 import config from '@payload-config'
 import { productCanonicalUrl } from '@/lib/product-url'
 
@@ -51,11 +52,8 @@ export async function POST(request: NextRequest) {
 
     const providedToken = headerToken || queryToken || bearerToken
 
-    if (webhookSecret && providedToken !== webhookSecret) {
+    if (!webhookSecret || !providedToken || providedToken !== webhookSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    if (!webhookSecret && !providedToken) {
-      return NextResponse.json({ error: 'Webhook secret is not configured' }, { status: 401 })
     }
 
     let body: unknown
@@ -107,10 +105,17 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < targetSkus.length; i += CHUNK_SIZE) {
       const chunk = targetSkus.slice(i, i + CHUNK_SIZE)
       const numericIds = chunk.map((s) => Number(s)).filter((n) => Number.isInteger(n) && n > 0)
+      const termsSet = new Set<string>()
+      for (const item of chunk) {
+        termsSet.add(item)
+        termsSet.add(item.toUpperCase())
+        termsSet.add(item.toLowerCase())
+      }
+      const searchTerms = Array.from(termsSet)
       const orConditions: any[] = [
-        { sku: { in: chunk } },
-        { 'variants.sku': { in: chunk } },
-        { 'variants.id': { in: chunk } },
+        { sku: { in: searchTerms } },
+        { 'variants.sku': { in: searchTerms } },
+        { 'variants.id': { in: searchTerms } },
       ]
       if (numericIds.length > 0) {
         orConditions.push({ id: { in: numericIds } })
@@ -194,19 +199,31 @@ export async function POST(request: NextRequest) {
         totalUpdatedPositions += updatedVariantsInProduct
         productsUpdatedCount++
 
-        const updateData: Record<string, any> = {
-          price: newProductPrice,
-        }
-        if (hasVariants) {
-          updateData.variants = updatedVariants
-        }
+        const drizzle = (payload.db as any)?.drizzle
+        if (drizzle && hasVariants) {
+          for (const variant of updatedVariants) {
+            const vSku = normalizeSku(variant.sku)
+            const vId = normalizeSku(variant.id)
+            if ((vSku && skuPriceMap.has(vSku)) || (vId && skuPriceMap.has(vId))) {
+              await drizzle.execute(sql`UPDATE "products_variants" SET "price" = ${variant.price} WHERE "id" = ${variant.id}`)
+            }
+          }
+          await drizzle.execute(sql`UPDATE "products" SET "price" = ${newProductPrice}, "updated_at" = NOW() WHERE "id" = ${product.id}`)
+        } else {
+          const updateData: Record<string, any> = {
+            price: newProductPrice,
+          }
+          if (hasVariants) {
+            updateData.variants = updatedVariants
+          }
 
-        await payload.update({
-          collection: 'products',
-          id: product.id,
-          overrideAccess: true,
-          data: updateData,
-        })
+          await payload.update({
+            collection: 'products',
+            id: product.id,
+            overrideAccess: true,
+            data: updateData,
+          })
+        }
 
         const canonicalPath = productCanonicalUrl({
           slug: product.slug,
