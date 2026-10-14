@@ -38,7 +38,8 @@ interface WebhookPayload {
   }>
 }
 
-async function fetchMoySkladJson(url: string, token: string) {
+async function fetchMoySkladJson(url: string, token?: string) {
+  if (!token) return null
   try {
     const res = await fetch(url, {
       headers: {
@@ -60,8 +61,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const configuredToken = process.env.MOYSKLAD_WEBHOOK_TOKEN || process.env.MOYSKLAD_TOKEN || '03b076486453ce090a8f28978a12af9a6dfbe137'
-    const apiToken = process.env.MOYSKLAD_API_TOKEN || process.env.MOYSKLAD_TOKEN || '03b076486453ce090a8f28978a12af9a6dfbe137'
+    const configuredToken = process.env.MOYSKLAD_WEBHOOK_TOKEN || process.env.MOYSKLAD_TOKEN
+    const apiToken = process.env.MOYSKLAD_API_TOKEN || process.env.MOYSKLAD_TOKEN
 
     const headerToken = request.headers.get('x-webhook-token') || request.headers.get('x-hook-secret')
     const queryToken = request.nextUrl.searchParams.get('token') || request.nextUrl.searchParams.get('secret')
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     const providedToken = headerToken || queryToken || bearerToken
 
-    if (configuredToken && providedToken !== configuredToken) {
+    if (!configuredToken || providedToken !== configuredToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
