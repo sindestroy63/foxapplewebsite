@@ -41,9 +41,10 @@ export async function middleware(request: NextRequest) {
 
   // 2. Check dynamic redirects (database)
   try {
-    const response = await fetch(`${request.nextUrl.origin}/api/check-redirect?path=${encodeURIComponent(normalizedPath)}`, {
+    const response = await fetch(`http://127.0.0.1:3000/api/check-redirect?path=${encodeURIComponent(normalizedPath)}`, {
       method: 'GET',
       headers: { 'x-middleware': 'true' },
+      signal: AbortSignal.timeout(500),
     })
 
     if (response.ok) {
