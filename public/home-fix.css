@@ -90,3 +90,28 @@
     height: 240px !important;
   }
 }
+
+@media (max-width: 860px) {
+  .hero.hero-reel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: calc(100% - 16px) !important;
+    margin: 8px auto !important;
+    padding: 20px 16px !important;
+    border-radius: 20px !important;
+  }
+  .hero-reel-copy {
+    max-width: 100% !important;
+    text-align: center !important;
+  }
+  .hero-reel-copy h1 {
+    font-size: 28px !important;
+  }
+  .hero-reel-media {
+    height: 200px !important;
+    width: 100% !important;
+  }
+  .catalog-group-card {
+    border-radius: 16px !important;
+  }
+}
