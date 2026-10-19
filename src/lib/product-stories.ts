@@ -20,6 +20,187 @@ export type ProductStoryData = {
 }
 
 export const STORIES: Record<string, ProductStoryData> = {
+  "ipad-11": {
+    hero: {
+      image: "/stories/ipad-11/00.png",
+      title: "Apple iPad 11\" (A16, 2025)",
+      subtitle: "Еще больше удовольствия в руках",
+      description: "Теперь со сверхбыстрым чипом A16. Удвоенный объем памяти — 128 ГБ. ◊ Яркий и стильный дизайн. 11-дюймовым экран Liquid Retina. ◊ Поддержка Magic Keyboard Folio, Apple Pencil (USB‑C) и Apple Pencil (1-го поколения) ◊",
+    },
+    cards: [
+      {
+        image: "/stories/ipad-11/01.png",
+        title: "Еще больше удовольствия в руках",
+        text: "Теперь со сверхбыстрым чипом A16. Удвоенный объем памяти — 128 ГБ. ◊ Яркий и стильный дизайн. 11-дюймовым экран Liquid Retina. ◊ Поддержка Magic Keyboard Folio, Apple Pencil (USB‑C) и Apple Pencil (1-го поколения) ◊",
+      },
+      {
+        image: "/stories/ipad-11/02.png",
+        title: "Ускорьте процесс своей работы",
+        text: "Работайте в режиме многозадачности, делитесь проектами и легко переключайтесь между приложениями благодаря мощному чипу А16 и батарее, которой хватит на весь день ◊",
+      },
+      {
+        image: "/stories/ipad-11/03.jpg",
+        title: "Дайте волю своему творчеству",
+        text: "Самовыражайтесь, рисуйте и генерируйте идеи, используя Apple Pencil, на захватывающем экране. Снимайте, редактируйте и делитесь контентом — на iPad можно делать все. Создавайте музыкальные проекты с помощью встроенных качественных микрофоно",
+      },
+      {
+        image: "/stories/ipad-11/04.png",
+        title: "Будьте на связи. Оставайтесь в кадре",
+        text: "Наслаждайтесь более естественными видеозвонками в альбомном режиме с функцией Centre Stage. Оставайтесь на связи с коллегами и близкими по Wi-Fi 6 и 5G ◊",
+      },
+      {
+        image: "/stories/ipad-11/05.png",
+        title: "Смотри. Учись. Играй",
+        text: "Смотрите фильмы, учитесь у мастеров и играйте в сетевые игры на великолепном экране. Погружайтесь в новые миры вместе с технологией AR",
+      },
+      {
+        image: "/stories/ipad-11/06.png",
+        title: "Аксессуары, с которыми будет проще",
+        text: "С помощью Magic Keyboard Folio удобно набирать текст и выполнять точные задачи. Рисуйте, делайте заметки и оставляйте комментарии в документах с помощью Apple Pencil",
+      },
+    ],
+  },
+  "watch-ultra-4": {
+    hero: {
+      image: "/stories/watch-ultra-4/00.jpg",
+      title: "Apple Watch Ultra 4",
+      subtitle: "49 мм, титан, GPS + Cellular",
+      description: "Умные часы Apple Watch Ultra 4 GPS+Cellular, 49 мм, Natural Titanium.",
+    },
+    cards: [
+      {
+        image: "/stories/watch-ultra-4/01.jpg",
+        title: "49 мм",
+        text: "Корпус 49 мм. Самый крупный размер линейки Ultra.",
+      },
+      {
+        image: "/stories/watch-ultra-4/02.jpg",
+        title: "Титан",
+        text: "Natural Titanium. Цвет и материал с карточки re-store.",
+      },
+      {
+        image: "/stories/watch-ultra-4/03.jpg",
+        title: "GPS + Cellular",
+        text: "Версия с сотовой связью: звонки и сообщения без iPhone рядом.",
+      },
+      {
+        image: "/stories/watch-ultra-4/04.jpg",
+        title: "Ремешок Natural",
+        text: "В комплекте этой версии ремешок Natural Titanium.",
+      },
+    ],
+  },
+  "ipad-pro-m5": {
+    hero: {
+      image: "/stories/ipad-pro-m5/01.jpg",
+      title: "Apple iPad Pro (M5, 2025)",
+      subtitle: "Чип М5. Скорость без компромиссов.",
+      description: "Новый этап ИИ на iPad. Экран Ultra Retina XDR в 11 и 13 дюймах.",
+    },
+    cards: [
+      {
+        image: "/stories/ipad-pro-m5/02.png",
+        title: "Чип М5",
+        text: "Скорость без компромиссов. Новый этап ИИ на iPad.",
+      },
+      {
+        image: "/stories/ipad-pro-m5/03.png",
+        title: "iPadOS 26",
+        text: "Полностью обновлён. Возможности нового уровня.",
+      },
+      {
+        image: "/stories/ipad-pro-m5/04.png",
+        title: "Ultra Retina XDR",
+        text: "Передовой дисплей в компактном 11-дюймовом и просторном 13-дюймовом iPad Pro.",
+      },
+      {
+        image: "/stories/ipad-pro-m5/05.jpg",
+        title: "Тонкий и лёгкий",
+        text: "Невероятно тонкий дизайн и мощность, которую можно носить с собой.",
+      },
+      {
+        image: "/stories/ipad-pro-m5/06.png",
+        title: "Весь день без розетки",
+        text: "Батареи хватает на весь день.",
+      },
+    ],
+  },
+  "ipad-air-m4": {
+    hero: {
+      image: "/stories/ipad-air-m4/hero.png",
+      title: "Apple iPad Air (M4, 2026)",
+      subtitle: "Чип Apple M4",
+      description: "Невероятная производительность и передовая графика. Версии 11 и 13 дюймов.",
+    },
+    cards: [
+      {
+        image: "/stories/ipad-air-m4/01.jpg",
+        title: "Чип M4",
+        text: "Невероятная производительность и передовая графика.",
+      },
+      {
+        image: "/stories/ipad-air-m4/02.png",
+        title: "iPadOS",
+        text: "Задачи выполняются легко и интуитивно.",
+      },
+      {
+        image: "/stories/ipad-air-m4/03.png",
+        title: "11″ и 13″",
+        text: "Потрясающий дисплей Liquid Retina.",
+      },
+      {
+        image: "/stories/ipad-air-m4/04.png",
+        title: "Apple Pencil Pro",
+        text: "Мощные возможности для творчества.",
+      },
+      {
+        image: "/stories/ipad-air-m4/05.png",
+        title: "Magic Keyboard",
+        text: "Комфортный набор текста, большой трекпад и ряд функций.",
+      },
+    ],
+  },
+  "iphone-duo": {
+    hero: {
+      image: "/stories/iphone-duo/hero.jpg",
+      title: "iPhone Duo",
+      subtitle: "Больше экран. Больше впечатлений.",
+      description: "Складной iPhone с двумя камерами Fusion 48 Мп, чипом A20 Pro и титановой рамкой.",
+    },
+    cards: [
+      {
+        image: "/stories/iphone-duo/01.png",
+        title: "Больше экран",
+        text: "Больше способов смотреть, работать и снимать.",
+      },
+      {
+        image: "/stories/iphone-duo/02.png",
+        title: "iOS",
+        text: "Новые возможности системы на большом экране.",
+      },
+      {
+        image: "/stories/iphone-duo/03.png",
+        title: "Две камеры Fusion 48 Мп",
+        text: "Новые способы съёмки.",
+      },
+      {
+        image: "/stories/iphone-duo/04.png",
+        title: "Чип A20 Pro",
+        text: "Испарительное охлаждение и производительность уровня Pro.",
+      },
+      {
+        image: "/stories/iphone-duo/05.png",
+        title: "Два аккумулятора",
+        text: "Энергии хватает на весь день.",
+      },
+      {
+        image: "/stories/iphone-duo/06.png",
+        title: "Титан",
+        text: "Титановая рамка. Красиво и прочно.",
+      },
+    ],
+  },
+
   "iphone-18-pro": {
     hero: {
       image: "/stories/iphone-18-pro/intro.png",
@@ -645,34 +826,7 @@ export const STORIES: Record<string, ProductStoryData> = {
     ],
   },
   
-  "ipad-11": {
-    hero: {
-      image: "/api/media/file/blue-9.jpg",
-      title: "iPad 11 (A16, 2025)",
-      subtitle: "Яркий, универсальный и доступный",
-      description: "Классический iPad с обновленным чипом A16 Bionic, большим дисплеем Liquid Retina 11 дюймов и четырьмя выразительными цветами корпуса.",
-    },
-    cards: [
-      {
-        image: "/api/media/file/blue-9.jpg",
-        title: "Дисплей Liquid Retina 11 дюймов",
-        text: "Большой дисплей от края до края с высоким разрешением идеально подходит для учебы, просмотра видео и повседневных задач.",
-        badge: "Экран",
-      },
-      {
-        image: "/api/media/file/pink-12.jpg",
-        title: "Четыре ярких цвета корпуса",
-        text: "Корпус из прочного переработанного алюминия в цветах Silver, Blue, Pink и Yellow под ваш индивидуальный стиль.",
-        badge: "Дизайн",
-      },
-      {
-        image: "/api/media/file/yellow.jpg",
-        title: "Камеры 12 Мп и Touch ID",
-        text: "Фронтальная камера с функцией «В центре внимания» для видеосвязи, порт USB-C и быстрый сенсор Touch ID в кнопке включения.",
-        badge: "Удобство",
-      },
-    ],
-  },
+
   "ipad-pro": {
     hero: {
       image: "/stories/ipad-pro/hero.jpg",
@@ -729,34 +883,7 @@ export const STORIES: Record<string, ProductStoryData> = {
       },
     ],
   },
-  "watch-ultra-4": {
-    hero: {
-      image: "/stories/watch-ultra/intro.jpg",
-      title: "Apple Watch Ultra 4",
-      subtitle: "Новое поколение флагманских часов для спорта и приключений",
-      description: "Сверхпрочный титановый корпус, новый уровень энергоэффективности, спутниковая связь и расширенные метрики мониторинга здоровья.",
-    },
-    cards: [
-      {
-        image: "/stories/watch-ultra/display.png",
-        title: "Титановый корпус и сапфировое стекло",
-        text: "Максимальная защита от ударов, песка и воды для экстремальных видов спорта и повседневной носки.",
-        badge: "Титан",
-      },
-      {
-        image: "/stories/watch-ultra/power.png",
-        title: "Увеличенная автономность",
-        text: "До 72 часов работы в режиме низкого энергопотребления для многодневных походов.",
-        badge: "Автономность",
-      },
-      {
-        image: "/stories/watch-ultra/run.jpg",
-        title: "Глубиномер и сертификат EN13319",
-        text: "Встроенные датчики глубины и температуры воды для дайвинга и водных видов спорта.",
-        badge: "Водозащита 100м",
-      },
-    ],
-  },
+
 
 
   "samsung-galaxy-s": {
@@ -1009,34 +1136,7 @@ export const STORIES: Record<string, ProductStoryData> = {
       },
     ],
   },
-  "iphone-duo": {
-    hero: {
-      image: "/stories/iphone-duo/intro.png",
-      title: "iPhone Duo",
-      subtitle: "Больше экран. Больше впечатлений",
-      description: "Новый складной форм-фактор iPhone. В сложенном виде — привычный эргономичный смартфон. В раскрытом — огромное рабочее пространство с новыми возможностями многозадачности iOS, камерами Fusion 48 МП и чипом A20 Pro.",
-    },
-    cards: [
-      {
-        image: "/stories/iphone-duo/size.png",
-        title: "Два экрана в одном корпусе",
-        text: "Компактный внешний дисплей для быстрых задач и просторный внутренний экран для игр, видео и работы.",
-        badge: "Форм-фактор",
-      },
-      {
-        image: "/stories/iphone-duo/fusion.png",
-        title: "Система камер Fusion 48 МП",
-        text: "Новые способы съемки, поддержка гибких углов установки и профессиональное качество фото в любых условиях.",
-        badge: "Камера",
-      },
-      {
-        image: "/stories/iphone-duo/ios.png",
-        title: "Многозадачность нового поколения",
-        text: "Удобное разделение экрана, одновременная работа в двух приложениях и мгновенный перенос файлов между окнами.",
-        badge: "Многозадачность",
-      },
-    ],
-  },
+
   "galaxy-buds": {
     hero: {
       image: "/stories/galaxy-buds/01.png",
@@ -1902,40 +2002,7 @@ export const STORIES: Record<string, ProductStoryData> = {
       },
     ],
   },
-  "ipad-air-m4": {
-    hero: {
-      image: "/api/media/file/49695137_762_q70.webp",
-      title: "iPad Air (M4, 2026)",
-      subtitle: "Невероятная мощь чипа M4 в ультратонком дизайне",
-      description: "iPad Air нового поколения на сверхмощном процессоре Apple M4 с поддержкой Apple Intelligence, великолепным дисплеем Liquid Retina и поддержкой Apple Pencil Pro.",
-    },
-    cards: [
-      {
-        image: "/stories/ipad-pro/chip.png",
-        title: "Чип Apple M4",
-        text: "Феноменальная скорость работы, поддержка передовых функций ИИ Apple Intelligence и графическая производительность консольного уровня.",
-        badge: "Процессор",
-      },
-      {
-        image: "/stories/ipad-pro/display.png",
-        title: "Дисплей Liquid Retina",
-        text: "Высокая яркость, точная цветопередача P3, технологии True Tone и антибликовое покрытие для комфортной работы в любых условиях.",
-        badge: "Экран",
-      },
-      {
-        image: "/stories/ipad-pro/intro.png",
-        title: "Тонкий корпус и автономность на весь день",
-        text: "Легкий алюминиевый корпус и энергоэффективная архитектура M4 обеспечивают до 10 часов непрерывной работы без подзарядки.",
-        badge: "Дизайн",
-      },
-      {
-        image: "/stories/apple-pencil/intro.jpg",
-        title: "Поддержка Apple Pencil Pro",
-        text: "Продвинутые жесты сжатия, тактильный отклик и гироскоп для точного рисования, черчения и мгновенных заметок.",
-        badge: "Творчество",
-      },
-    ],
-  },
+
   "ipad-11-a16": {
     hero: {
       image: "/api/media/file/silver-11.jpg",
@@ -3428,8 +3495,8 @@ export const PRODUCT_MAP: Record<number, string> = {
   32: "airpods-4-anc",
   47: "airpods-pro",
   63: "airpods-max",
-  57: "ipad-pro",
-  56: "ipad-pro",
+  57: "ipad-pro-m5",
+  56: "ipad-air-m4",
   10: "ipad-11",
   28: "watch-ultra-3",
   165: "watch-ultra-4",
@@ -3534,8 +3601,8 @@ export function getStoryForProduct(product: Product): ProductStoryData | null {
   }
   const str = `${product.slug || ""} ${product.name || ""} ${product.model || ""}`.toLowerCase()
 
-  if (/ipad.*air|m4.*2026/i.test(str)) return pick("ipad-air-m4")
-  if (/ipad.*11|a16.*2025/i.test(str)) return pick("ipad-11-a16")
+  if (/ipad.*air/i.test(str)) return pick("ipad-air-m4")
+  if (/ipad.*11|a16.*2025/i.test(str)) return pick("ipad-11")
   if (/watch.*series.*11/i.test(str)) return pick("watch-series-11")
   if (/watch.*se|se.*2025/i.test(str)) return pick("watch-se-3")
   if (/macbook.*neo|a18\s*pro/i.test(str)) return pick("macbook-neo")
@@ -3588,7 +3655,7 @@ export function getStoryForProduct(product: Product): ProductStoryData | null {
   if (/iphone\s*18\s*pro|айфон\s*18\s*pro/i.test(str)) return pick("iphone-18-pro")
   if (/iphone\s*17\s*pro|айфон\s*17\s*pro/.test(str)) return pick("iphone-17-pro")
   if (/iphone\s*air|айфон\s*air/.test(str)) return pick("iphone-air")
-  if (/iphone\s*duo|айфон\s*duo/.test(str)) return pick("iphone-duo")
+  if (/iphone.*duo|айфон.*duo/i.test(str)) return pick("iphone-duo")
   if (/iphone\s*(17e|17\s*se)|айфон\s*(17e|17\s*se)/i.test(str)) return pick("iphone-17e")
   if (/iphone\s*17|айфон\s*17/i.test(str)) return pick("iphone-17")
   if (/macbook/.test(str)) return pick("macbook-pro")
@@ -3600,7 +3667,7 @@ export function getStoryForProduct(product: Product): ProductStoryData | null {
   if (/ray\s*ban/.test(str)) return pick("ray-ban-meta")
   if (/playstation\s*5|ps5\s*(pro|slim)/.test(str)) return pick("ps5-console")
   if (/dualsense/.test(str)) return pick("ps5-dualsense")
-  if (/watch\s*ultra/.test(str) && !/galaxy|samsung/.test(str)) return pick("watch-ultra")
+  if (/watch.*ultra/i.test(str) && !/galaxy|samsung/.test(str)) return pick("watch-ultra-4")
   if (/watch\s*series\s*12/.test(str) && !/galaxy|samsung/.test(str)) return pick("watch-series-12")
   if (/apple\s*watch|\bwatch\b/.test(str) && !/galaxy|samsung|fitbit/.test(str)) return pick("watch-series")
   if (/galaxy\s*z\s*fold|z\s*fold|z\s*flip/.test(str)) return pick("galaxy-z-fold8")
