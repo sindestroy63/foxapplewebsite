@@ -1,0 +1,92 @@
+.hero.hero-reel {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr) !important;
+  align-items: center !important;
+  width: min(1180px, calc(100% - 32px)) !important;
+  margin: 16px auto 12px !important;
+  padding: 32px 36px 28px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  background: #0a0a0a !important;
+  border-radius: 28px !important;
+  color: #fff !important;
+}
+.hero-reel-copy {
+  position: relative !important;
+  z-index: 2 !important;
+  max-width: 520px !important;
+  padding: 0 !important;
+}
+.hero-reel-copy h1,
+.hero-reel-copy .hero-subtitle,
+.hero-reel-copy .eyebrow {
+  color: #fff !important;
+}
+.hero-reel-copy h1 {
+  font-size: clamp(34px, 4vw, 52px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.03em !important;
+  margin: 10px 0 12px !important;
+}
+.hero-reel-copy .hero-subtitle {
+  max-width: 440px !important;
+  margin: 0 0 18px !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+.hero.hero-reel .hero-primary {
+  background: #fff !important;
+  color: #111 !important;
+  border-color: #fff !important;
+}
+.hero.hero-reel .hero-secondary {
+  background: transparent !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+.hero-reel-media {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: min(440px, 56vh) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.hero-reel-video {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+.catalog-group-card {
+  overflow: hidden !important;
+}
+.catalog-group-card img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #f3f3f5 !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+.site-main {
+  padding-bottom: calc(var(--bottom-ticker-height, 41px) + 28px) !important;
+}
+@media (max-width: 860px) {
+  .hero.hero-reel {
+    grid-template-columns: 1fr !important;
+    width: min(100% - 16px, 100%) !important;
+    padding: 22px 18px 20px !important;
+  }
+  .hero-reel-media {
+    height: 240px !important;
+  }
+}

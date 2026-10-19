@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { LeadForm } from '@/components/LeadForm'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
+import { ProductStory } from '@/components/ProductStory'
 import { RichText } from '@/components/RichText'
 import { getProductBySlugs, getSiteSettings } from '@/lib/cms'
 import { productCanonicalUrl } from '@/lib/product-url'
@@ -58,6 +59,7 @@ export default async function ProductPage({ params }: Props) {
           telegramUsername={settings.telegramUsername}
         />
       </div>
+      <ProductStory product={product} />
 
       <div className="container product-detail-bottom">
         <p className="offer-note detail-offer-note">Информация на сайте не является публичной офертой.</p>

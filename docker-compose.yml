@@ -52,6 +52,8 @@ services:
         condition: service_healthy
     volumes:
       - media_data:/app/media
+      - ./.next:/app/.next
+      - ./public:/app/public
 
   nginx:
     image: nginx:1.27-alpine
