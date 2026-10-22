@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check css links
+      - name: Check globals
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJjdXJsIiwgIi1zayIsICItSCIsICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiwgImh0dHBzOi8vMTI3LjAuMC4xL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE4LXByby1tYXgtMTRqZjFxIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKaHRtbCA9IHJlcy5zdGRvdXQgb3IgIiIKCmltcG9ydCByZQpsaW5rcyA9IHJlLmZpbmRhbGwocic8bGlua1tePl0qcmVsPSJzdHlsZXNoZWV0IltePl0qPicsIGh0bWwpCmZvciBsIGluIGxpbmtzOgogICAgcHJpbnQobCkKbGlua3MyID0gcmUuZmluZGFsbChyJzxsaW5rW14+XSpocmVmPSJbXiJdK1wuY3NzW14iXSoiW14+XSo+JywgaHRtbCkKZm9yIGwgaW4gbGlua3MyOgogICAgcHJpbnQobCkK | base64 -d > /tmp/check-css-links.py
-            python3 /tmp/check-css-links.py
-            rm -f /tmp/check-css-links.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJncmVwIiwgIi1uIiwgInJlc3RvcmUtY2FyZCIsICIvb3B0L2ZveGFwcGxlL3NyYy9hcHAvKGZyb250ZW5kKS9nbG9iYWxzLmNzcyJdLAogICAgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAopCnByaW50KCJHUkVQIEdMT0JBTFMuQ1NTIE9OIFNFUlZFUjoiKQpwcmludChyZXMuc3Rkb3V0IG9yICJOT05FIElOIEdMT0JBTFMuQ1NTIE9OIFNFUlZFUiEiKQo= | base64 -d > /tmp/check-globals-server.py
+            python3 /tmp/check-globals-server.py
+            rm -f /tmp/check-globals-server.py
