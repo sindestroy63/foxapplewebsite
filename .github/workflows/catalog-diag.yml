@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Find desc
+      - name: Print snippet
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJncmVwIC1ybiAncHJvZHVjdC1zaG9ydC1kZXNjcmlwdGlvbicgL29wdC9mb3hhcHBsZS8ubmV4dC8gMj4vZGV2L251bGwgfCBoZWFkIC0xMCIpCnNoKCJkb2NrZXIgZXhlYyBmb3hhcHBsZS1hcHAtMSBncmVwIC1ybiAncHJvZHVjdC1zaG9ydC1kZXNjcmlwdGlvbicgL2FwcC8gMj4vZGV2L251bGwgfCBoZWFkIC0xMCIpCnNoKCJkb2NrZXIgZXhlYyBmb3hhcHBsZS1hcHAtMSBwcyBhdXgiKQpzaCgibmV0c3RhdCAtdGxwbiB8IGdyZXAgMzAwMCIpCg== | base64 -d > /tmp/find-desc.py
-            python3 /tmp/find-desc.py
-            rm -f /tmp/find-desc.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJjdXJsIiwgIi1zayIsICItSCIsICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiwgImh0dHBzOi8vMTI3LjAuMC4xL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE4LXByby1tYXgtMTRqZjFxIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKaHRtbCA9IHJlcy5zdGRvdXQgb3IgIiIKCmlkeCA9IGh0bWwuZmluZCgiZGV0YWlsLWRlc2NyaXB0aW9uIikKcHJpbnQoIklOREVYOiIsIGlkeCkKaWYgaWR4ID49IDA6CiAgICBwcmludCgiPT09IFNOSVBQRVQgPT09IikKICAgIHByaW50KGh0bWxbbWF4KDAsIGlkeC0xMDApOmlkeCs1MDBdKQplbHNlOgogICAgcHJpbnQoImRldGFpbC1kZXNjcmlwdGlvbiBOT1QgRk9VTkQhIikK | base64 -d > /tmp/print-snippet.py
+            python3 /tmp/print-snippet.py
+            rm -f /tmp/print-snippet.py
