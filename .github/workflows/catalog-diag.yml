@@ -6,14 +6,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Get categories
+      - name: Check URLs
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
           username: root
           password: ${{ secrets.SSH_PASSWORD }}
-          command_timeout: 3m
+          command_timeout: 4m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBwc3FsKHNxbCk6CiAgICBwcm9jID0gc3VicHJvY2Vzcy5ydW4oCiAgICAgICAgWyJkb2NrZXIiLCAiZXhlYyIsICItaSIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLVAiLCAicGFnZXI9b2ZmIiwgIi12IiwgIk9OX0VSUk9SX1NUT1A9MSJdLAogICAgICAgIGlucHV0PXNxbCwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAogICAgKQogICAgcHJpbnQocHJvYy5zdGRvdXQgb3IgIiIpCiAgICBpZiBwcm9jLnJldHVybmNvZGU6CiAgICAgICAgcHJpbnQocHJvYy5zdGRlcnIgb3IgIiIpCgpwc3FsKCIiIgpTRUxFQ1QgaWQsIG5hbWUsIHNsdWcgRlJPTSBjYXRlZ29yaWVzIE9SREVSIEJZIGlkOwpTRUxFQ1QgRElTVElOQ1QgcHJvZHVjdF9ncm91cCBGUk9NIHByb2R1Y3RzOwpTRUxFQ1QgcC5pZCwgcC5uYW1lLCBwLnNsdWcsIGMuc2x1ZyBBUyBjYXRfc2x1ZywgcC5wcm9kdWN0X2dyb3VwCkZST00gcHJvZHVjdHMgcApMRUZUIEpPSU4gY2F0ZWdvcmllcyBjIE9OIGMuaWQgPSBwLmNhdGVnb3J5X2lkCldIRVJFIHAubmFtZSBJTElLRSAnJTE3IFBybyUnIE9SIHAubmFtZSBJTElLRSAnJWlQYWQlJyBPUiBwLm5hbWUgSUxJS0UgJyVXYXRjaCUnCkxJTUlUIDIwOwoiIiIpCg== | base64 -d > /tmp/get-cats.py
-            python3 /tmp/get-cats.py
-            rm -f /tmp/get-cats.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnVybHMgPSBbCiAgICAiL2NhdGFsb2ciLAogICAgIi9jYXRhbG9nP2JyYW5kPUFwcGxlIiwKICAgICIvY2F0YWxvZz9ncm91cD1zbWFydHBob25lcyIsCiAgICAiL2NhdGFsb2c/Z3JvdXA9dGFibGV0cyIsCiAgICAiL2NhdGFsb2c/Z3JvdXA9c21hcnQtd2F0Y2hlcyIsCiAgICAiL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE3LXBybyIsCiAgICAiL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE3LXByby1tYXgiLAogICAgIi9jYXRhbG9nL3RhYmxldHMvaXBhZCIsCiAgICAiL2NhdGFsb2cvc21hcnQtd2F0Y2hlcy9hcHBsZS13YXRjaC1zZXJpZXMtMTEiLApdCgpmb3IgdSBpbiB1cmxzOgogICAgcmVzID0gc3VicHJvY2Vzcy5ydW4oCiAgICAgICAgWyJjdXJsIiwgIi1zayIsICItbyIsICIvZGV2L251bGwiLCAiLXciLCAiJXtodHRwX2NvZGV9IHRpbWU6ICV7dGltZV90b3RhbH1cXG4iLCAiLUgiLCAiSG9zdDogeG4tLW4xYWFnY2ZqaS54bi0tcDFhaSIsIGYiaHR0cHM6Ly8xMjcuMC4wLjF7dX0iXSwKICAgICAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCiAgICApCiAgICBwcmludChmInt1OjQ1fSAtPiB7cmVzLnN0ZG91dC5zdHJpcCgpfSIpCgpjbWQgPSAiIiJjdXJsIC1zayAtSCAiSG9zdDogeG4tLW4xYWFnY2ZqaS54bi0tcDFhaSIgImh0dHBzOi8vMTI3LjAuMC4xL2NhdGFsb2c/YnJhbmQ9QXBwbGUiIHwgZ3JlcCAtb0UgJzwoaDJ8aDN8c3BhbnxhKVtePl0qPihpUGhvbmUgMTcgUHJvfEFwcGxlIFdhdGNofGlQYWQpW148XSonIHwgaGVhZCAtMjAiIiIKcmVzID0gc3VicHJvY2Vzcy5ydW4oY21kLCBzaGVsbD1UcnVlLCB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUpCnByaW50KCJcbklURU1TIEZPVU5EIE9OIC9jYXRhbG9nP2JyYW5kPUFwcGxlOlxuIiArIHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/check-all-urls.py
+            python3 /tmp/check-all-urls.py
+            rm -f /tmp/check-all-urls.py
