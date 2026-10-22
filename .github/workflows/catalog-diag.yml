@@ -12,8 +12,8 @@ jobs:
           host: 72.56.34.120
           username: root
           password: ${{ secrets.SSH_PASSWORD }}
-          command_timeout: 3m
+          command_timeout: 2m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKaW1wb3J0IHRpbWUKdGltZS5zbGVlcCg4KQpjbWQgPSBbCiAgICAiY3VybCIsICItc2siLCAiLS1tYXgtdGltZSIsICIyNSIsCiAgICAiLUgiLCAiSG9zdDogeG4tLW4xYWFnY2ZqaS54bi0tcDFhaSIsCiAgICAiaHR0cHM6Ly8xMjcuMC4wLjEvY2F0YWxvZy9zbWFydHBob25lcy9pcGhvbmUtMTgtcHJvLWM4NjZvZyIsCl0KcHJvYyA9IHN1YnByb2Nlc3MucnVuKGNtZCwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQpodG1sID0gcHJvYy5zdGRvdXQgb3IgIiIKcHJpbnQoInN0YXR1c19ieXRlcyIsIGxlbihodG1sKSwgImVyciIsIChwcm9jLnN0ZGVyciBvciAiIilbOjIwMF0pCmZvciBuZWVkbGUgaW4gKCJTSU0gKyBlU0lNIiwgImVTSU0iLCAiMTIyOTkwIiwgIjEyMDk5MCIsICIxMTU5OTAiLCAiMTE2OTkwIiwgItCSINC90LDQu9C40YfQuNC4IiwgItCd0LXRgiDQsiDQvdCw0LvQuNGH0LjQuCIpOgogICAgcHJpbnQobmVlZGxlLCBodG1sLmNvdW50KG5lZWRsZSkpCnByaW50KHN1YnByb2Nlc3MucnVuKFsiZG9ja2VyIiwgInBzIiwgIi0tZm9ybWF0IiwgInt7Lk5hbWVzfX0ge3suU3RhdHVzfX0iXSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKS5zdGRvdXQpCg== | base64 -d > /tmp/catalog-verify.py
-            python3 /tmp/catalog-verify.py
-            rm -f /tmp/catalog-verify.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKaHRtbCA9IHN1YnByb2Nlc3MuY2hlY2tfb3V0cHV0KAogICAgWyJjdXJsIiwgIi1zayIsICItLW1heC10aW1lIiwgIjI1IiwgIi1IIiwgIkhvc3Q6IHhuLS1uMWFhZ2NmamkueG4tLXAxYWkiLCAiaHR0cHM6Ly8xMjcuMC4wLjEvY2F0YWxvZy9zbWFydHBob25lcy9pcGhvbmUtMTgtcHJvLWM4NjZvZyJdLAogICAgdGV4dD1UcnVlLAogICAgZXJyb3JzPSJyZXBsYWNlIiwKKQpwcmludCgiaW5fc3RvY2siLCBodG1sLmNvdW50KCJpbl9zdG9jayIpLCAib3V0X29mX3N0b2NrIiwgaHRtbC5jb3VudCgib3V0X29mX3N0b2NrIikpCnByaW50KCJzdG9ja1F0eSIsIGh0bWwuY291bnQoInN0b2NrUXR5IiksICJzdG9ja19xdHkiLCBodG1sLmNvdW50KCJzdG9ja19xdHkiKSkKaWR4ID0gaHRtbC5maW5kKCJTSU1fRVNJTSIpCnByaW50KCJzaW1fZXNpbV9pZHgiLCBpZHgpCmlmIGlkeCA+PSAwOgogICAgcHJpbnQoaHRtbFttYXgoMCwgaWR4LTEyMCk6aWR4KzE4MF0ucmVwbGFjZSgiXG4iLCAiICIpKQppZHggPSBodG1sLmZpbmQoIjEyMjk5MCIpCnByaW50KCJwcmljZV9pZHgiLCBpZHgpCmlmIGlkeCA+PSAwOgogICAgcHJpbnQoaHRtbFttYXgoMCwgaWR4LTE4MCk6aWR4KzgwXS5yZXBsYWNlKCJcbiIsICIgIikpCg== | base64 -d > /tmp/catalog-html.py
+            python3 /tmp/catalog-html.py
+            rm -f /tmp/catalog-html.py
