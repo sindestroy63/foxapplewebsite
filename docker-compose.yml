@@ -54,6 +54,8 @@ services:
       - media_data:/app/media
       - ./.next:/app/.next
       - ./public:/app/public
+      - ./scripts:/app/scripts
+      - ./.env:/app/.env:ro
 
   nginx:
     image: nginx:1.27-alpine
