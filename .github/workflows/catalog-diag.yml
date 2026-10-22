@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Find videos
+      - name: Check db videos
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJmaW5kIiwgIi9vcHQvZm94YXBwbGUiLCAiL3Zhci9saWIvZG9ja2VyL3ZvbHVtZXMiLCAiLW5hbWUiLCAiKi5tcDQiLCAiLW8iLCAiLW5hbWUiLCAiKi53ZWJtIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIkVYSVNUSU5HIFZJREVPUyBPTiBTRVJWRVI6IikKcHJpbnQocmVzLnN0ZG91dCBvciAiTk8gT1RIRVIgVklERU9TIikK | base64 -d > /tmp/find-videos.py
-            python3 /tmp/find-videos.py
-            rm -f /tmp/find-videos.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1GIiwgInwiLCAiLWMiLAogICAgICJTRUxFQ1QgaWQsIGZpbGVuYW1lLCBtaW1lX3R5cGUsIENPQUxFU0NFKGFsdCwgJycpIEZST00gbWVkaWEgV0hFUkUgbWltZV90eXBlIExJS0UgJyV2aWRlbyUnIE9SIGZpbGVuYW1lIExJS0UgJyUubXA0JyJdLAogICAgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAopCnByaW50KCJNRURJQSBWSURFT1MgSU4gREI6IikKcHJpbnQocmVzLnN0ZG91dCkK | base64 -d > /tmp/check-db-videos.py
+            python3 /tmp/check-db-videos.py
+            rm -f /tmp/check-db-videos.py
