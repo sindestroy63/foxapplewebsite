@@ -1,0 +1,19 @@
+name: Catalog diag
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check images
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.56.34.120
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 3m
+          script: |
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnVybHMgPSBbCiAgICAiL3N0b3JpZXMvaXBob25lLTE4LXByby9pbnRyby5wbmciLAogICAgIi9zdG9yaWVzL2lwaG9uZS0xOC1wcm8vc2l6ZS5wbmciLAogICAgIi9zdG9yaWVzL2lwaG9uZS0xOC1wcm8vZnVzaW9uLmpwZyIsCiAgICAiL3N0b3JpZXMvaXBob25lLTE4LXByby9jYW1lcmFwcm8uanBnIiwKICAgICIvc3Rvcmllcy9pcGFkLTExLzAwLnBuZyIsCiAgICAiL3N0b3JpZXMvaXBhZC0xMS8wMS5wbmciLAogICAgIi9zdG9yaWVzL3dhdGNoLXVsdHJhLTQvMDAuanBnIiwKICAgICIvc3Rvcmllcy9pcGhvbmUtZHVvL2hlcm8uanBnIiwKXQoKcHJpbnQoIi0tLSBDSEVDS0lORyBTVE9SWSBJTUFHRVMgT1ZFUiBIVFRQIC0tLSIpCmZvciB1IGluIHVybHM6CiAgICByZXMgPSBzdWJwcm9jZXNzLnJ1bigKICAgICAgICBbImN1cmwiLCAiLXNrIiwgIi1vIiwgIi9kZXYvbnVsbCIsICItdyIsICIle2h0dHBfY29kZX0gYnl0ZXM6ICV7c2l6ZV9kb3dubG9hZH1cXG4iLCAiLUgiLCAiSG9zdDogeG4tLW4xYWFnY2ZqaS54bi0tcDFhaSIsIGYiaHR0cHM6Ly8xMjcuMC4wLjF7dX0iXSwKICAgICAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCiAgICApCiAgICBwcmludChmInt1OjQwfSAtPiB7cmVzLnN0ZG91dC5zdHJpcCgpfSIpCg== | base64 -d > /tmp/check-imgs.py
+            python3 /tmp/check-imgs.py
+            rm -f /tmp/check-imgs.py
