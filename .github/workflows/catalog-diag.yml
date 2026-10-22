@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check commit 57
+      - name: Check story diff
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJnaXQiLCAiLUMiLCAiL29wdC9mb3hhcHBsZSIsICJzaG93IiwgIjU3YmMwMWYiLCAiLS1zdGF0Il0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQocmVzLnN0ZG91dCkKcmVzMiA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJnaXQiLCAiLUMiLCAiL29wdC9mb3hhcHBsZSIsICJzaG93IiwgIjU3YmMwMWYiXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpwcmludChyZXMyLnN0ZG91dFs6MzAwMF0pCg== | base64 -d > /tmp/check-commit-57.py
-            python3 /tmp/check-commit-57.py
-            rm -f /tmp/check-commit-57.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJnaXQiLCAiLUMiLCAiL29wdC9mb3hhcHBsZSIsICJkaWZmIiwgIjU3YmMwMWZ+MS4uNTdiYzAxZiIsICItLSIsICJzcmMvY29tcG9uZW50cy9Qcm9kdWN0U3RvcnkudHN4Il0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIlByb2R1Y3RTdG9yeSBkaWZmOiIpCnByaW50KHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/check-diff-story.py
+            python3 /tmp/check-diff-story.py
+            rm -f /tmp/check-diff-story.py
