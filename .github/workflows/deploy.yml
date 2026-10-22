@@ -42,3 +42,4 @@ jobs:
             cd /opt/foxapple
             sed -i 's/next", "dev"/next", "start"/' docker-compose.yml
             docker compose up -d app
+            docker restart foxapple-app-1
