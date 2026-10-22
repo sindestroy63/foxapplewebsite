@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check server css
+      - name: Print 768
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo dGV4dCA9IG9wZW4oIi9vcHQvZm94YXBwbGUvcHVibGljL3N0b3J5LXdoaXRlLmNzcyIsIGVuY29kaW5nPSJ1dGYtOCIpLnJlYWQoKQpwcmludCgiU0VSVkVSIHN0b3J5LXdoaXRlLmNzcyBMRU5HVEg6IiwgbGVuKHRleHQpKQoKaW1wb3J0IHJlCm1lZGlhID0gcmUuZmluZGFsbChyJ0BtZWRpYVtee10re1tefV0rfScsIHRleHQpCmZvciBtIGluIG1lZGlhOgogICAgcHJpbnQoIk1FRElBOiIsIG1bOjEyMF0pCgpmb3IgbGluZSBpbiB0ZXh0LnNwbGl0bGluZXMoKToKICAgIGlmICJkaXNwbGF5OiBub25lIiBpbiBsaW5lIG9yICJkaXNwbGF5Om5vbmUiIGluIGxpbmUgb3IgImhpZGRlbiIgaW4gbGluZSBvciAidmlzaWJpbGl0eSIgaW4gbGluZToKICAgICAgICBwcmludCgiSElEREVOIFJVTEU6IiwgbGluZSkK | base64 -d > /tmp/check-server-css.py
-            python3 /tmp/check-server-css.py
-            rm -f /tmp/check-server-css.py
+            echo dGV4dCA9IG9wZW4oIi9vcHQvZm94YXBwbGUvcHVibGljL3N0b3J5LXdoaXRlLmNzcyIsIGVuY29kaW5nPSJ1dGYtOCIpLnJlYWQoKQoKaWR4ID0gdGV4dC5maW5kKCJAbWVkaWEgKG1heC13aWR0aDogNzY4cHgpIikKaWYgaWR4ID49IDA6CiAgICBwcmludCh0ZXh0W2lkeDppZHgrMjAwMF0pCmVsc2U6CiAgICBwcmludCgiNzY4cHggTk9UIEZPVU5EIikK | base64 -d > /tmp/print-768.py
+            python3 /tmp/print-768.py
+            rm -f /tmp/print-768.py
