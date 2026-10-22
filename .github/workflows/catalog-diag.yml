@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check duo db
+      - name: Check duo links
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1GIiwgInwiLCAiLWMiLAogICAgICJTRUxFQ1QgaWQsIG5hbWUsIHNsdWcsIGJyYW5kLCBwcm9kdWN0X2dyb3VwLCBpc19hdmFpbGFibGUsIHN0YXR1cyBGUk9NIHByb2R1Y3RzIFdIRVJFIG5hbWUgSUxJS0UgJyVEdW8lJyBPUiBzbHVnIElMSUtFICclZHVvJSciXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpwcmludCgiRFVPIElOIERCOiIpCnByaW50KHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/check-duo-db.py
-            python3 /tmp/check-duo-db.py
-            rm -f /tmp/check-duo-db.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmNtZCA9ICIiImN1cmwgLXNrIC1IICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiAiaHR0cHM6Ly8xMjcuMC4wLjEvY2F0YWxvZz9ncm91cD1zbWFydHBob25lcyZicmFuZD1BcHBsZSZwbGFjZW1lbnQ9aXBob25lIiB8IGdyZXAgLW9FICc8YVtePl0raHJlZj0iW14iXSpkdW9bXiJdKiJbXj5dKj4nIiIiCnJlcyA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQpwcmludCgiRFVPIExJTktTIE9OIFBMQUNFTUVOVCBQQUdFOiIpCnByaW50KHJlcy5zdGRvdXQgb3IgIk5PIERVTyBMSU5LUyBGT1VORCEiKQoKY21kMiA9ICIiImN1cmwgLXNrIC1IICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiAiaHR0cHM6Ly8xMjcuMC4wLjEvY2F0YWxvZz9icmFuZD1BcHBsZSIgfCBncmVwIC1vRSAnPGFbXj5dK2hyZWY9IlteIl0qZHVvW14iXSoiW14+XSo+JyIiIgpyZXMyID0gc3VicHJvY2Vzcy5ydW4oY21kMiwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQpwcmludCgiRFVPIExJTktTIE9OIEJSQU5EIFBBR0U6IikKcHJpbnQocmVzMi5zdGRvdXQgb3IgIk5PIERVTyBMSU5LUyBGT1VORCEiKQo= | base64 -d > /tmp/check-duo-links.py
+            python3 /tmp/check-duo-links.py
+            rm -f /tmp/check-duo-links.py
