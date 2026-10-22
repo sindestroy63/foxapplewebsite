@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Find tables
+      - name: Check duo db
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1jIiwKICAgICAiU0VMRUNUIHRhYmxlX25hbWUgRlJPTSBpbmZvcm1hdGlvbl9zY2hlbWEudGFibGVzIFdIRVJFIHRhYmxlX25hbWUgTElLRSAnJWdsb2JhbCUnIE9SIHRhYmxlX25hbWUgTElLRSAnJW5hdiUnIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIlRBQkxFUzoiKQpwcmludChyZXMuc3Rkb3V0KQo= | base64 -d > /tmp/find-tables.py
-            python3 /tmp/find-tables.py
-            rm -f /tmp/find-tables.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1GIiwgInwiLCAiLWMiLAogICAgICJTRUxFQ1QgaWQsIG5hbWUsIHNsdWcsIGJyYW5kLCBwcm9kdWN0X2dyb3VwLCBpc19hdmFpbGFibGUsIHN0YXR1cyBGUk9NIHByb2R1Y3RzIFdIRVJFIG5hbWUgSUxJS0UgJyVEdW8lJyBPUiBzbHVnIElMSUtFICclZHVvJSciXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpwcmludCgiRFVPIElOIERCOiIpCnByaW50KHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/check-duo-db.py
+            python3 /tmp/check-duo-db.py
+            rm -f /tmp/check-duo-db.py
