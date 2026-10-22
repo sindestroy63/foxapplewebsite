@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Print 768
+      - name: Check home fix
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo dGV4dCA9IG9wZW4oIi9vcHQvZm94YXBwbGUvcHVibGljL3N0b3J5LXdoaXRlLmNzcyIsIGVuY29kaW5nPSJ1dGYtOCIpLnJlYWQoKQoKaWR4ID0gdGV4dC5maW5kKCJAbWVkaWEgKG1heC13aWR0aDogNzY4cHgpIikKaWYgaWR4ID49IDA6CiAgICBwcmludCh0ZXh0W2lkeDppZHgrMjAwMF0pCmVsc2U6CiAgICBwcmludCgiNzY4cHggTk9UIEZPVU5EIikK | base64 -d > /tmp/print-768.py
-            python3 /tmp/print-768.py
-            rm -f /tmp/print-768.py
+            echo dGV4dCA9IG9wZW4oIi9vcHQvZm94YXBwbGUvcHVibGljL2hvbWUtZml4LmNzcyIsIGVuY29kaW5nPSJ1dGYtOCIpLnJlYWQoKQpwcmludCgiaG9tZS1maXguY3NzIExFTkdUSDoiLCBsZW4odGV4dCkpCgpmb3IgbGluZSBpbiB0ZXh0LnNwbGl0bGluZXMoKToKICAgIGlmICJyZXN0b3JlIiBpbiBsaW5lIG9yICIuZ2FsbGVyeSIgaW4gbGluZSBvciAiY2FyZC1tZWRpYSIgaW4gbGluZToKICAgICAgICBwcmludCgiTUFUQ0g6IiwgbGluZSkK | base64 -d > /tmp/check-home-fix.py
+            python3 /tmp/check-home-fix.py
+            rm -f /tmp/check-home-fix.py
