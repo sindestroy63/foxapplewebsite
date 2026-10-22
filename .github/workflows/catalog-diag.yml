@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check git and chunks
+      - name: Find desc
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJjZCAvb3B0L2ZveGFwcGxlICYmIGdpdCBsb2cgLTEgLS1vbmVsaW5lIikKc2goImdyZXAgLXJuICdwcm9kdWN0LXNob3J0LWRlc2NyaXB0aW9uJyAvb3B0L2ZveGFwcGxlLy5uZXh0L3NlcnZlci9jaHVua3MvIDI+L2Rldi9udWxsIHwgaGVhZCAtMTAiKQpzaCgiZ3JlcCAtcm4gJ2RldGFpbC1kZXNjcmlwdGlvbicgL29wdC9mb3hhcHBsZS8ubmV4dC9zZXJ2ZXIvY2h1bmtzLyAyPi9kZXYvbnVsbCB8IGhlYWQgLTEwIikK | base64 -d > /tmp/check-server-git.py
-            python3 /tmp/check-server-git.py
-            rm -f /tmp/check-server-git.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJncmVwIC1ybiAncHJvZHVjdC1zaG9ydC1kZXNjcmlwdGlvbicgL29wdC9mb3hhcHBsZS8ubmV4dC8gMj4vZGV2L251bGwgfCBoZWFkIC0xMCIpCnNoKCJkb2NrZXIgZXhlYyBmb3hhcHBsZS1hcHAtMSBncmVwIC1ybiAncHJvZHVjdC1zaG9ydC1kZXNjcmlwdGlvbicgL2FwcC8gMj4vZGV2L251bGwgfCBoZWFkIC0xMCIpCnNoKCJkb2NrZXIgZXhlYyBmb3hhcHBsZS1hcHAtMSBwcyBhdXgiKQpzaCgibmV0c3RhdCAtdGxwbiB8IGdyZXAgMzAwMCIpCg== | base64 -d > /tmp/find-desc.py
+            python3 /tmp/find-desc.py
+            rm -f /tmp/find-desc.py
