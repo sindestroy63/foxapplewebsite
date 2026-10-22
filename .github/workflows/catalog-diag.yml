@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check loop log
+      - name: Check node and files
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0Wy00MDAwOl0pCiAgICBpZiBwLnJldHVybmNvZGU6CiAgICAgICAgcHJpbnQoIkVSUiIsIHAuc3RkZXJyWy0yMDAwOl0pCgpzaCgicHMgYXV4IHwgZ3JlcCAtaSBtb3lza2xhZCB8IGdyZXAgLXYgZ3JlcCIpCnNoKCJ0YWlsIC1uIDMwIC92YXIvbG9nL21veXNrbGFkLXN0b2NrLmxvZyAyPi9kZXYvbnVsbCB8fCBlY2hvIE5PX0xPRyIpCnNoKCJjYXQgL29wdC9mb3hhcHBsZS9zY3JpcHRzL21veXNrbGFkLWxvb3Auc2ggMj4vZGV2L251bGwgfHwgZWNobyBOT19MT09QX1NIIikK | base64 -d > /tmp/check-loop.py
-            python3 /tmp/check-loop.py
-            rm -f /tmp/check-loop.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJ3aGljaCBub2RlOyBub2RlIC12IDI+L2Rldi9udWxsIHx8IGVjaG8gTk9fTk9ERV9PTl9IT1NUIikKc2goImRvY2tlciBleGVjIGZveGFwcGxlLWFwcC0xIHRlc3QgLWYgL2FwcC9zY3JpcHRzL21veXNrbGFkLXN0b2NrLm1qcyAmJiBlY2hvIElOX0NPTlRBSU5FUiB8fCBlY2hvIE5PVF9JTl9DT05UQUlORVIiKQpzaCgibHMgLWxhIC9vcHQvZm94YXBwbGUvc2NyaXB0cy8iKQo= | base64 -d > /tmp/check-node.py
+            python3 /tmp/check-node.py
+            rm -f /tmp/check-node.py
