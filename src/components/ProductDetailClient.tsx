@@ -348,15 +348,6 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
 
       </div>
 
-      {product.shortDescription && (
-        <div className="detail-description">
-          <hr className="detail-divider" />
-          <details className="detail-accordion" open>
-            <summary>Подробнее о товаре</summary>
-            <p className="product-short-description">{product.shortDescription}</p>
-          </details>
-        </div>
-      )}
     </>
   )
 }

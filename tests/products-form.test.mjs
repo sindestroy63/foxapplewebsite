@@ -253,10 +253,10 @@ test('legacy rich-text description is hidden while shortDescription remains the 
   assert.doesNotMatch(system, /fields\.description/)
 })
 
-test('product detail renders shortDescription and does not fall back to legacy rich text', () => {
+test('product detail does not render text descriptions in favor of visual stories', () => {
   assert.match(metadata, /seoDescription/)
   const detail = fs.readFileSync('src/components/ProductDetailClient.tsx', 'utf8')
-  assert.match(detail, /product\.shortDescription/)
+  assert.doesNotMatch(detail, /product\.shortDescription/)
   assert.doesNotMatch(detail, /product\.description/)
 })
 
