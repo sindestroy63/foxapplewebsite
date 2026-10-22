@@ -1,0 +1,19 @@
+name: Catalog diag
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check loop log
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.56.34.120
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 3m
+          script: |
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0Wy00MDAwOl0pCiAgICBpZiBwLnJldHVybmNvZGU6CiAgICAgICAgcHJpbnQoIkVSUiIsIHAuc3RkZXJyWy0yMDAwOl0pCgpzaCgicHMgYXV4IHwgZ3JlcCAtaSBtb3lza2xhZCB8IGdyZXAgLXYgZ3JlcCIpCnNoKCJ0YWlsIC1uIDMwIC92YXIvbG9nL21veXNrbGFkLXN0b2NrLmxvZyAyPi9kZXYvbnVsbCB8fCBlY2hvIE5PX0xPRyIpCnNoKCJjYXQgL29wdC9mb3hhcHBsZS9zY3JpcHRzL21veXNrbGFkLWxvb3Auc2ggMj4vZGV2L251bGwgfHwgZWNobyBOT19MT09QX1NIIikK | base64 -d > /tmp/check-loop.py
+            python3 /tmp/check-loop.py
+            rm -f /tmp/check-loop.py
