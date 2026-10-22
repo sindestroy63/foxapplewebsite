@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check manifest
+      - name: Parse manifest
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJncmVwIiwgIi1ybiIsICJQcm9kdWN0RGV0YWlsQ2xpZW50IiwgIi9vcHQvZm94YXBwbGUvLm5leHQvc2VydmVyL2FwcC8oZnJvbnRlbmQpL2NhdGFsb2cvW2NhdGVnb3J5U2x1Z10vW3Byb2R1Y3RTbHVnXS9wYWdlX2NsaWVudC1yZWZlcmVuY2UtbWFuaWZlc3QuanMiXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpwcmludCgiTUFOSUZFU1QgQ0hVTktTIEZPUiBQcm9kdWN0RGV0YWlsQ2xpZW50OiIpCnByaW50KHJlcy5zdGRvdXRbOjE1MDBdKQo= | base64 -d > /tmp/check-manifest.py
-            python3 /tmp/check-manifest.py
-            rm -f /tmp/check-manifest.py
+            echo aW1wb3J0IGpzb24KCm1hbmlmZXN0X3BhdGggPSAiL29wdC9mb3hhcHBsZS8ubmV4dC9zZXJ2ZXIvYXBwLyhmcm9udGVuZCkvY2F0YWxvZy9bY2F0ZWdvcnlTbHVnXS9bcHJvZHVjdFNsdWddL3BhZ2VfY2xpZW50LXJlZmVyZW5jZS1tYW5pZmVzdC5qcyIKcmF3ID0gb3BlbihtYW5pZmVzdF9wYXRoLCBlbmNvZGluZz0idXRmLTgiKS5yZWFkKCkKCnByZWZpeCA9ICdnbG9iYWxUaGlzLl9fUlNDX01BTklGRVNUWyIvKGZyb250ZW5kKS9jYXRhbG9nL1tjYXRlZ29yeVNsdWddL1twcm9kdWN0U2x1Z10vcGFnZSJdID0gJwpqc29uX3RleHQgPSByYXcuc3BsaXQocHJlZml4LCAxKVsxXS5yc3RyaXAoIjtcbiIpCmRhdGEgPSBqc29uLmxvYWRzKGpzb25fdGV4dCkKCmZvciBrLCB2IGluIGRhdGEuZ2V0KCJjbGllbnRNb2R1bGVzIiwge30pLml0ZW1zKCk6CiAgICBpZiAiUHJvZHVjdERldGFpbENsaWVudCIgaW4gazoKICAgICAgICBwcmludCgiS0VZOiIsIGspCiAgICAgICAgcHJpbnQoIkNIVU5LUzoiLCB2LmdldCgiY2h1bmtzIikpCg== | base64 -d > /tmp/parse-manifest.py
+            python3 /tmp/parse-manifest.py
+            rm -f /tmp/parse-manifest.py
