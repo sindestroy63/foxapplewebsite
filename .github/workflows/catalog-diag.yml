@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check globals
+      - name: List public
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJncmVwIiwgIi1uIiwgInJlc3RvcmUtY2FyZCIsICIvb3B0L2ZveGFwcGxlL3NyYy9hcHAvKGZyb250ZW5kKS9nbG9iYWxzLmNzcyJdLAogICAgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAopCnByaW50KCJHUkVQIEdMT0JBTFMuQ1NTIE9OIFNFUlZFUjoiKQpwcmludChyZXMuc3Rkb3V0IG9yICJOT05FIElOIEdMT0JBTFMuQ1NTIE9OIFNFUlZFUiEiKQo= | base64 -d > /tmp/check-globals-server.py
-            python3 /tmp/check-globals-server.py
-            rm -f /tmp/check-globals-server.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKFsibHMiLCAiLWxhIiwgIi9vcHQvZm94YXBwbGUvcHVibGljLyJdLCB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUpCnByaW50KHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/list-public.py
+            python3 /tmp/list-public.py
+            rm -f /tmp/list-public.py
