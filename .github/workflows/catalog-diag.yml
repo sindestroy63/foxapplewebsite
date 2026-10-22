@@ -1,0 +1,19 @@
+name: Catalog diag
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Verify text gone
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.56.34.120
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 3m
+          script: |
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJjdXJsIiwgIi1zayIsICItSCIsICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiwgImh0dHBzOi8vMTI3LjAuMC4xL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE4LXByby1tYXgtMTRqZjFxIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKaHRtbCA9IHJlcy5zdGRvdXQgb3IgIiIKcHJpbnQoIkhUTUwgQllURVM6IiwgbGVuKGh0bWwpKQpwcmludCgiZGV0YWlsLWRlc2NyaXB0aW9uIGNvdW50OiIsIGh0bWwuY291bnQoImRldGFpbC1kZXNjcmlwdGlvbiIpKQpwcmludCgicHJvZHVjdC1zaG9ydC1kZXNjcmlwdGlvbiBjb3VudDoiLCBodG1sLmNvdW50KCJwcm9kdWN0LXNob3J0LWRlc2NyaXB0aW9uIikpCnByaW50KCJ0ZXh0IHNuaXBwZXQgY291bnQ6IiwgaHRtbC5jb3VudCgi0LDQsdGB0L7Qu9GO0YLQvdGL0Lkg0YTQu9Cw0LPQvNCw0L0g0YEg0LzQsNC60YHQuNC80YPQvNC+0Lwg0LLQvtC30LzQvtC20L3QvtGB0YLQtdC5IikpCnByaW50KCJyZXN0b3JlLXN0b3J5IGNvdW50OiIsIGh0bWwuY291bnQoInJlc3RvcmUtc3RvcnkiKSkKcHJpbnQoInJlc3RvcmUtaGVyby10aXRsZSBjb3VudDoiLCBodG1sLmNvdW50KCJyZXN0b3JlLWhlcm8tdGl0bGUiKSkK | base64 -d > /tmp/check-text-gone.py
+            python3 /tmp/check-text-gone.py
+            rm -f /tmp/check-text-gone.py
