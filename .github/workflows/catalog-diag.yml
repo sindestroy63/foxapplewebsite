@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check db desc
+      - name: Check compiled css
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1GIiwgInwiLCAiLWMiLAogICAgICJTRUxFQ1QgaWQsIG5hbWUsIGxlZnQoZGVzY3JpcHRpb246OnRleHQsIDQwMCkgRlJPTSBwcm9kdWN0cyBXSEVSRSBpZCBJTiAoMTU5LCAxNjAsIDEwLCA4LCA5KSJdLAogICAgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAopCnByaW50KCJQUk9EVUNUUyBERVNDUklQVElPTiBGSUVMRDoiKQpwcmludChyZXMuc3Rkb3V0KQo= | base64 -d > /tmp/check-db-desc.py
-            python3 /tmp/check-db-desc.py
-            rm -f /tmp/check-db-desc.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmNzc19wYXRoID0gIi9vcHQvZm94YXBwbGUvLm5leHQvc3RhdGljL2NodW5rcy8wanBhZ3d5aGouLnJrLmNzcyIKcmVzID0gc3VicHJvY2Vzcy5ydW4oWyJncmVwIiwgIi1vRSIsIHIiXC5yZXN0b3JlLVthLXpBLVowLTlfLV0rIiwgY3NzX3BhdGhdLCB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUpCmNsYXNzZXMgPSBzb3J0ZWQoc2V0KHJlcy5zdGRvdXQuc3BsaXRsaW5lcygpKSkKcHJpbnQoIlJFU1RPUkUgQ0xBU1NFUyBJTiBDT01QSUxFRCBORVhULkpTIENTUzoiKQpwcmludChjbGFzc2VzKQo= | base64 -d > /tmp/check-compiled-css.py
+            python3 /tmp/check-compiled-css.py
+            rm -f /tmp/check-compiled-css.py
