@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check story diff
+      - name: Check db desc
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJnaXQiLCAiLUMiLCAiL29wdC9mb3hhcHBsZSIsICJkaWZmIiwgIjU3YmMwMWZ+MS4uNTdiYzAxZiIsICItLSIsICJzcmMvY29tcG9uZW50cy9Qcm9kdWN0U3RvcnkudHN4Il0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIlByb2R1Y3RTdG9yeSBkaWZmOiIpCnByaW50KHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/check-diff-story.py
-            python3 /tmp/check-diff-story.py
-            rm -f /tmp/check-diff-story.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1GIiwgInwiLCAiLWMiLAogICAgICJTRUxFQ1QgaWQsIG5hbWUsIGxlZnQoZGVzY3JpcHRpb246OnRleHQsIDQwMCkgRlJPTSBwcm9kdWN0cyBXSEVSRSBpZCBJTiAoMTU5LCAxNjAsIDEwLCA4LCA5KSJdLAogICAgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAopCnByaW50KCJQUk9EVUNUUyBERVNDUklQVElPTiBGSUVMRDoiKQpwcmludChyZXMuc3Rkb3V0KQo= | base64 -d > /tmp/check-db-desc.py
+            python3 /tmp/check-db-desc.py
+            rm -f /tmp/check-db-desc.py
