@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Probe videos
+      - name: List sizes
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MsIGdsb2IKCnZpZGVvcyA9IGdsb2IuZ2xvYigiL3Zhci9saWIvZG9ja2VyL3ZvbHVtZXMvZm94YXBwbGVfbWVkaWFfZGF0YS9fZGF0YS8qLm1wNCIpCnZpZGVvcyArPSBbIi9vcHQvZm94YXBwbGUvcHVibGljL2hlcm8taXBob25lLm1wNCJdCgpwcmludCgiUFJPQklORyBWSURFT1M6IikKZm9yIHYgaW4gc29ydGVkKHNldCh2aWRlb3MpKToKICAgIGNtZCA9IFsKICAgICAgICAiZmZwcm9iZSIsICItdiIsICJlcnJvciIsCiAgICAgICAgIi1zaG93X2VudHJpZXMiLCAiZm9ybWF0PWR1cmF0aW9uLHNpemU6c3RyZWFtPXdpZHRoLGhlaWdodCxjb2RlY19uYW1lIiwKICAgICAgICAiLW9mIiwgImRlZmF1bHQ9bm9wcmludF93cmFwcGVycz0xIiwgdgogICAgXQogICAgcmVzID0gc3VicHJvY2Vzcy5ydW4oY21kLCB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUpCiAgICBvdXQgPSByZXMuc3Rkb3V0LnJlcGxhY2UoIlxuIiwgIiAiKS5zdHJpcCgpCiAgICBwcmludCh2LnNwbGl0KCIvIilbLTFdLCAiOiIsIG91dCkK | base64 -d > /tmp/probe-server-vids.py
-            python3 /tmp/probe-server-vids.py
-            rm -f /tmp/probe-server-vids.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJscyIsICItbGgiLCAiL3Zhci9saWIvZG9ja2VyL3ZvbHVtZXMvZm94YXBwbGVfbWVkaWFfZGF0YS9fZGF0YS8iXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpmb3IgbGluZSBpbiByZXMuc3Rkb3V0LnNwbGl0bGluZXMoKToKICAgIGlmICIubXA0IiBpbiBsaW5lLmxvd2VyKCk6CiAgICAgICAgcHJpbnQobGluZSkK | base64 -d > /tmp/list-sizes.py
+            python3 /tmp/list-sizes.py
+            rm -f /tmp/list-sizes.py
