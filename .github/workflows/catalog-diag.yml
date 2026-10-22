@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Dump server css
+      - name: Check brand nav
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnRleHQgPSBvcGVuKCIvb3B0L2ZveGFwcGxlL3B1YmxpYy9zdG9yeS13aGl0ZS5jc3MiLCBlbmNvZGluZz0idXRmLTgiKS5yZWFkKCkKaW1wb3J0IGpzb24KcHJpbnQoIkpTT05fU1RBUlQiKQpwcmludChqc29uLmR1bXBzKHsiY3NzIjogdGV4dH0pKQpwcmludCgiSlNPTl9FTkQiKQo= | base64 -d > /tmp/dump-server-css.py
-            python3 /tmp/dump-server-css.py
-            rm -f /tmp/dump-server-css.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MsIGpzb24KCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1wb3N0Z3Jlcy0xIiwgInBzcWwiLCAiLVUiLCAiZm94YXBwbGUiLCAiLWQiLCAiZm94YXBwbGUiLCAiLUF0IiwgIi1jIiwKICAgICAiU0VMRUNUIGpzb25iX3ByZXR0eShkYXRhKSBGUk9NIGdsb2JhbHMgV0hFUkUgc2x1ZyA9ICdicmFuZC1jYXRhbG9nLW5hdmlnYXRpb24nIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIkJSQU5EIENBVEFMT0cgTkFWSUdBVElPTiBHTE9CQUw6IikKdGV4dCA9IHJlcy5zdGRvdXQgb3IgIiIKcHJpbnQodGV4dFs6NDAwMF0pCgpmb3IgbGluZSBpbiB0ZXh0LnNwbGl0bGluZXMoKToKICAgIGlmICJkdW8iIGluIGxpbmUubG93ZXIoKSBvciAiaXBob25lIiBpbiBsaW5lLmxvd2VyKCkgb3IgImhyZWYiIGluIGxpbmUubG93ZXIoKSBvciAidGl0bGUiIGluIGxpbmUubG93ZXIoKToKICAgICAgICBwcmludCgiTElORToiLCBsaW5lKQo= | base64 -d > /tmp/check-brand-nav.py
+            python3 /tmp/check-brand-nav.py
+            rm -f /tmp/check-brand-nav.py
