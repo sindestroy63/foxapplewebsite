@@ -6,14 +6,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Test live sync with token
+      - name: Check avail lines
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
           username: root
           password: ${{ secrets.SSH_PASSWORD }}
-          command_timeout: 4m
+          command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJkb2NrZXIgZXhlYyBmb3hhcHBsZS1hcHAtMSBiYXNoIC1jICdlY2hvIFwiTU9ZU0tMQURfQVBJX1RPS0VOPTAzYjA3NjQ4NjQ1M2NlMDkwYThmMjg5NzhhMTJhZjlhNmRmYmUxMzdcIiA+PiAvYXBwLy5lbnYnIikKc2goImRvY2tlciBleGVjIGZveGFwcGxlLWFwcC0xIGJhc2ggLWMgJ2VjaG8gXCJNT1lTS0xBRF9XRUJIT09LX1RPS0VOPTAzYjA3NjQ4NjQ1M2NlMDkwYThmMjg5NzhhMTJhZjlhNmRmYmUxMzdcIiA+PiAvYXBwLy5lbnYnIikKc2goImRvY2tlciBleGVjIGZveGFwcGxlLWFwcC0xIG5vZGUgL2FwcC9zY3JpcHRzL21veXNrbGFkLXN0b2NrLm1qcyAtLWRyeSIpCg== | base64 -d > /tmp/test-live-sync.py
-            python3 /tmp/test-live-sync.py
-            rm -f /tmp/test-live-sync.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJncmVwIC1uICdwcm9kdWN0QXZhaWwuc2V0JyAvb3B0L2ZveGFwcGxlL3NjcmlwdHMvbW95c2tsYWQtc3RvY2subWpzIikK | base64 -d > /tmp/check-avail.py
+            python3 /tmp/check-avail.py
+            rm -f /tmp/check-avail.py
