@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check node and files
+      - name: Check token
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJ3aGljaCBub2RlOyBub2RlIC12IDI+L2Rldi9udWxsIHx8IGVjaG8gTk9fTk9ERV9PTl9IT1NUIikKc2goImRvY2tlciBleGVjIGZveGFwcGxlLWFwcC0xIHRlc3QgLWYgL2FwcC9zY3JpcHRzL21veXNrbGFkLXN0b2NrLm1qcyAmJiBlY2hvIElOX0NPTlRBSU5FUiB8fCBlY2hvIE5PVF9JTl9DT05UQUlORVIiKQpzaCgibHMgLWxhIC9vcHQvZm94YXBwbGUvc2NyaXB0cy8iKQo= | base64 -d > /tmp/check-node.py
-            python3 /tmp/check-node.py
-            rm -f /tmp/check-node.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmRlZiBzaChjbWQpOgogICAgcCA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQogICAgcHJpbnQoIiMjIyIsIGNtZCkKICAgIHByaW50KHAuc3Rkb3V0KQogICAgaWYgcC5yZXR1cm5jb2RlOgogICAgICAgIHByaW50KCJFUlIiLCBwLnN0ZGVycikKCnNoKCJkb2NrZXIgZXhlYyBmb3hhcHBsZS1hcHAtMSBncmVwIC1pIG1veXNrbGFkIC9hcHAvLmVudiAyPi9kZXYvbnVsbCB8fCBlY2hvIE5PX01PWVNLTEFEX0lOX0FQUF9FTlYiKQpzaCgiZ3JlcCAtaSBtb3lza2xhZCAvb3B0L2ZveGFwcGxlLy5lbnYgMj4vZGV2L251bGwgfHwgZWNobyBOT19NT1lTS0xBRF9JTl9IT1NUX0VOViIpCg== | base64 -d > /tmp/check-token.py
+            python3 /tmp/check-token.py
+            rm -f /tmp/check-token.py
