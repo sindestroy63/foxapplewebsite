@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check SSR chunks
+      - name: Find server acc
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IG9zLCBnbG9iCgpjaHVua3MgPSBnbG9iLmdsb2IoIi9vcHQvZm94YXBwbGUvLm5leHQvc2VydmVyL2NodW5rcy9zc3IvKlByb2R1Y3REZXRhaWxDbGllbnQqIikKcHJpbnQoIlNTUiBDSFVOS1MgRk9SIFByb2R1Y3REZXRhaWxDbGllbnQ6IikKZm9yIGMgaW4gY2h1bmtzOgogICAgdGV4dCA9IG9wZW4oYywgZW5jb2Rpbmc9InV0Zi04IiwgZXJyb3JzPSJyZXBsYWNlIikucmVhZCgpCiAgICBwcmludChjLCAiSEFTX0FDQ09SRElPTjoiLCAiZGV0YWlsLWFjY29yZGlvbiIgaW4gdGV4dCwgIkhBU19TSE9SVF9ERVNDOiIsICJwcm9kdWN0LXNob3J0LWRlc2NyaXB0aW9uIiBpbiB0ZXh0KQo= | base64 -d > /tmp/check-ssr.py
-            python3 /tmp/check-ssr.py
-            rm -f /tmp/check-ssr.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJncmVwIiwgIi1ybiIsICJkZXRhaWwtYWNjb3JkaW9uIiwgIi9vcHQvZm94YXBwbGUvLm5leHQvc2VydmVyLyJdLAogICAgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlLAopCnByaW50KCJTRVJWRVIgQ0hVTktTIFdJVEggZGV0YWlsLWFjY29yZGlvbjoiKQpwcmludChyZXMuc3Rkb3V0WzoyMDAwXSBvciAiTk9ORSBJTiAvc2VydmVyLyEiKQo= | base64 -d > /tmp/find-server-acc.py
+            python3 /tmp/find-server-acc.py
+            rm -f /tmp/find-server-acc.py
