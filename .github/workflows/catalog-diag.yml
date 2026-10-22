@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Read foxapple conf
+      - name: Dump server css
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo dGV4dCA9IG9wZW4oIi9vcHQvZm94YXBwbGUvbmdpbngvY29uZi5kL2ZveGFwcGxlLmNvbmYiLCBlbmNvZGluZz0idXRmLTgiKS5yZWFkKCkKcHJpbnQoIkZPWEFQUExFLkNPTkY6IikKcHJpbnQodGV4dCkK | base64 -d > /tmp/read-foxapple-conf.py
-            python3 /tmp/read-foxapple-conf.py
-            rm -f /tmp/read-foxapple-conf.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnRleHQgPSBvcGVuKCIvb3B0L2ZveGFwcGxlL3B1YmxpYy9zdG9yeS13aGl0ZS5jc3MiLCBlbmNvZGluZz0idXRmLTgiKS5yZWFkKCkKaW1wb3J0IGpzb24KcHJpbnQoIkpTT05fU1RBUlQiKQpwcmludChqc29uLmR1bXBzKHsiY3NzIjogdGV4dH0pKQpwcmludCgiSlNPTl9FTkQiKQo= | base64 -d > /tmp/dump-server-css.py
+            python3 /tmp/dump-server-css.py
+            rm -f /tmp/dump-server-css.py
