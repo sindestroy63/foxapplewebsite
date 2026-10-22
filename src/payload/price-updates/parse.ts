@@ -33,7 +33,7 @@ const REGION_TOKENS: Array<[RegExp, string]> = [
   [/\u{1f1e6}\u{1f1ea}|\buae\b|\bunited\s+arab\s+emirates\b|\u043e\u0430\u044d/iu, 'United Arab Emirates'],
 ]
 
-const COLOR_TOKENS = ['black / black titanium milanese loop', 'natural / light blue', 'white silver', 'cosmic orange', 'space black', 'cloud white', 'light gold', 'space gray', 'jet black', 'sky blue', 'mist blue', 'deep blue', 'cobalt violet', 'rose gold', 'light blue', 'burgundy', 'graphite', 'cream', 'lavender', 'glacier', 'starlight', 'midnight', 'indigo', 'citrus', 'natural', 'silver', 'orange', 'purple', 'yellow', 'black', 'blue', 'violet', 'sage', 'pink', 'white', 'gold']
+const COLOR_TOKENS = ['black / black titanium milanese loop', 'titanium jet black', 'titanium white silver', 'titanium silver blue', 'titanium silverblue', 'titanium whitesilver', 'titanium black', 'titanium gray', 'titanium grey', 'natural / light blue', 'white silver', 'cosmic orange', 'space black', 'cloud white', 'light gold', 'space gray', 'jet black', 'sky blue', 'mist blue', 'deep blue', 'cobalt violet', 'rose gold', 'light blue', 'burgundy', 'graphite', 'cream', 'lavender', 'glacier', 'starlight', 'midnight', 'indigo', 'citrus', 'natural', 'silver', 'orange', 'purple', 'yellow', 'gray', 'grey', 'black', 'blue', 'violet', 'sage', 'pink', 'white', 'gold']
 
 const SIM_TOKEN = /(?<![\p{L}\p{N}])(?:\(\s*)?(?:(?:1\s*)?sim\s*\+?\s*e\s*sim|1\s*sim|e\s*sim)(?:\s*\))?(?![\p{L}\p{N}])/giu
 const ACTIVE_TOKEN = /(?<![\p{L}\p{N}])актив(?![\p{L}\p{N}])/giu
@@ -164,7 +164,8 @@ function parseFreeformItem(line: string, lineNumber: number, contextHeading: str
   const genMatch = body.match(/\b(?:20\d{2}|SE\d|S\d{2}|UL\s*\d|MAX\s*\d)\b/iu)
   if (genMatch) generation = genMatch[0]
   const familyText = `${contextHeading} ${line}`
-  const productType = /airpods/i.test(familyText) ? 'airpods' : /^(?:watch\s+)?(?:se\d|s\d{2}|ul\s*\d)\b/i.test(body) ? 'watch' : /ipad|\bmini\b/i.test(familyText) ? 'ipad' : /\bmac\b|\bneo\s+\d{2}\b|\b(?:air|pro)\s+(?:13|14|15|16)\b/i.test(familyText) ? 'mac' : 'iphone'
+  const phoneFamily = /\b(?:ultra|plus|fe|edge|flip|fold)\b/iu.test(`${body} ${familyText}`)
+  const productType = /airpods/i.test(familyText) ? 'airpods' : !phoneFamily && /^(?:watch\s+)?(?:se\d|s\d{2}|ul\s*\d)\b/i.test(body) ? 'watch' : /ipad|\bmini\b/i.test(familyText) ? 'ipad' : /\bmac\b|\bneo\s+\d{2}\b|\b(?:air|pro)\s+(?:13|14|15|16)\b/i.test(familyText) ? 'mac' : 'iphone'
   body = body.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim()
   if (productType === 'ipad') {
     if (/\bmini\b/iu.test(body)) body = 'iPad mini'

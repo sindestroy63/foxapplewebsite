@@ -1414,3 +1414,40 @@ test('missing attributes stay out of preview until a manager confirms the server
 test('verified preview rejects forged candidate keys and product/variant mismatches', () => {
   assert.throws(() => buildVerifiedPreviewRows([{ id: 1, resolution: 'manual', price: 1, selectedCandidateKey: 'forged', candidates: [] }], []), /selected candidate/i)
 })
+
+test('Flip8 and S25 Ultra supplier lines match catalog colors instead of watches', () => {
+  const parsed = parseFreeformPriceList([
+    'Z Flip 8 12/256 Cream - 68900',
+    'Z Flip 8 12/512 Graphite - 77900',
+    'S25 Ultra 12/256 Titanium Black - 71000',
+    'S25 Ultra 12/512 Titanium Gray - 77000',
+    'Galaxy S25 Ultra 12/512 Titanium White Silver - 77000',
+    'S25 Ultra 12/1TB Titanium Silver Blue - 85000',
+  ].join('\n'))
+  assert.equal(parsed.errors.length, 0)
+  assert.deepEqual(parsed.items.map((item) => [item.modelText, item.storage, item.color, item.ram]), [
+    ['Z Flip 8', '256GB', 'Cream', '12GB'],
+    ['Z Flip 8', '512GB', 'Graphite', '12GB'],
+    ['S25 Ultra', '256GB', 'Titanium Black', '12GB'],
+    ['S25 Ultra', '512GB', 'Titanium Gray', '12GB'],
+    ['Galaxy S25 Ultra', '512GB', 'Titanium White Silver', '12GB'],
+    ['S25 Ultra', '1TB', 'Titanium Silver Blue', '12GB'],
+  ])
+  const catalog = [
+    { id: 157, name: 'Galaxy Z Flip8', model: 'Galaxy Z Flip8', variants: [
+      { id: 'flip-cream-256', sku: 'FLIP-CREAM-256', storage: '256GB', ram: '12GB', color: 'Creamy' },
+      { id: 'flip-graphite-512', sku: 'FLIP-GRAPHITE-512', storage: '512GB', ram: '12GB', color: 'Graphite' },
+    ] },
+    { id: 158, name: 'Galaxy S25 Ultra', model: 'Galaxy S25 Ultra', variants: [
+      { id: 's25-black-256', sku: 'S25-BLACK-256', storage: '256GB', ram: '12GB', color: 'Titanium Black' },
+      { id: 's25-grey-512', sku: 'S25-GREY-512', storage: '512GB', ram: '12GB', color: 'Titanium grey' },
+      { id: 's25-silver-512', sku: 'S25-SILVER-512', storage: '512GB', ram: '12GB', color: 'Titanium silver' },
+      { id: 's25-blue-1tb', sku: 'S25-BLUE-1TB', storage: '1TB', ram: '12GB', color: 'Titanium blue' },
+    ] },
+  ]
+  const results = parsed.items.map((item) => matchCatalogItem(item, catalog))
+  assert.deepEqual(results.map((result) => result.status), ['matched', 'matched', 'matched', 'matched', 'matched', 'matched'])
+  assert.deepEqual(results.map((result) => result.selected?.sku), [
+    'FLIP-CREAM-256', 'FLIP-GRAPHITE-512', 'S25-BLACK-256', 'S25-GREY-512', 'S25-SILVER-512', 'S25-BLUE-1TB',
+  ])
+})

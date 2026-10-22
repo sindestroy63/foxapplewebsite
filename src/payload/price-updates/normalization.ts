@@ -41,6 +41,7 @@ export function normalizeModelKey(value: unknown): string {
   if (samsung) return `samsung galaxy ${samsung[1]}${samsung[2] ? ` ${samsung[2]}` : ''}`
   if (/^(?:watch\s+)?s\s*\d{2}$/u.test(raw)) return `apple watch series ${raw.replace(/^(?:watch\s+)?s\s*/u, '')}`
   if (/^(?:watch\s+)?ul(?:tra)?\s*\d$/u.test(raw)) return `apple watch ultra ${raw.replace(/^(?:watch\s+)?ul(?:tra)?\s*/u, '')}`
+  if (/^z\s*flip\s*8$/u.test(raw)) return 'z flip 8'
   const fold = raw.match(/^z\s*fold\s*8(?:\s+(ultra))?(?:\s*\(\s*2026\s*\))?$/u)
   if (fold) return `z fold 8${fold[1] ? ' ultra' : ''}`
   if (/^playstation\s+5\s+(?:slim\s+)?(?:disk|disc|diskovodom|\u0441\s+\u0434\u0438\u0441\u043a\u043e\u0432\u043e\u0434\u043e\u043c|1\s*\u0442\u0431)(?:\s+.*)?$/iu.test(raw)) return 'playstation 5 slim disk'
@@ -149,6 +150,25 @@ export function normalizeColor(value?: unknown, model?: unknown): string {
     'samsung galaxy s26 ultra': { blue: 'sky blue', violet: 'cobalt violet' },
     'z fold 8': { cream: 'creamy' },
     'z fold 8 ultra': { cream: 'creamy', violet: 'violet shadow' },
+    'z flip 8': { cream: 'creamy', крем: 'creamy', кремовый: 'creamy', graphite: 'graphite', графит: 'graphite' },
+    'samsung galaxy s25 ultra': {
+      black: 'titanium black',
+      'jet black': 'titanium black',
+      'titanium black': 'titanium black',
+      'titanium jet black': 'titanium black',
+      gray: 'titanium grey',
+      grey: 'titanium grey',
+      'titanium gray': 'titanium grey',
+      'titanium grey': 'titanium grey',
+      silver: 'titanium silver',
+      'white silver': 'titanium silver',
+      'titanium white silver': 'titanium silver',
+      'titanium silver': 'titanium silver',
+      blue: 'titanium blue',
+      'silver blue': 'titanium blue',
+      'titanium silver blue': 'titanium blue',
+      'titanium blue': 'titanium blue',
+    },
   }
   return aliases[modelKey]?.[raw] || raw
 }
