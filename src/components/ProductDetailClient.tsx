@@ -220,7 +220,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                       const isActive = selection[key] === val
                       const testSel = { ...selection, [key]: val }
                       const match = findVariant(variants, testSel, selectedColor)
-                      const isDisabled = !match || match.isAvailable === false
+                      const isDisabled = !match
                       return (
                         <button
                           key={val}
@@ -245,7 +245,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                     const isActive = selectedColor === clr.value
                     const testSel = { ...selection }
                     const match = findVariant(variants, testSel, clr.value)
-                    const isDisabled = !match || match.isAvailable === false
+                    const isDisabled = !match
                     return (
                       <button
                         key={clr.value}
