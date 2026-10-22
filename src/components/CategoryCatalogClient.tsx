@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import type { Product, ProductVariant } from '@/lib/types'
 import { ProductDetailClient } from './ProductDetailClient'
+import { ProductStory } from './ProductStory'
 import { catalogPlacementHref, type CatalogPlacementDefinition } from '@/lib/product-catalog-placement'
 
 const CATEGORY_SUBTITLES: Record<string, string> = {
@@ -164,6 +165,7 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, ph
           />
         </div>
       </div>
+      {selectedProduct && <ProductStory key={selectedProduct.id} product={selectedProduct} />}
     </div>
   )
 }

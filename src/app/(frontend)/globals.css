@@ -4316,3 +4316,256 @@ a.contact-item:hover {
   }
 }
 
+
+/* Product Story Cards - Responsive Styles */
+.restore-story-section {
+  background: #fff !important;
+  padding: 40px 0 60px !important;
+  display: block !important;
+  width: 100% !important;
+}
+.restore-story-section .container {
+  max-width: 1140px !important;
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+.restore-story-heading {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #1d1d1f !important;
+  margin: 0 0 20px !important;
+  letter-spacing: -0.02em !important;
+}
+.restore-tabs-header {
+  margin-bottom: 24px !important;
+}
+.restore-tabs {
+  display: flex !important;
+  gap: 8px !important;
+}
+.restore-tab-btn {
+  padding: 8px 18px !important;
+  border-radius: 20px !important;
+  border: 1px solid #e8e8ed !important;
+  background: #fff !important;
+  color: #1d1d1f !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+.restore-tab-btn.active {
+  background: #1d1d1f !important;
+  color: #fff !important;
+  border-color: #1d1d1f !important;
+}
+.restore-hero-card {
+  display: flex !important;
+  flex-direction: row !important;
+  background: #fbfbfd !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  border: 1px solid #e8e8ed !important;
+  margin-bottom: 24px !important;
+  box-sizing: border-box !important;
+}
+.restore-hero-content {
+  flex: 1 1 55% !important;
+  padding: 40px 36px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+.restore-hero-title {
+  font-size: clamp(26px, 3vw, 36px) !important;
+  font-weight: 700 !important;
+  color: #1d1d1f !important;
+  margin: 0 0 10px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+}
+.restore-hero-subtitle {
+  font-size: 17px !important;
+  color: #1d1d1f !important;
+  margin: 0 0 12px !important;
+  font-weight: 500 !important;
+}
+.restore-hero-description {
+  font-size: 15px !important;
+  color: #86868b !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+.restore-hero-media {
+  flex: 1 1 45% !important;
+  height: 340px !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  padding: 20px !important;
+}
+.restore-hero-img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+.restore-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+  margin-top: 24px !important;
+}
+.restore-card {
+  display: flex !important;
+  flex-direction: column !important;
+  background: #fbfbfd !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  border: 1px solid #e8e8ed !important;
+  padding: 28px 24px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+.restore-card--wide {
+  grid-column: 1 / -1 !important;
+}
+.restore-card-badge {
+  display: inline-block !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: #86868b !important;
+  margin-bottom: 6px !important;
+}
+.restore-card-title {
+  font-size: clamp(19px, 2vw, 24px) !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+  color: #1d1d1f !important;
+  margin: 0 0 12px !important;
+}
+.restore-card-media {
+  height: 240px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 12px 0 16px !important;
+  box-sizing: border-box !important;
+}
+.restore-card-img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+.restore-card-text {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #6e6e73 !important;
+  margin: 0 auto !important;
+  max-width: 480px !important;
+}
+.restore-specs-block {
+  margin-top: 32px !important;
+  background: #fbfbfd !important;
+  border-radius: 20px !important;
+  border: 1px solid #e8e8ed !important;
+  padding: 32px !important;
+}
+.restore-specs-title {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #1d1d1f !important;
+  margin: 0 0 20px !important;
+}
+.restore-specs-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  padding: 14px 0 !important;
+  border-bottom: 1px solid #e8e8ed !important;
+  font-size: 14px !important;
+}
+.restore-specs-label {
+  color: #86868b !important;
+  font-weight: 500 !important;
+}
+.restore-specs-value {
+  color: #1d1d1f !important;
+  font-weight: 600 !important;
+  text-align: right !important;
+}
+@media (max-width: 768px) {
+  .restore-story-section {
+    padding: 24px 0 40px !important;
+  }
+  .restore-story-section .container {
+    padding: 0 16px !important;
+  }
+  .restore-hero-card {
+    flex-direction: column !important;
+    padding: 24px 18px !important;
+    border-radius: 18px !important;
+  }
+  .restore-hero-content {
+    flex: none !important;
+    padding: 0 0 16px !important;
+    text-align: center !important;
+  }
+  .restore-hero-title {
+    font-size: 24px !important;
+  }
+  .restore-hero-media {
+    flex: none !important;
+    height: 220px !important;
+    padding: 8px !important;
+    width: 100% !important;
+  }
+  .restore-hero-img {
+    max-height: 200px !important;
+  }
+  .restore-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .restore-card,
+  .restore-card--wide {
+    padding: 22px 16px !important;
+    border-radius: 18px !important;
+  }
+  .restore-card-media {
+    height: 200px !important;
+    margin: 10px 0 14px !important;
+    width: 100% !important;
+  }
+  .restore-card-img {
+    max-height: 180px !important;
+  }
+  .restore-card-title {
+    font-size: 18px !important;
+  }
+  .restore-card-text {
+    font-size: 13px !important;
+  }
+  .restore-specs-block {
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+  }
+  .restore-specs-row {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  .restore-specs-value {
+    text-align: left !important;
+  }
+}

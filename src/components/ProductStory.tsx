@@ -126,14 +126,14 @@ export function ProductStory({ product }: { product: Product }) {
                   className={`restore-card ${cards.length % 2 !== 0 && idx === cards.length - 1 ? "restore-card--wide" : ""}`}
                   key={card.title}
                 >
-                  <div className="restore-card-body">
+                  <div className="restore-card-header">
                     {card.badge && <span className="restore-card-badge">{card.badge}</span>}
                     <h3 className="restore-card-title">{card.title}</h3>
-                    <p className="restore-card-text">{card.text}</p>
                   </div>
                   <div className="restore-card-media">
                     <img src={card.image} alt={card.title} className="restore-card-img" />
                   </div>
+                  {card.text && <p className="restore-card-text">{card.text}</p>}
                 </article>
               ))}
             </div>
