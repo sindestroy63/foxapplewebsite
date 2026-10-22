@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check nginx sub
+      - name: Read foxapple conf
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1uZ2lueC0xIiwgImdyZXAiLCAiLXJuIiwgInN1Yl9maWx0ZXIiLCAiL2V0Yy9uZ2lueC9jb25mLmQvIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIk5HSU5YIFNVQl9GSUxURVIgSU4gQ09ORklHUzoiKQpwcmludChyZXMuc3Rkb3V0KQoKcmVzMiA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1uZ2lueC0xIiwgImxzIiwgIi1sYSIsICIvZXRjL25naW54L2NvbmYuZC8iXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpwcmludCgiTkdJTlggQ09ORi5EIEZJTEVTOiIpCnByaW50KHJlczIuc3Rkb3V0KQo= | base64 -d > /tmp/check-nginx-sub.py
-            python3 /tmp/check-nginx-sub.py
-            rm -f /tmp/check-nginx-sub.py
+            echo dGV4dCA9IG9wZW4oIi9vcHQvZm94YXBwbGUvbmdpbngvY29uZi5kL2ZveGFwcGxlLmNvbmYiLCBlbmNvZGluZz0idXRmLTgiKS5yZWFkKCkKcHJpbnQoIkZPWEFQUExFLkNPTkY6IikKcHJpbnQodGV4dCkK | base64 -d > /tmp/read-foxapple-conf.py
+            python3 /tmp/read-foxapple-conf.py
+            rm -f /tmp/read-foxapple-conf.py
