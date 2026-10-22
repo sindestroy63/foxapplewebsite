@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check compiled css
+      - name: Check nginx sub
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 3m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCmNzc19wYXRoID0gIi9vcHQvZm94YXBwbGUvLm5leHQvc3RhdGljL2NodW5rcy8wanBhZ3d5aGouLnJrLmNzcyIKcmVzID0gc3VicHJvY2Vzcy5ydW4oWyJncmVwIiwgIi1vRSIsIHIiXC5yZXN0b3JlLVthLXpBLVowLTlfLV0rIiwgY3NzX3BhdGhdLCB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUpCmNsYXNzZXMgPSBzb3J0ZWQoc2V0KHJlcy5zdGRvdXQuc3BsaXRsaW5lcygpKSkKcHJpbnQoIlJFU1RPUkUgQ0xBU1NFUyBJTiBDT01QSUxFRCBORVhULkpTIENTUzoiKQpwcmludChjbGFzc2VzKQo= | base64 -d > /tmp/check-compiled-css.py
-            python3 /tmp/check-compiled-css.py
-            rm -f /tmp/check-compiled-css.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1uZ2lueC0xIiwgImdyZXAiLCAiLXJuIiwgInN1Yl9maWx0ZXIiLCAiL2V0Yy9uZ2lueC9jb25mLmQvIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIk5HSU5YIFNVQl9GSUxURVIgSU4gQ09ORklHUzoiKQpwcmludChyZXMuc3Rkb3V0KQoKcmVzMiA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJkb2NrZXIiLCAiZXhlYyIsICJmb3hhcHBsZS1uZ2lueC0xIiwgImxzIiwgIi1sYSIsICIvZXRjL25naW54L2NvbmYuZC8iXSwKICAgIHRleHQ9VHJ1ZSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKKQpwcmludCgiTkdJTlggQ09ORi5EIEZJTEVTOiIpCnByaW50KHJlczIuc3Rkb3V0KQo= | base64 -d > /tmp/check-nginx-sub.py
+            python3 /tmp/check-nginx-sub.py
+            rm -f /tmp/check-nginx-sub.py
