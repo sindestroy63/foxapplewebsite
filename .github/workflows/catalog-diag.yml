@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Check URLs
+      - name: Check lists
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
@@ -14,6 +14,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           command_timeout: 4m
           script: |
-            echo aW1wb3J0IHN1YnByb2Nlc3MKCnVybHMgPSBbCiAgICAiL2NhdGFsb2ciLAogICAgIi9jYXRhbG9nP2JyYW5kPUFwcGxlIiwKICAgICIvY2F0YWxvZz9ncm91cD1zbWFydHBob25lcyIsCiAgICAiL2NhdGFsb2c/Z3JvdXA9dGFibGV0cyIsCiAgICAiL2NhdGFsb2c/Z3JvdXA9c21hcnQtd2F0Y2hlcyIsCiAgICAiL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE3LXBybyIsCiAgICAiL2NhdGFsb2cvc21hcnRwaG9uZXMvaXBob25lLTE3LXByby1tYXgiLAogICAgIi9jYXRhbG9nL3RhYmxldHMvaXBhZCIsCiAgICAiL2NhdGFsb2cvc21hcnQtd2F0Y2hlcy9hcHBsZS13YXRjaC1zZXJpZXMtMTEiLApdCgpmb3IgdSBpbiB1cmxzOgogICAgcmVzID0gc3VicHJvY2Vzcy5ydW4oCiAgICAgICAgWyJjdXJsIiwgIi1zayIsICItbyIsICIvZGV2L251bGwiLCAiLXciLCAiJXtodHRwX2NvZGV9IHRpbWU6ICV7dGltZV90b3RhbH1cXG4iLCAiLUgiLCAiSG9zdDogeG4tLW4xYWFnY2ZqaS54bi0tcDFhaSIsIGYiaHR0cHM6Ly8xMjcuMC4wLjF7dX0iXSwKICAgICAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCiAgICApCiAgICBwcmludChmInt1OjQ1fSAtPiB7cmVzLnN0ZG91dC5zdHJpcCgpfSIpCgpjbWQgPSAiIiJjdXJsIC1zayAtSCAiSG9zdDogeG4tLW4xYWFnY2ZqaS54bi0tcDFhaSIgImh0dHBzOi8vMTI3LjAuMC4xL2NhdGFsb2c/YnJhbmQ9QXBwbGUiIHwgZ3JlcCAtb0UgJzwoaDJ8aDN8c3BhbnxhKVtePl0qPihpUGhvbmUgMTcgUHJvfEFwcGxlIFdhdGNofGlQYWQpW148XSonIHwgaGVhZCAtMjAiIiIKcmVzID0gc3VicHJvY2Vzcy5ydW4oY21kLCBzaGVsbD1UcnVlLCB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUpCnByaW50KCJcbklURU1TIEZPVU5EIE9OIC9jYXRhbG9nP2JyYW5kPUFwcGxlOlxuIiArIHJlcy5zdGRvdXQpCg== | base64 -d > /tmp/check-all-urls.py
-            python3 /tmp/check-all-urls.py
-            rm -f /tmp/check-all-urls.py
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmNtZCA9ICIiImN1cmwgLXNrIC1IICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiAiaHR0cHM6Ly8xMjcuMC4wLjEvY2F0YWxvZz9ncm91cD10YWJsZXRzIiB8IGdyZXAgLW9FICc8KGgyfGgzfHNwYW58YSlbXj5dKj4oQXBwbGUgaVBhZHxpUGFkKVtePF0qJyB8IGhlYWQgLTIwIiIiCnJlcyA9IHN1YnByb2Nlc3MucnVuKGNtZCwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQpwcmludCgiVEFCTEVUUzpcbiIgKyByZXMuc3Rkb3V0KQoKY21kMiA9ICIiImN1cmwgLXNrIC1IICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiAiaHR0cHM6Ly8xMjcuMC4wLjEvY2F0YWxvZz9ncm91cD1zbWFydHBob25lcyIgfCBncmVwIC1vRSAnPChoMnxoM3xzcGFufGEpW14+XSo+KGlQaG9uZSlbXjxdKicgfCBoZWFkIC0yMCIiIgpyZXMyID0gc3VicHJvY2Vzcy5ydW4oY21kMiwgc2hlbGw9VHJ1ZSwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQpwcmludCgiU01BUlRQSE9ORVM6XG4iICsgcmVzMi5zdGRvdXQpCg== | base64 -d > /tmp/check-lists.py
+            python3 /tmp/check-lists.py
+            rm -f /tmp/check-lists.py
