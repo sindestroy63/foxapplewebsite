@@ -1,0 +1,19 @@
+name: Catalog diag
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Find videos
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.56.34.120
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 3m
+          script: |
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCnJlcyA9IHN1YnByb2Nlc3MucnVuKAogICAgWyJmaW5kIiwgIi9vcHQvZm94YXBwbGUiLCAiL3Zhci9saWIvZG9ja2VyL3ZvbHVtZXMiLCAiLW5hbWUiLCAiKi5tcDQiLCAiLW8iLCAiLW5hbWUiLCAiKi53ZWJtIl0sCiAgICB0ZXh0PVRydWUsIGNhcHR1cmVfb3V0cHV0PVRydWUsCikKcHJpbnQoIkVYSVNUSU5HIFZJREVPUyBPTiBTRVJWRVI6IikKcHJpbnQocmVzLnN0ZG91dCBvciAiTk8gT1RIRVIgVklERU9TIikK | base64 -d > /tmp/find-videos.py
+            python3 /tmp/find-videos.py
+            rm -f /tmp/find-videos.py
