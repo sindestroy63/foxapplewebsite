@@ -1,0 +1,19 @@
+name: Catalog diag
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check actions
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.56.34.120
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 3m
+          script: |
+            echo aW1wb3J0IHN1YnByb2Nlc3MKCmNtZCA9IFsKICAgICJjdXJsIiwgIi1zayIsICItSCIsICJIb3N0OiB4bi0tbjFhYWdjZmppLnhuLS1wMWFpIiwKICAgICJodHRwczovLzEyNy4wLjAuMS9jYXRhbG9nL3NtYXJ0cGhvbmVzL2lwaG9uZS1kdW8tYWQ5MGNkIgpdCnJlcyA9IHN1YnByb2Nlc3MucnVuKGNtZCwgdGV4dD1UcnVlLCBjYXB0dXJlX291dHB1dD1UcnVlKQpodG1sID0gcmVzLnN0ZG91dCBvciAiIgoKaWR4ID0gaHRtbC5maW5kKCJkZXRhaWwtYWN0aW9ucyIpCnByaW50KCJJTkRFWDoiLCBpZHgpCmlmIGlkeCA+PSAwOgogICAgcHJpbnQoaHRtbFtpZHg6aWR4KzQwMF0pCmVsc2U6CiAgICBwcmludCgiTk8gZGV0YWlsLWFjdGlvbnMgRk9VTkQhIikKCmlkeDIgPSBodG1sLmZpbmQoImRldGFpbC1hZGQtdG8tY2FydCIpCmlmIGlkeDIgPj0gMDoKICAgIHByaW50KCJcbkFERCBUTyBDQVJUIEJMT0NLOiIpCiAgICBwcmludChodG1sW2lkeDI6aWR4Mis2MDBdKQo= | base64 -d > /tmp/check-duo-actions.py
+            python3 /tmp/check-duo-actions.py
+            rm -f /tmp/check-duo-actions.py
