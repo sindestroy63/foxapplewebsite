@@ -16,6 +16,10 @@ export type HeroSlide = {
   secondaryUrl?: string
   secondaryLabel?: string
   bg?: string
+  btnLeft?: string
+  btnTop?: string
+  aspectRatio?: string
+  darkBtn?: boolean
 }
 
 type Props = {
@@ -119,26 +123,41 @@ export function HeroSlideshow({ slides }: Props) {
                   </div>
                 </div>
               ) : (
-                <Link
-                  className="hero-banner-link"
-                  href={slide.buyUrl}
-                  aria-label={`${slide.alt} - ${slide.buyLabel || 'Купить'}`}
-                >
-                  <img
-                    alt={slide.alt}
-                    className="hero-banner-image"
-                    loading={i <= 1 ? 'eager' : 'lazy'}
-                    src={slide.url}
-                  />
-                  <span className="hero-banner-cta-button">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="9" cy="21" r="1"/>
-                      <circle cx="20" cy="21" r="1"/>
-                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                    </svg>
-                    {slide.buyLabel || 'Купить'}
-                  </span>
-                </Link>
+                <div className="hero-banner-slide">
+                  <div
+                    className="hero-banner-inner"
+                    style={{ aspectRatio: slide.aspectRatio || '2048 / 819' }}
+                  >
+                    <Link
+                      className="hero-banner-art-link"
+                      href={slide.buyUrl}
+                      aria-label={slide.alt}
+                    >
+                      <img
+                        alt={slide.alt}
+                        className="hero-banner-image"
+                        loading={i <= 1 ? 'eager' : 'lazy'}
+                        src={slide.url}
+                      />
+                    </Link>
+                    <Link
+                      className={`hero-banner-btn${slide.darkBtn ? ' hero-banner-btn--light' : ''}`}
+                      href={slide.buyUrl}
+                      style={{
+                        left: slide.btnLeft || '14%',
+                        top: slide.btnTop || '68%',
+                      }}
+                      aria-label={`${slide.alt} - Купить`}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="9" cy="21" r="1"/>
+                        <circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                      </svg>
+                      <span>Купить</span>
+                    </Link>
+                  </div>
+                </div>
               )
             )}
           </div>

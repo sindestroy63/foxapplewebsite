@@ -65,7 +65,9 @@ export default async function HomePage() {
               url: '/banners/iphone-duo.webp',
               alt: 'iPhone Duo',
               buyUrl: '/catalog/smartphones/iphone-duo-ad90cd',
-              buyLabel: 'Предзаказ',
+              buyLabel: 'Купить',
+              btnLeft: '66.2%',
+              btnTop: '70.2%',
               bg: '#f7f6f9',
             },
             {
@@ -74,6 +76,8 @@ export default async function HomePage() {
               alt: 'AirPods 5',
               buyUrl: '/catalog/audio/airpods-5-mysjt0',
               buyLabel: 'Купить',
+              btnLeft: '50.5%',
+              btnTop: '69.2%',
               bg: '#f7f6f9',
             },
             {
@@ -82,6 +86,8 @@ export default async function HomePage() {
               alt: 'Apple Watch Series 12',
               buyUrl: '/catalog/smart-watches/apple-watch-series-12-mdag95',
               buyLabel: 'Купить',
+              btnLeft: '12.8%',
+              btnTop: '68.6%',
               bg: '#f7f6f9',
             },
             {
@@ -90,6 +96,8 @@ export default async function HomePage() {
               alt: 'Apple Watch Ultra 4',
               buyUrl: '/catalog/smart-watches/apple-watch-ultra-4-08l1wr',
               buyLabel: 'Купить',
+              btnLeft: '12.8%',
+              btnTop: '68.6%',
               bg: '#f7f6f9',
             },
             {
@@ -98,6 +106,8 @@ export default async function HomePage() {
               alt: 'MacBook Air',
               buyUrl: '/catalog/laptops/Apple%20MacBook%20Air%20%28M5%2C%202026%29',
               buyLabel: 'Купить',
+              btnLeft: '12.0%',
+              btnTop: '65.3%',
               bg: '#f7f6f9',
             },
             {
@@ -106,7 +116,10 @@ export default async function HomePage() {
               alt: 'AirPods Pro 3',
               buyUrl: '/catalog/audio/airpods-pro-3',
               buyLabel: 'Купить',
-              bg: '#f7f6f9',
+              btnLeft: '12.2%',
+              btnTop: '70.5%',
+              darkBtn: true,
+              bg: '#000000',
             },
             {
               id: 'iphone-air',
@@ -114,6 +127,8 @@ export default async function HomePage() {
               alt: 'iPhone Air',
               buyUrl: '/catalog/smartphones/iphone-air',
               buyLabel: 'Купить',
+              btnLeft: '14.9%',
+              btnTop: '67.4%',
               bg: '#f7f6f9',
             },
             {
@@ -122,6 +137,9 @@ export default async function HomePage() {
               alt: 'PlayStation 5 Pro',
               buyUrl: '/catalog/gaming-consoles/playstation-5-pro',
               buyLabel: 'Купить',
+              btnLeft: '12.2%',
+              btnTop: '67.5%',
+              darkBtn: true,
               bg: '#000000',
             },
             {
@@ -130,6 +148,9 @@ export default async function HomePage() {
               alt: 'MacBook Neo',
               buyUrl: '/catalog/laptops/Apple%20MacBook%20Neo%20%28A18%20Pro%2C%202026%29',
               buyLabel: 'Купить',
+              btnLeft: '16.9%',
+              btnTop: '71.4%',
+              aspectRatio: '1300 / 672',
               bg: '#f7f6f9',
             },
           ]}
