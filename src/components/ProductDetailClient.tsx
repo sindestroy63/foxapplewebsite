@@ -184,7 +184,8 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   const displayImages = colorGroupImages.length > 0 ? colorGroupImages : variantImages.length > 0 ? variantImages : productImages
 
   const normalizedPhone = phone?.replace(/[^\d+]/g, '') || ''
-  const tgLink = telegramUsername ? `https://t.me/${telegramUsername.replace('@', '')}` : '#'
+  const tgUsername = telegramUsername || 'FoxStorSeller'
+  const tgLink = `https://t.me/${tgUsername.replace('@', '')}`
 
   return (
     <>
@@ -335,14 +336,19 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
           />
         </div>
 
-        <hr className="detail-divider" />
-
         <div className="detail-actions">
+          <a
+            className="button secondary button-write"
+            href={tgLink}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Написать
+          </a>
           {normalizedPhone && (
-            <a className="button" href={`tel:${normalizedPhone}`}>Позвонить</a>
-          )}
-          {telegramUsername && (
-            <a className="button secondary" href={tgLink} target="_blank" rel="noopener noreferrer">Написать</a>
+            <a className="button secondary button-call" href={`tel:${normalizedPhone}`}>
+              Позвонить
+            </a>
           )}
         </div>
 
