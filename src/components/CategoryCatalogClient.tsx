@@ -81,7 +81,6 @@ type Props = {
   categoryName: string
   categorySlug: string
   products: Product[]
-  phone: string
   telegramUsername?: string
   initialModelSlug?: string
   breadcrumbBrand?: string
@@ -90,7 +89,7 @@ type Props = {
   activePlacement?: CatalogPlacementDefinition | null
 }
 
-export function CategoryCatalogClient({ categoryName, categorySlug, products, phone, telegramUsername, initialModelSlug, breadcrumbBrand, breadcrumbChild, placementTabs, activePlacement }: Props) {
+export function CategoryCatalogClient({ categoryName, categorySlug, products, telegramUsername, initialModelSlug, breadcrumbBrand, breadcrumbChild, placementTabs, activePlacement }: Props) {
   const merged = useMemo(() => mergeByScreenSize(products), [products])
 
   const [selectedIndex, setSelectedIndex] = useState(() => {
@@ -160,8 +159,6 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, ph
           <ProductDetailClient
             key={`${selectedProduct.id}-${selectedIndex}`}
             product={selectedProduct}
-            phone={phone}
-            telegramUsername={telegramUsername}
           />
         </div>
       </div>

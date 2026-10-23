@@ -89,6 +89,7 @@ export type ProductVariant = {
   oldPrice?: number
   status?: ProductStatus
   isAvailable?: boolean
+  stockQty?: number
   images?: Array<Media | string | number>
 }
 

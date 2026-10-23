@@ -42,7 +42,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       return {}
     }
     const placementNode = findPlacement(brandNavigation)
-    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placementNode.child?.title || 'Каталог'} categorySlug="other" products={products} phone="+7 (917) 954-64-64" breadcrumbBrand={placementNode.groupTitle} breadcrumbChild={placementNode.child?.title} /></div></section>
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placementNode.child?.title || 'Каталог'} categorySlug="other" products={products} breadcrumbBrand={placementNode.groupTitle} breadcrumbChild={placementNode.child?.title} /></div></section>
   }
   if (groupSlug) {
     const [{ group, products }] = await Promise.all([
@@ -69,7 +69,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     const placement = resolveProductCatalogPlacement({ productGroup: filters.productGroup, brand: filters.brand, productLine: filters.line })
     const menuGroup = placement ? brandNavigation.find((item) => item.key === placement.groupKey) : undefined
     const childOrder = menuGroup?.children?.map((item) => item.key)
-    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : title} categorySlug="other" products={products} phone="+7 (917) 954-64-64" placementTabs={getCatalogPlacementTabs({ productGroup: filters.productGroup, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories, childOrder })} activePlacement={placement} breadcrumbBrand={placement && filters.brand ? filters.brand : undefined} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} /></div></section>
+    return <section className="page-section"><div className="container"><CategoryCatalogClient categoryName={placement && filters.brand ? `${filters.brand} — ${placement.childTitle || placement.groupTitle}` : title} categorySlug="other" products={products} placementTabs={getCatalogPlacementTabs({ productGroup: filters.productGroup, brand: filters.brand, line: filters.line, appleAccessories: filters.appleAccessories, childOrder })} activePlacement={placement} breadcrumbBrand={placement && filters.brand ? filters.brand : undefined} breadcrumbChild={placement && filters.brand ? placement.childTitle : undefined} /></div></section>
   }
   return (
     <section className="page-section">

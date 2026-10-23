@@ -15,8 +15,6 @@ const SIM_LABELS: Record<string, string> = {
 
 type Props = {
   product: Product
-  phone?: string
-  telegramUsername?: string
   categorySlug?: string
 }
 
@@ -119,23 +117,23 @@ function ColorDot({ hex, hex2 }: { hex?: string; hex2?: string }) {
   return <span className="color-dot" style={style} />
 }
 
-export function ProductDetailClient({ product, phone, telegramUsername, categorySlug }: Props) {
+export function ProductDetailClient({ product, categorySlug }: Props) {
   const variants = product.variants || []
   const hasVariants = variants.length > 0
 
+  const firstVariant = variants.find((v) => v.isAvailable !== false && Number(v.price) > 0) || variants[0]
+
   const [selection, setSelection] = useState<Record<string, string | null>>(() => {
-    if (!hasVariants) return {}
-    return {}
+    if (!firstVariant) return {}
+    const initSel: Record<string, string | null> = {}
+    for (const axis of STRING_AXES) {
+      const aVal = firstVariant[axis.key as keyof ProductVariant]
+      if (typeof aVal === 'string') initSel[axis.key] = aVal.trim()
+    }
+    return initSel
   })
 
-  const colors = useMemo(() => {
-    const all = uniqueColors(variants)
-    if (!product.hideUnavailableColors) return all
-    return all.filter((clr) => {
-      const match = findVariant(variants, selection, clr.value)
-      return match !== null && match.isAvailable !== false
-    })
-  }, [variants, product.hideUnavailableColors, selection])
+  const colors = useMemo(() => uniqueColors(variants), [variants])
   const hasColors = colors.length > 0
 
   const stringAxes = useMemo(() => {
@@ -149,7 +147,7 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   }, [hasVariants, variants])
 
   const [selectedColor, setSelectedColor] = useState<string | null>(() => {
-    return hasColors ? colors[0].value : null
+    return firstVariant?.color?.value || (hasColors ? colors[0].value : null)
   })
 
   useEffect(() => {
@@ -182,10 +180,6 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
   const variantImages = resolveMedia(activeVariant?.images)
   const productImages = resolveMedia(product.images)
   const displayImages = colorGroupImages.length > 0 ? colorGroupImages : variantImages.length > 0 ? variantImages : productImages
-
-  const normalizedPhone = phone?.replace(/[^\d+]/g, '') || ''
-  const tgUsername = telegramUsername || 'FoxStorSeller'
-  const tgLink = `https://t.me/${tgUsername.replace('@', '')}`
 
   return (
     <>
@@ -221,13 +215,38 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                       const isActive = selection[key] === val
                       const testSel = { ...selection, [key]: val }
                       const match = findVariant(variants, testSel, selectedColor)
-                      const isDisabled = !match
+                      const isExistent = variants.some((v) => {
+                        const vVal = v[key as keyof ProductVariant]
+                        return typeof vVal === 'string' && vVal.trim() === val
+                      })
+                      const isDisabled = !isExistent
                       return (
                         <button
                           key={val}
                           type="button"
                           className={`variant-btn${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}`}
-                          onClick={() => { if (!isDisabled) setSelection((prev) => ({ ...prev, [key]: val })) }}
+                          onClick={() => {
+                            if (match) {
+                              setSelection((prev) => ({ ...prev, [key]: val }))
+                            } else {
+                              const alt = variants.find((v) => {
+                                const vVal = v[key as keyof ProductVariant]
+                                return typeof vVal === 'string' && vVal.trim() === val && (v.isAvailable !== false || (v.stockQty ?? 0) > 0)
+                              }) || variants.find((v) => {
+                                const vVal = v[key as keyof ProductVariant]
+                                return typeof vVal === 'string' && vVal.trim() === val
+                              })
+                              if (alt) {
+                                const nextSel: Record<string, string | null> = { ...selection, [key]: val }
+                                for (const axis of stringAxes) {
+                                  const aVal = alt[axis.key as keyof ProductVariant]
+                                  if (typeof aVal === 'string') nextSel[axis.key] = aVal.trim()
+                                }
+                                setSelection(nextSel)
+                                if (alt.color?.value) setSelectedColor(alt.color.value)
+                              }
+                            }
+                          }}
                         >
                           {displayLabel(key, val)}
                         </button>
@@ -246,13 +265,28 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
                     const isActive = selectedColor === clr.value
                     const testSel = { ...selection }
                     const match = findVariant(variants, testSel, clr.value)
-                    const isDisabled = !match
+                    const isExistent = variants.some((v) => v.color?.value === clr.value)
+                    const isDisabled = !isExistent
                     return (
                       <button
                         key={clr.value}
                         type="button"
                         className={`variant-btn variant-btn--color${isActive ? ' variant-btn--active' : ''}${isDisabled ? ' variant-btn--disabled' : ''}`}
-                        onClick={() => { if (!isDisabled) setSelectedColor(clr.value) }}
+                        onClick={() => {
+                          setSelectedColor(clr.value)
+                          if (!match) {
+                            const alt = variants.find((v) => v.color?.value === clr.value && (v.isAvailable !== false || (v.stockQty ?? 0) > 0))
+                              || variants.find((v) => v.color?.value === clr.value)
+                            if (alt) {
+                              const nextSel: Record<string, string | null> = { ...selection }
+                              for (const axis of stringAxes) {
+                                const aVal = alt[axis.key as keyof ProductVariant]
+                                if (typeof aVal === 'string') nextSel[axis.key] = aVal.trim()
+                              }
+                              setSelection(nextSel)
+                            }
+                          }
+                        }}
                       >
                         <ColorDot hex={clr.hex} hex2={clr.hex2} />
                         <span className="color-label">
@@ -332,24 +366,8 @@ export function ProductDetailClient({ product, phone, telegramUsername, category
               simType: product.simType,
               size: product.size,
             } : undefined)}
-            disabled={displayStatus === 'out_of_stock'}
+            disabled={displayStatus === 'out_of_stock' && (!displayPrice || displayPrice <= 0)}
           />
-        </div>
-
-        <div className="detail-actions">
-          <a
-            className="button secondary button-write"
-            href={tgLink}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Написать
-          </a>
-          {normalizedPhone && (
-            <a className="button secondary button-call" href={`tel:${normalizedPhone}`}>
-              Позвонить
-            </a>
-          )}
         </div>
 
       </div>

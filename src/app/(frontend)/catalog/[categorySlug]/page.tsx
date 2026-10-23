@@ -54,11 +54,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   if (!data.category) {
     const aliasGroup = LEGACY_CATEGORY_GROUP_ALIASES[categorySlug]
     if (aliasGroup) {
-      const [settings, grouped] = await Promise.all([
-        getSiteSettings(),
-        getProductsByProductGroup(aliasGroup),
-      ])
-      return <GroupCatalogPage group={grouped.group!} products={grouped.products} phone={settings.phone} />
+      const grouped = await getProductsByProductGroup(aliasGroup)
+      return <GroupCatalogPage group={grouped.group!} products={grouped.products} />
     }
     // Keep the historical used-items URL available even when the local dump
     // does not contain a `used` category record. Used is a technical state,
@@ -70,7 +67,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             categoryName="Б/У"
             categorySlug="used"
             products={[]}
-            phone={settings.phone || '+7 (917) 954-64-64'}
             telegramUsername={settings.telegramUsername}
           />
         </div></section>
@@ -79,8 +75,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     notFound()
   }
 
-  const phone = settings.phone || '+7 (917) 954-64-64'
-
   return (
     <section className="page-section">
       <div className="container">
@@ -88,7 +82,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           categoryName={data.category.name}
           categorySlug={categorySlug}
           products={data.products}
-          phone={phone}
           telegramUsername={settings.telegramUsername}
           initialModelSlug={modelSlug}
         />

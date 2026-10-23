@@ -5,7 +5,7 @@ import { LeadForm } from '@/components/LeadForm'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
 import { ProductStory } from '@/components/ProductStory'
 import { RichText } from '@/components/RichText'
-import { getProductBySlugs, getSiteSettings } from '@/lib/cms'
+import { getProductBySlugs } from '@/lib/cms'
 import { productCanonicalUrl } from '@/lib/product-url'
 
 export const dynamic = 'force-dynamic'
@@ -41,22 +41,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
-  const [{ categorySlug, productSlug }, settings] = await Promise.all([params, getSiteSettings()])
+  const { categorySlug, productSlug } = await params
   const product = await getProductBySlugs(categorySlug, productSlug)
 
   if (!product) {
     notFound()
   }
 
-  const phone = settings.phone || '+7 (917) 954-64-64'
-
   return (
     <section className="page-section">
       <div className="container product-detail product-detail-panel">
         <ProductDetailClient
           product={product}
-          phone={phone}
-          telegramUsername={settings.telegramUsername}
         />
       </div>
       <ProductStory product={product} />
