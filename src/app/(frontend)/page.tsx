@@ -53,9 +53,9 @@ export default async function HomePage() {
     },
     { id: 'duo', alt: 'iPhone Duo', video: '/hero/duo.mp4', poster: '/hero/duo.jpg', href: '/catalog/smartphones/iphone-duo-ad90cd' },
     { id: 'airpods-5', alt: 'AirPods 5', video: '/hero/airpods-5.mp4', poster: '/hero/airpods-5.jpg', href: '/catalog/audio/airpods-5-mysjt0' },
-    { id: 'watch-12', alt: 'Apple Watch Series 12', video: '/hero/watch-12.mp4', poster: '/hero/watch-12.jpg', href: '/catalog/smart-watches/apple-watch-series-12-mdag95', dark: true },
+    { id: 'watch-12', alt: 'Apple Watch Series 12', video: '/hero/watch-12.mp4', poster: '/hero/watch-12.jpg', href: '/catalog/smart-watches/apple-watch-series-12-mdag95' },
     { id: 'macbook-neo', alt: 'MacBook Neo', video: '/hero/macbook-neo.mp4', poster: '/hero/macbook-neo.jpg', href: '/catalog/laptops/Apple%20MacBook%20Neo%20%28A18%20Pro%2C%202026%29' },
-    { id: 'playstation', alt: 'PlayStation 5 Pro', video: '/hero/playstation.mp4', poster: '/hero/playstation.jpg', href: '/catalog/gaming-consoles/playstation-5-pro', dark: true },
+    { id: 'playstation', alt: 'PlayStation 5 Pro', video: '/hero/playstation.mp4', poster: '/hero/playstation.jpg', href: '/catalog/gaming-consoles/playstation-5-pro' },
     { id: 'dyson', alt: 'Dyson Airstrait', video: '/hero/dyson.mp4', poster: '/hero/dyson.jpg', href: '/catalog/home-appliances/vypryamitel-dyson-ht01' },
   ]
 

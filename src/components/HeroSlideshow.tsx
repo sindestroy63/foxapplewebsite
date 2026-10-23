@@ -12,7 +12,6 @@ export type HeroSlide = {
   eyebrow?: string
   title?: string
   subtitle?: string
-  dark?: boolean
   secondaryHref?: string
   secondaryLabel?: string
 }
@@ -112,7 +111,7 @@ export function HeroSlideshow({ slides }: Props) {
               ) : (
                 <>
                   <Link className="hero-slide-link" href={slide.href} aria-label={slide.alt} draggable={false} />
-                  <Link className={`hero-buy${slide.dark ? ' hero-buy--light' : ''}`} href={slide.href} draggable={false}>
+                  <Link className="hero-buy" href={slide.href} draggable={false}>
                     Купить
                   </Link>
                 </>
