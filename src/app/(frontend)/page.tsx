@@ -39,104 +39,30 @@ export default async function HomePage() {
 
   const phone = settings.phone || '+7 (917) 954-64-64'
 
+  const heroSlides: HeroSlide[] = [
+    {
+      id: 'iphone-18-pro-max',
+      alt: 'iPhone 18 Pro Max',
+      video: getMediaUrl({ id: heroMedia.mediaId, filename: heroMedia.filename, mimeType: 'video/mp4' }, 'detail') || '/api/media/file/hero-iphone.mp4',
+      href: '/catalog/smartphones/iphone-18-pro-max-14jf1q',
+      eyebrow: 'Самара · техника Apple · бронь онлайн',
+      title: 'iPhone 18 Pro Max',
+      subtitle: 'Самый большой дисплей. Максимальная автономность.',
+      secondaryHref: '/contacts',
+      secondaryLabel: 'Связаться',
+    },
+    { id: 'duo', alt: 'iPhone Duo', video: '/hero/duo.mp4', poster: '/hero/duo.jpg', href: '/catalog/smartphones/iphone-duo-ad90cd' },
+    { id: 'airpods-5', alt: 'AirPods 5', video: '/hero/airpods-5.mp4', poster: '/hero/airpods-5.jpg', href: '/catalog/audio/airpods-5-mysjt0' },
+    { id: 'watch-12', alt: 'Apple Watch Series 12', video: '/hero/watch-12.mp4', poster: '/hero/watch-12.jpg', href: '/catalog/smart-watches/apple-watch-series-12-mdag95', dark: true },
+    { id: 'macbook-neo', alt: 'MacBook Neo', video: '/hero/macbook-neo.mp4', poster: '/hero/macbook-neo.jpg', href: '/catalog/laptops/Apple%20MacBook%20Neo%20%28A18%20Pro%2C%202026%29' },
+    { id: 'playstation', alt: 'PlayStation 5 Pro', video: '/hero/playstation.mp4', poster: '/hero/playstation.jpg', href: '/catalog/gaming-consoles/playstation-5-pro', dark: true },
+    { id: 'dyson', alt: 'Dyson Airstrait', video: '/hero/dyson.mp4', poster: '/hero/dyson.jpg', href: '/catalog/home-appliances/vypryamitel-dyson-ht01' },
+  ]
 
   return (
     <>
-      {/* ── HERO ── */}
       <section className="hero">
-        <HeroSlideshow
-          slides={[
-            {
-              id: 'iphone-18-pro-max',
-              isVideo: true,
-              url: getMediaUrl({ id: heroMedia.mediaId, filename: heroMedia.filename, mimeType: 'video/mp4' }, 'detail') || '/api/media/file/hero-iphone.mp4',
-              alt: 'iPhone 18 Pro Max',
-              eyebrow: 'Самара · техника Apple · бронь онлайн',
-              title: 'iPhone 18 Pro Max',
-              subtitle: 'Самый большой дисплей. Максимальная автономность.',
-              buyUrl: '/catalog/smartphones/iphone-18-pro-max-14jf1q',
-              buyLabel: 'Купить',
-              secondaryUrl: '/contacts',
-              secondaryLabel: 'Связаться',
-              bg: '#000000',
-            },
-            {
-              id: 'iphone-duo',
-              url: '/banners/iphone-duo.webp',
-              alt: 'iPhone Duo',
-              buyUrl: '/catalog/smartphones/iphone-duo-ad90cd',
-              buyLabel: 'Купить',
-              bg: '#f7f6f9',
-            },
-            {
-              id: 'airpods-5',
-              url: '/banners/airpods-5.webp',
-              alt: 'AirPods 5',
-              buyUrl: '/catalog/audio/airpods-5-mysjt0',
-              buyLabel: 'Купить',
-              bg: '#f7f6f9',
-            },
-            {
-              id: 'watch-s12',
-              url: '/banners/watch-s12.webp',
-              alt: 'Apple Watch Series 12',
-              buyUrl: '/catalog/smart-watches/apple-watch-series-12-mdag95',
-              buyLabel: 'Купить',
-              bg: '#f7f6f9',
-            },
-            {
-              id: 'watch-ultra-4',
-              url: '/banners/watch-ultra-4.webp',
-              alt: 'Apple Watch Ultra 4',
-              buyUrl: '/catalog/smart-watches/apple-watch-ultra-4-08l1wr',
-              buyLabel: 'Купить',
-              bg: '#f7f6f9',
-            },
-            {
-              id: 'macbook-air',
-              url: '/banners/macbook-air.webp',
-              alt: 'MacBook Air',
-              buyUrl: '/catalog/laptops/Apple%20MacBook%20Air%20%28M5%2C%202026%29',
-              buyLabel: 'Купить',
-              bg: '#f7f6f9',
-            },
-            {
-              id: 'airpods-pro-3',
-              url: '/banners/airpods-pro-3.webp',
-              alt: 'AirPods Pro 3',
-              buyUrl: '/catalog/audio/airpods-pro-3',
-              buyLabel: 'Купить',
-              darkBtn: true,
-              bg: '#000000',
-            },
-            {
-              id: 'iphone-air',
-              url: '/banners/iphone-air.webp',
-              alt: 'iPhone Air',
-              buyUrl: '/catalog/smartphones/iphone-air',
-              buyLabel: 'Купить',
-              bg: '#f7f6f9',
-            },
-            {
-              id: 'ps5-pro',
-              url: '/banners/ps5-pro.webp',
-              alt: 'PlayStation 5 Pro',
-              buyUrl: '/catalog/gaming-consoles/playstation-5-pro',
-              buyLabel: 'Купить',
-              darkBtn: true,
-              bg: '#000000',
-            },
-            {
-              id: 'macbook-neo',
-              url: '/banners/macbook-neo.webp',
-              alt: 'MacBook Neo',
-              buyUrl: '/catalog/laptops/Apple%20MacBook%20Neo%20%28A18%20Pro%2C%202026%29',
-              buyLabel: 'Купить',
-              aspectRatio: '1300 / 672',
-              bg: '#f7f6f9',
-            },
-          ]}
-        />
+        <HeroSlideshow slides={heroSlides} />
       </section>
 
       {/* ── КАТЕГОРИИ ── */}
