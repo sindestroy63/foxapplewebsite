@@ -1,4 +1,4 @@
-import { HeroSlideshow } from '@/components/HeroSlideshow'
+import { HeroSlideshow, type HeroSlide } from '@/components/HeroSlideshow'
 import { ScrollReveal } from '@/components/ScrollReveal'
 import Link from 'next/link'
 
@@ -44,21 +44,96 @@ export default async function HomePage() {
     <>
       {/* ── HERO ── */}
       <section className="hero">
-        <HeroSlideshow slides={[{ url: getMediaUrl({ id: heroMedia.mediaId, filename: heroMedia.filename, mimeType: 'video/mp4' }, 'detail')!, isVideo: true, alt: 'ФОХСТОР' }]} />
-        <div className="hero-bg-overlay" />
-        <div className="container hero-content">
-          <p className="eyebrow">Самара · техника Apple · бронь онлайн</p>
-          <h1>{CONTACTS.heroTitle}</h1>
-          <p className="hero-subtitle">{CONTACTS.heroSubtitle}</p>
-          <div className="hero-actions">
-            <Link className="button hero-primary" href="/catalog">
-              Подобрать технику
-            </Link>
-            <Link className="button hero-secondary" href="/contacts">
-              Связаться
-            </Link>
-          </div>
-        </div>
+        <HeroSlideshow
+          slides={[
+            {
+              id: 'iphone-18-pro-max',
+              isVideo: true,
+              url: getMediaUrl({ id: heroMedia.mediaId, filename: heroMedia.filename, mimeType: 'video/mp4' }, 'detail') || '/api/media/file/hero-iphone.mp4',
+              alt: 'iPhone 18 Pro Max',
+              eyebrow: 'Самара · техника Apple · бронь онлайн',
+              title: 'iPhone 18 Pro Max',
+              subtitle: 'Самый большой дисплей. Максимальная автономность.',
+              buyUrl: '/catalog/smartphones/iphone-18-pro-max-14jf1q',
+              buyLabel: 'Купить',
+              secondaryUrl: '/contacts',
+              secondaryLabel: 'Связаться',
+              bg: '#000000',
+            },
+            {
+              id: 'iphone-duo',
+              url: '/banners/iphone-duo.webp',
+              alt: 'iPhone Duo',
+              buyUrl: '/catalog/smartphones/iphone-duo-ad90cd',
+              buyLabel: 'Предзаказ',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'airpods-5',
+              url: '/banners/airpods-5.webp',
+              alt: 'AirPods 5',
+              buyUrl: '/catalog/audio/airpods-5-mysjt0',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'watch-s12',
+              url: '/banners/watch-s12.webp',
+              alt: 'Apple Watch Series 12',
+              buyUrl: '/catalog/smart-watches/apple-watch-series-12-mdag95',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'watch-ultra-4',
+              url: '/banners/watch-ultra-4.webp',
+              alt: 'Apple Watch Ultra 4',
+              buyUrl: '/catalog/smart-watches/apple-watch-ultra-4-08l1wr',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'macbook-air',
+              url: '/banners/macbook-air.webp',
+              alt: 'MacBook Air',
+              buyUrl: '/catalog/laptops/Apple%20MacBook%20Air%20%28M5%2C%202026%29',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'airpods-pro-3',
+              url: '/banners/airpods-pro-3.webp',
+              alt: 'AirPods Pro 3',
+              buyUrl: '/catalog/audio/airpods-pro-3',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'iphone-air',
+              url: '/banners/iphone-air.webp',
+              alt: 'iPhone Air',
+              buyUrl: '/catalog/smartphones/iphone-air',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+            {
+              id: 'ps5-pro',
+              url: '/banners/ps5-pro.webp',
+              alt: 'PlayStation 5 Pro',
+              buyUrl: '/catalog/gaming-consoles/playstation-5-pro',
+              buyLabel: 'Купить',
+              bg: '#000000',
+            },
+            {
+              id: 'macbook-neo',
+              url: '/banners/macbook-neo.webp',
+              alt: 'MacBook Neo',
+              buyUrl: '/catalog/laptops/Apple%20MacBook%20Neo%20%28A18%20Pro%2C%202026%29',
+              buyLabel: 'Купить',
+              bg: '#f7f6f9',
+            },
+          ]}
+        />
       </section>
 
       {/* ── КАТЕГОРИИ ── */}

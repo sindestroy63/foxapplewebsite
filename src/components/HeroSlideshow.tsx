@@ -1,25 +1,34 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Media } from '@/lib/types'
+import Link from 'next/link'
 
-type Slide = {
+export type HeroSlide = {
+  id: string
+  isVideo?: boolean
   url: string
-  isVideo: boolean
   alt: string
+  title?: string
+  subtitle?: string
+  eyebrow?: string
+  buyUrl: string
+  buyLabel?: string
+  secondaryUrl?: string
+  secondaryLabel?: string
+  bg?: string
 }
 
 type Props = {
-  slides: Slide[]
+  slides: HeroSlide[]
 }
 
 export function HeroSlideshow({ slides }: Props) {
   const [current, setCurrent] = useState(0)
   const [next, setNext] = useState<number | null>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | number | null>(null)
   const len = slides.length
 
-  const isCurrentVideo = slides[current]?.isVideo
+  const isCurrentVideo = Boolean(slides[current]?.isVideo)
 
   const advance = useCallback(
     (to?: number) => {
@@ -30,17 +39,17 @@ export function HeroSlideshow({ slides }: Props) {
       setTimeout(() => {
         setCurrent(target)
         setNext(null)
-      }, 800)
+      }, 600)
     },
     [current, len],
   )
 
   useEffect(() => {
     if (len <= 1) return
-    if (isCurrentVideo) return
-    timerRef.current = setTimeout(() => advance(), 7000)
+    const duration = isCurrentVideo ? 7000 : 5000
+    timerRef.current = setTimeout(() => advance(), duration)
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
+      clearTimeout(timerRef.current as number)
     }
   }, [advance, len, current, isCurrentVideo])
 
@@ -49,52 +58,87 @@ export function HeroSlideshow({ slides }: Props) {
   }, [advance, len])
 
   const goTo = (idx: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current)
+    clearTimeout(timerRef.current as number)
     advance(idx)
   }
 
   const goPrev = () => {
-    if (timerRef.current) clearTimeout(timerRef.current)
+    clearTimeout(timerRef.current as number)
     advance((current - 1 + len) % len)
   }
 
   const goNext = () => {
-    if (timerRef.current) clearTimeout(timerRef.current)
+    clearTimeout(timerRef.current as number)
     advance((current + 1) % len)
   }
 
   if (slides.length === 0) return null
 
   return (
-    <div className="hero-slideshow">
+    <div className="hero-slideshow-container">
       {slides.map((slide, i) => {
         const isActive = i === current
         const isNext = i === next
         const visible = isActive || isNext
+        const slideBg = slide.bg || (slide.isVideo ? '#000000' : '#f7f6f9')
+
         return (
           <div
             className={`hero-slide${isActive && next === null ? ' hero-slide--active' : ''}${isNext ? ' hero-slide--next' : ''}${isActive && next !== null ? ' hero-slide--leaving' : ''}`}
-            key={i}
+            key={slide.id || i}
+            style={{ backgroundColor: slideBg }}
           >
             {visible && (
               slide.isVideo ? (
-                <video
-                  autoPlay
-                  className="hero-bg-video"
-                  loop={len <= 1}
-                  muted
-                  onEnded={isActive ? handleVideoEnded : undefined}
-                  playsInline
-                  preload="auto"
-                  src={slide.url}
-                />
+                <div className="hero-slide-video-wrap">
+                  <video
+                    autoPlay
+                    className="hero-bg-video"
+                    loop={len <= 1}
+                    muted
+                    onEnded={isActive ? handleVideoEnded : undefined}
+                    playsInline
+                    preload="auto"
+                    src={slide.url}
+                  />
+                  <div className="hero-bg-overlay" />
+                  <div className="container hero-content">
+                    {slide.eyebrow && <p className="eyebrow">{slide.eyebrow}</p>}
+                    <h1>{slide.title || 'iPhone 18 Pro Max'}</h1>
+                    {slide.subtitle && <p className="hero-subtitle">{slide.subtitle}</p>}
+                    <div className="hero-actions">
+                      <Link className="button hero-primary" href={slide.buyUrl}>
+                        {slide.buyLabel || 'Купить'}
+                      </Link>
+                      {slide.secondaryUrl && (
+                        <Link className="button hero-secondary" href={slide.secondaryUrl}>
+                          {slide.secondaryLabel || 'Связаться'}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <img
-                  alt={slide.alt}
-                  className="hero-bg-video"
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  src={slide.url}
-                />
+                <Link
+                  className="hero-banner-link"
+                  href={slide.buyUrl}
+                  aria-label={`${slide.alt} - ${slide.buyLabel || 'Купить'}`}
+                >
+                  <img
+                    alt={slide.alt}
+                    className="hero-banner-image"
+                    loading={i <= 1 ? 'eager' : 'lazy'}
+                    src={slide.url}
+                  />
+                  <span className="hero-banner-cta-button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="9" cy="21" r="1"/>
+                      <circle cx="20" cy="21" r="1"/>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    {slide.buyLabel || 'Купить'}
+                  </span>
+                </Link>
               )
             )}
           </div>
