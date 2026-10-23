@@ -31,6 +31,8 @@ jobs:
           source: ".next/*"
           target: "/opt/foxapple/.next"
           strip_components: 1
+          timeout: 120s
+          command_timeout: 15m
 
       - name: Restart app
         uses: appleboy/ssh-action@v1.0.3
