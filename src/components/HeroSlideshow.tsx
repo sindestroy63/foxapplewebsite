@@ -143,10 +143,6 @@ export function HeroSlideshow({ slides }: Props) {
                     <Link
                       className={`hero-banner-btn${slide.darkBtn ? ' hero-banner-btn--light' : ''}`}
                       href={slide.buyUrl}
-                      style={{
-                        left: slide.btnLeft || '14%',
-                        top: slide.btnTop || '68%',
-                      }}
                       aria-label={`${slide.alt} - Купить`}
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
