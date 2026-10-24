@@ -80,6 +80,23 @@ function extractStorageLabel(storage: unknown, memory: unknown): string {
   return ''
 }
 
+function extractRamLabel(ramOption: unknown, ram: unknown): string {
+  if (ramOption && typeof ramOption === 'object') {
+    const option = ramOption as { label?: string; key?: string }
+    const label = (option.label || option.key || '').trim()
+    if (label) return label
+  }
+  return typeof ram === 'string' ? ram.trim() : ''
+}
+
+function extractChipLabel(chip: unknown): string {
+  return typeof chip === 'string' ? chip.trim() : ''
+}
+
+function stripMemoryUnit(label: string): string {
+  return label.replace(/\s*(gb|гб)$/i, '')
+}
+
 function extractSimLabel(sim: unknown, simType: unknown): string {
   let val = ''
   if (sim) {
@@ -99,21 +116,41 @@ function extractSimLabel(sim: unknown, simType: unknown): string {
   return val
 }
 
-function buildOfferName(baseName: string, color: string, storage: string, sim: string): string {
-  const parts: string[] = [baseName.trim()]
-  const lowerBase = baseName.toLowerCase()
+type OfferNameParts = {
+  chip: string
+  ram: string
+  storage: string
+  color: string
+  sim: string
+}
 
-  if (color && !lowerBase.includes(color.toLowerCase())) {
-    parts.push(color)
-  }
-  if (storage && !lowerBase.includes(storage.toLowerCase())) {
-    parts.push(storage)
-  }
-  if (sim && !lowerBase.includes(sim.toLowerCase())) {
-    parts.push(sim)
+function buildOfferName(baseName: string, parts: OfferNameParts): string {
+  const name = baseName.trim()
+  const lowerBase = name.toLowerCase()
+  const has = (value: string) => lowerBase.includes(value.toLowerCase())
+  const result: string[] = [name]
+
+  if (parts.chip && !has(parts.chip)) {
+    result.push(parts.chip)
   }
 
-  return parts.join(' ')
+  const storageInBase = parts.storage ? has(parts.storage) : false
+  let memory = ''
+  if (parts.ram && parts.storage && !storageInBase) memory = `${stripMemoryUnit(parts.ram)}/${parts.storage}`
+  else if (parts.ram) memory = parts.ram
+  else if (parts.storage && !storageInBase) memory = parts.storage
+  if (memory && !has(memory)) {
+    result.push(memory)
+  }
+
+  if (parts.color && !has(parts.color)) {
+    result.push(parts.color)
+  }
+  if (parts.sim && !has(parts.sim)) {
+    result.push(parts.sim)
+  }
+
+  return result.join(' ')
 }
 
 export async function GET() {
@@ -198,7 +235,13 @@ export async function GET() {
           const colorName = extractColorLabel(variant.color) || extractColorLabel(product.color)
           const storageName = extractStorageLabel(variant.storage, variant.memory) || extractStorageLabel(null, product.memory)
           const simName = extractSimLabel(variant.sim, variant.simType) || extractSimLabel(null, product.simType)
-          const offerName = buildOfferName(baseName, colorName, storageName, simName)
+          const offerName = buildOfferName(baseName, {
+            chip: extractChipLabel(variant.chip) || extractChipLabel(product.chip),
+            ram: extractRamLabel(variant.ramOption, variant.ram) || extractRamLabel(null, product.ram),
+            storage: storageName,
+            color: colorName,
+            sim: simName,
+          })
 
           const rawPrice = variant.price != null && variant.price !== '' ? Number(variant.price) : Number(product.price)
           const price = Math.round(Number(rawPrice || 0))
@@ -225,7 +268,13 @@ export async function GET() {
         const colorName = extractColorLabel(product.color)
         const storageName = extractStorageLabel(null, product.memory)
         const simName = extractSimLabel(null, product.simType)
-        const offerName = buildOfferName(baseName, colorName, storageName, simName)
+        const offerName = buildOfferName(baseName, {
+          chip: extractChipLabel(product.chip),
+          ram: extractRamLabel(null, product.ram),
+          storage: storageName,
+          color: colorName,
+          sim: simName,
+        })
 
         const price = Math.round(Number(product.price || 0))
         if (price <= 0) continue
