@@ -9,11 +9,8 @@ export type HeroSlide = {
   video: string
   poster?: string
   href: string
-  eyebrow?: string
-  title?: string
-  subtitle?: string
-  secondaryHref?: string
-  secondaryLabel?: string
+  title: string
+  subtitle: string
 }
 
 type Props = {
@@ -74,9 +71,9 @@ export function HeroSlideshow({ slides }: Props) {
     <>
       <div className="hero-track" ref={trackRef}>
         {slides.map((slide, index) => {
-          const isIntro = Boolean(slide.title)
+          const Heading = index === 0 ? 'h1' : 'h2'
           return (
-            <div className={`hero-slide${isIntro ? ' hero-slide--intro' : ''}`} key={slide.id}>
+            <div className="hero-slide" key={slide.id}>
               <video
                 className="hero-slide-media"
                 ref={(node) => {
@@ -89,33 +86,15 @@ export function HeroSlideshow({ slides }: Props) {
                 preload={index === active || index === (active + 1) % count ? 'auto' : 'none'}
                 onEnded={index === active && count > 1 ? () => goTo((active + 1) % count) : undefined}
               />
-              {isIntro ? (
-                <>
-                  <div className="hero-bg-overlay" />
-                  <div className="hero-content hero-intro">
-                    {slide.eyebrow && <p className="eyebrow">{slide.eyebrow}</p>}
-                    <h1>{slide.title}</h1>
-                    {slide.subtitle && <p className="hero-subtitle">{slide.subtitle}</p>}
-                    <div className="hero-actions">
-                      <Link className="button hero-primary" href={slide.href}>
-                        Купить
-                      </Link>
-                      {slide.secondaryHref && (
-                        <Link className="button hero-secondary" href={slide.secondaryHref}>
-                          {slide.secondaryLabel || 'Связаться'}
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link className="hero-slide-link" href={slide.href} aria-label={slide.alt} draggable={false} />
-                  <Link className="hero-buy" href={slide.href} draggable={false}>
-                    Купить
-                  </Link>
-                </>
-              )}
+              <div className="hero-slide-shade" />
+              <Link className="hero-slide-link" href={slide.href} aria-label={slide.alt} draggable={false} />
+              <div className="hero-slide-copy">
+                <Heading className="hero-slide-title">{slide.title}</Heading>
+                <p className="hero-slide-tagline">{slide.subtitle}</p>
+              </div>
+              <Link className="hero-buy" href={slide.href} draggable={false}>
+                Купить
+              </Link>
             </div>
           )
         })}
