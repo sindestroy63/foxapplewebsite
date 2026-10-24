@@ -5,8 +5,6 @@ import Link from 'next/link'
 import { ProductGrid } from '@/components/ProductGrid'
 import { normalizeProducts } from '@/lib/normalize'
 import { getBestOffers, getBrandCatalogNavigation, getSiteSettings } from '@/lib/cms'
-import { heroMedia } from '@/lib/catalog-group-assets'
-import { getMediaUrl } from '@/lib/media'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
 import { CONTACTS } from '@/lib/constants'
 import {
@@ -43,7 +41,8 @@ export default async function HomePage() {
     {
       id: 'iphone-18-pro-max',
       alt: 'iPhone 18 Pro Max',
-      video: getMediaUrl({ id: heroMedia.mediaId, filename: heroMedia.filename, mimeType: 'video/mp4' }, 'detail') || '/api/media/file/hero-iphone.mp4',
+      video: '/hero/iphone-18-pro-max.mp4',
+      poster: '/hero/iphone-18-pro-max.jpg',
       href: '/catalog/smartphones/iphone-18-pro-max-14jf1q',
       eyebrow: 'Самара · техника Apple · бронь онлайн',
       title: 'iPhone 18 Pro Max',

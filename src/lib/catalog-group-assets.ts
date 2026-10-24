@@ -15,8 +15,6 @@ export const CATALOG_GROUP_ASSETS: Record<string, GroupAsset> = {
   other: { mediaId: 686, filename: 'ремах.jpg', alt: 'Другое' },
 }
 
-export const heroMedia = { mediaId: 1410, filename: 'video_2026-08-02_13-19-21.mp4', type: 'video' as const }
-
 export function catalogGroupAssetUrl(slug: string): string | null {
   const asset = CATALOG_GROUP_ASSETS[slug]
   return asset ? getMediaUrl({ id: asset.mediaId, filename: asset.filename } as Media, 'card') : null
