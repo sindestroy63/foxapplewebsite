@@ -28,7 +28,7 @@ async function main() {
 
     console.log('═══ PRODUCTION 404 COMPLETE AUDIT ═══\n')
 
-    // 1. ALL APPLE PRODUCTS MENTIONED
+    
     console.log('📱 ALL APPLE PRODUCTS:')
     const allApple = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -44,7 +44,7 @@ async function main() {
     console.table(allApple.rows)
     console.log(`Total found: ${allApple.rows.length}`)
 
-    // 2. CHECK IF MISSING PRODUCTS EXIST AT ALL
+    
     console.log('\n🔍 SEARCHING FOR MISSING PRODUCTS:')
     const missing = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -56,10 +56,10 @@ async function main() {
     `)
     console.table(missing.rows)
 
-    // 3. INSTAX CATEGORY CHECK
+    
     console.log('\n📷 INSTAX CATEGORY ANALYSIS:')
 
-    // Check navigation structure for "Фото и видео"
+    
     const photoVideoNav = await client.query(`
       SELECT id, title, kind, product_group, brand, product_line, stable_key, parent_id
       FROM catalog_navigation
@@ -72,7 +72,7 @@ async function main() {
     console.log('Photo/Video navigation entries:')
     console.table(photoVideoNav.rows)
 
-    // Check what filter the category uses
+    
     const instaxProducts = await client.query(`
       SELECT p.id, p.name, p.slug, p.product_group, p.brand, p.product_line, p.is_available,
         COUNT(cn.id) as nav_count
@@ -85,7 +85,7 @@ async function main() {
     console.log('\nInstax products and navigation:')
     console.table(instaxProducts.rows)
 
-    // 4. CHECK NEW SLUGS FOR CONFLICTS
+    
     console.log('\n🔄 SLUG CONFLICT CHECK:')
     const newSlugs = [
       'apple-airpods-max-2-2026',
@@ -109,7 +109,7 @@ async function main() {
     }
     console.log('✅ No conflicts found for new slugs')
 
-    // 5. URL_REDIRECTS TABLE STRUCTURE (try with different user if needed)
+    
     console.log('\n🔄 URL_REDIRECTS TABLE CHECK:')
     try {
       const redirectsSchema = await client.query(`
@@ -129,10 +129,10 @@ async function main() {
       console.log('✅ Table exists but requires higher privileges')
     }
 
-    // 6. NAVIGATION SYNC ANALYSIS
+    
     console.log('\n🗺️  NAVIGATION SYNC ANALYSIS:')
 
-    // Count all mismatches
+    
     const allMismatches = await client.query(`
       SELECT COUNT(*) as total
       FROM catalog_navigation cn
@@ -141,7 +141,7 @@ async function main() {
     `)
     console.log(`\nTotal navigation mismatches: ${allMismatches.rows[0].total}`)
 
-    // Show affected products from our fix list
+    
     const ourMismatches = await client.query(`
       SELECT
         cn.id as nav_id,
@@ -157,7 +157,7 @@ async function main() {
     console.log('\nOur products navigation (BEFORE slug fix):')
     console.table(ourMismatches.rows)
 
-    // 7. PRODUCTION DOMAIN CHECK
+    
     console.log('\n🌐 SITE SETTINGS:')
     const siteSettingsSchema = await client.query(`
       SELECT column_name FROM information_schema.columns
@@ -171,7 +171,7 @@ async function main() {
     `)
     console.table(siteSettings.rows)
 
-    // 8. PREPARE MIGRATION VERIFICATION
+    
     console.log('\n📋 MIGRATION TARGET PRODUCTS:')
     const targets = await client.query(`
       SELECT

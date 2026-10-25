@@ -1,18 +1,18 @@
--- ═══════════════════════════════════════════════════════════════════
--- FOXSTORE PRODUCTION NAVIGATION FIX
--- ═══════════════════════════════════════════════════════════════════
---
--- Updates navigation.href for target products only
--- Does NOT touch other 29 mismatched navigation entries
---
--- IMPORTANT: Run this AFTER slug updates are committed
--- ═══════════════════════════════════════════════════════════════════
+
+
+
+
+
+
+
+
+
 
 BEGIN;
 
--- ═══════════════════════════════════════════════════════════════════
--- VERIFY SLUGS WERE UPDATED
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 DO $$
 DECLARE
@@ -20,7 +20,7 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO updated_count
   FROM products
-  WHERE slug ~ '^[a-z0-9-]+$'  -- Valid slug format
+  WHERE slug ~ '^[a-z0-9-]+$'   
     AND id IN (20, 51, 56, 57, 58, 60, 62, 63, 67, 69, 72, 78);
 
   IF updated_count != 12 THEN
@@ -30,9 +30,9 @@ BEGIN
   RAISE NOTICE '✅ All target slugs verified';
 END $$;
 
--- ═══════════════════════════════════════════════════════════════════
--- UPDATE NAVIGATION HREF (TARGET PRODUCTS ONLY)
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 UPDATE catalog_navigation cn
 SET
@@ -40,16 +40,16 @@ SET
   updated_at = NOW()
 FROM products p
 WHERE cn.product_id = p.id
-  AND p.id IN (20, 51, 60, 63, 67, 69, 72, 78)  -- Only products with existing navigation
+  AND p.id IN (20, 51, 60, 63, 67, 69, 72, 78)   
   AND cn.href != '/catalog/' || p.product_group || '/' || p.slug;
 
 \echo '✅ Navigation updated for target products'
 
--- ═══════════════════════════════════════════════════════════════════
--- CREATE NAVIGATION FOR INSTAX (if not exists)
--- ═══════════════════════════════════════════════════════════════════
 
--- Get parent navigation ID for "other" category
+
+
+
+
 DO $$
 DECLARE
   other_parent_id INTEGER;
@@ -57,7 +57,7 @@ DECLARE
   instax12_exists BOOLEAN;
   instax13_exists BOOLEAN;
 BEGIN
-  -- Find parent for "other" category
+  
   SELECT id INTO other_parent_id
   FROM catalog_navigation
   WHERE product_group = 'other'
@@ -69,7 +69,7 @@ BEGIN
     RAISE EXCEPTION '❌ Parent navigation for "other" category not found';
   END IF;
 
-  -- Check if Instax navigation already exists
+  
   SELECT EXISTS(
     SELECT 1 FROM catalog_navigation WHERE product_id = 204
   ) INTO instax12_exists;
@@ -78,7 +78,7 @@ BEGIN
     SELECT 1 FROM catalog_navigation WHERE product_id = 205
   ) INTO instax13_exists;
 
-  -- Create navigation for Instax Mini 12 if not exists
+  
   IF NOT instax12_exists THEN
     INSERT INTO catalog_navigation (
       title, kind, product_group, href, sort_order,
@@ -106,7 +106,7 @@ BEGIN
     RAISE NOTICE '⚠️  Navigation for Instax Mini 12 already exists';
   END IF;
 
-  -- Create navigation for Instax Mini 13 if not exists
+  
   IF NOT instax13_exists THEN
     INSERT INTO catalog_navigation (
       title, kind, product_group, href, sort_order,
@@ -135,9 +135,9 @@ BEGIN
   END IF;
 END $$;
 
--- ═══════════════════════════════════════════════════════════════════
--- VERIFICATION
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 \echo ''
 \echo '═══════════════════════════════════════════════════════════════════'

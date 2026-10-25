@@ -28,7 +28,7 @@ async function main() {
 
     console.log('═══ PRODUCTION SCHEMA DEEP AUDIT ═══\n')
 
-    // 1. URL_REDIRECTS TABLE STRUCTURE
+    
     console.log('🔄 URL_REDIRECTS TABLE STRUCTURE:')
     try {
       const redirectsSchema = await client.query(`
@@ -44,7 +44,7 @@ async function main() {
       `)
       console.table(redirectsSchema.rows)
 
-      // Check constraints
+      
       const constraints = await client.query(`
         SELECT
           con.conname as constraint_name,
@@ -58,7 +58,7 @@ async function main() {
       console.log('\nConstraints:')
       console.table(constraints.rows)
 
-      // Check indexes
+      
       const indexes = await client.query(`
         SELECT
           i.relname as index_name,
@@ -79,7 +79,7 @@ async function main() {
       console.log(`❌ Cannot access url_redirects: ${e.message}`)
     }
 
-    // 2. PRODUCTS TABLE - SLUG RELATED
+    
     console.log('\n📦 PRODUCTS TABLE - SLUG & NAVIGATION:')
     const productsSchema = await client.query(`
       SELECT column_name, data_type, is_nullable
@@ -90,7 +90,7 @@ async function main() {
     `)
     console.table(productsSchema.rows)
 
-    // Check slug constraints
+    
     const slugConstraints = await client.query(`
       SELECT
         con.conname,
@@ -104,10 +104,10 @@ async function main() {
     console.log('\nSlug constraints:')
     console.table(slugConstraints.rows)
 
-    // 3. CATALOG_NAVIGATION RELATED TABLES
+    
     console.log('\n🗺️  CATALOG_NAVIGATION RELATIONSHIPS:')
 
-    // Check if there's a separate product_line or category table
+    
     const tables = await client.query(`
       SELECT table_name
       FROM information_schema.tables
@@ -120,10 +120,10 @@ async function main() {
     console.log('Related tables:')
     console.table(tables.rows)
 
-    // 4. INSTAX DETAILED ANALYSIS
+    
     console.log('\n📷 INSTAX DEEP ANALYSIS:')
 
-    // Get all Instax data
+    
     const instax = await client.query(`
       SELECT
         id, name, slug, product_group, brand, product_line, product_type,
@@ -134,7 +134,7 @@ async function main() {
     `)
     console.table(instax.rows)
 
-    // Get GoPro for comparison
+    
     const gopro = await client.query(`
       SELECT
         id, name, slug, product_group, brand, product_line, product_type,
@@ -145,7 +145,7 @@ async function main() {
     console.log('\nGoPro for comparison:')
     console.table(gopro.rows)
 
-    // Check navigation for "other" category
+    
     const otherNav = await client.query(`
       SELECT id, title, kind, product_group, brand, product_line, href, parent_id, stable_key
       FROM catalog_navigation
@@ -158,7 +158,7 @@ async function main() {
     console.log('\n"Other" category navigation:')
     console.table(otherNav.rows)
 
-    // 5. CHECK ALL 14 TARGET PRODUCTS
+    
     console.log('\n🎯 ALL 14 TARGET PRODUCTS:')
     const targets = await client.query(`
       SELECT
@@ -171,7 +171,7 @@ async function main() {
     `)
     console.table(targets.rows)
 
-    // 6. CHECK RAY-BAN & DUALSENSE (previously fixed)
+    
     console.log('\n✅ PREVIOUSLY FIXED PRODUCTS (Ray-Ban + DualSense):')
     const previouslyFixed = await client.query(`
       SELECT
@@ -183,7 +183,7 @@ async function main() {
     `)
     console.table(previouslyFixed.rows)
 
-    // 7. NAVIGATION FOR TARGET PRODUCTS
+    
     console.log('\n🗺️  NAVIGATION FOR TARGET PRODUCTS:')
     const targetNav = await client.query(`
       SELECT
@@ -201,7 +201,7 @@ async function main() {
     `)
     console.table(targetNav.rows)
 
-    // 8. COUNT EXACT NAVIGATION MISMATCHES
+    
     console.log('\n📊 NAVIGATION MISMATCH BREAKDOWN:')
     const mismatchBreakdown = await client.query(`
       SELECT

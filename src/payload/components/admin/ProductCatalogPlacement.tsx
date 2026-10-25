@@ -34,7 +34,6 @@ function ProductCatalogPlacement() {
   const [childKey, setChildKey] = React.useState('')
   const [status, setStatus] = React.useState('')
 
-  // Hydrate the visual path from Payload's form state without mutating the document.
   React.useEffect(() => {
     try {
       if (!groups.length) return
@@ -50,7 +49,6 @@ function ProductCatalogPlacement() {
       }
     } catch (error) {
       console.error('[ProductCatalogPlacement] Error hydrating path:', error)
-      // Не блокируем UI при ошибке
     }
   }, [groups, productId, values.productGroup, values.brand, values.productLine, values.condition])
 
@@ -177,7 +175,6 @@ function ProductCatalogPlacement() {
   </>)
 }
 
-// Обернём компонент в ErrorBoundary для защиты от полного краша админки
 export default function ProductCatalogPlacementWithErrorBoundary() {
   return (
     <ErrorBoundary>

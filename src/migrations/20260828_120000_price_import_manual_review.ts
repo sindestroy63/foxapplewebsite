@@ -8,6 +8,5 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
-  // PostgreSQL enums cannot safely remove a value in place. Keep this migration irreversible.
   void db
 }

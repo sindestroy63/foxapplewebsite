@@ -36,7 +36,6 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
-  // Hydrate from localStorage on client side
   useEffect(() => {
     setItems(getCart())
   }, [])

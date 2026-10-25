@@ -1,13 +1,10 @@
 import * as types from 'payload'
 
 export const up = async ({ payload }: { payload: types.Payload }): Promise<void> => {
-  // Add missing foreign key columns to payload_locked_documents_rels
-  // These columns are required for all registered collections in Payload CMS
 
   await payload.db.drizzle.execute(`
     DO $$
     BEGIN
-        -- Add colors_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='colors_id') THEN
@@ -17,7 +14,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (colors_id) REFERENCES colors(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add storage_options_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='storage_options_id') THEN
@@ -27,7 +23,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (storage_options_id) REFERENCES storage_options(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add sim_options_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='sim_options_id') THEN
@@ -37,7 +32,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (sim_options_id) REFERENCES sim_options(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add device_models_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='device_models_id') THEN
@@ -47,7 +41,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (device_models_id) REFERENCES device_models(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add price_update_batches_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='price_update_batches_id') THEN
@@ -57,7 +50,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (price_update_batches_id) REFERENCES price_update_batches(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add price_update_items_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='price_update_items_id') THEN
@@ -67,7 +59,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (price_update_items_id) REFERENCES price_update_items(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add price_import_sessions_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='price_import_sessions_id') THEN
@@ -77,7 +68,6 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
                 FOREIGN KEY (price_import_sessions_id) REFERENCES price_import_sessions(id) ON DELETE CASCADE;
         END IF;
 
-        -- Add price_import_items_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='payload_locked_documents_rels'
                        AND column_name='price_import_items_id') THEN
@@ -91,12 +81,9 @@ export const up = async ({ payload }: { payload: types.Payload }): Promise<void>
 }
 
 export const down = async ({ payload }: { payload: types.Payload }): Promise<void> => {
-  // Removing these columns would break document locking for these collections
-  // This migration should not be rolled back in production
   await payload.db.drizzle.execute(`
     DO $$
     BEGIN
-        -- Drop columns if they exist
         IF EXISTS (SELECT 1 FROM information_schema.columns
                    WHERE table_name='payload_locked_documents_rels'
                    AND column_name='colors_id') THEN

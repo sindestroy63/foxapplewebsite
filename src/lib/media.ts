@@ -4,10 +4,6 @@ function mediaPath(filename?: string): string | null {
   return filename ? `/api/media/file/${encodeURIComponent(filename)}` : null
 }
 
-/**
- * Returns URL for media file using our custom route /api/media/file/<filename>
- * Always uses the filename instead of Payload's default url to avoid 404 on production
- */
 export function getMediaUrl(media?: Media | string | number | null, preferred = 'card'): string | null {
   if (!media || typeof media !== 'object') {
     return null
@@ -18,7 +14,6 @@ export function getMediaUrl(media?: Media | string | number | null, preferred = 
   }
 
   const sized = media.sizes?.[preferred as keyof NonNullable<Media['sizes']>]
-  // Always use filename-based path through our custom route
   return mediaPath(sized?.filename || media.filename)
 }
 
@@ -30,19 +25,13 @@ export function isVideoMedia(media?: Media | string | number | null): boolean {
   return media.mimeType?.startsWith('video/') === true
 }
 
-/**
- * Получает изображение товара с учётом выбранного варианта.
- * Приоритет: selectedVariant.images → product.images → placeholder
- */
 export function getProductImage(
   product: Product,
   preferred = 'card',
   selectedVariant?: { images?: Array<Media | string | number> } | null
 ): { url: string | null; alt: string } {
-  // Используем изображения варианта, если есть
   let images = selectedVariant?.images || product.images
 
-  // Fallback: если product.images пустой, попробовать взять первый colorImage
   if ((!images || images.length === 0) && product.colorImages && product.colorImages.length > 0) {
     const firstColorImage = product.colorImages[0]
     if (firstColorImage && typeof firstColorImage === 'object' && 'images' in firstColorImage) {
@@ -50,7 +39,6 @@ export function getProductImage(
     }
   }
 
-  // Найти первое изображение, которое является объектом Media (не ID)
   const first = images?.find((image) => image != null && typeof image === 'object') as Media | undefined
 
   return {

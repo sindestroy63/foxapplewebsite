@@ -340,8 +340,6 @@ export const script = async (config: SanitizedConfig) => {
     depth: 0,
   })
 
-  // Keep user IDs referenced by price-update history. Update matching admins
-  // in place and reuse the first legacy user when the seed runs on an older DB.
   const usersByEmail = new Map(existingUsers.docs.map((user) => [user.email.toLowerCase(), user]))
   for (const [index, admin] of adminUsers.entries()) {
     const existing = usersByEmail.get(admin.email.toLowerCase()) || (index === 0 ? existingUsers.docs[0] : undefined)

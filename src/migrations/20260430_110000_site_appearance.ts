@@ -1,7 +1,6 @@
 import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
-  // 1. Create site-appearance global table
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "site_appearance" (
       "id" serial PRIMARY KEY,
@@ -13,7 +12,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     );
   `)
 
-  // 2. Create rels table for mediaBlockItems (hasMany relationship)
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "site_appearance_rels" (
       "id" serial PRIMARY KEY,
@@ -33,7 +31,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     CREATE INDEX IF NOT EXISTS "site_appearance_rels_path_idx" ON "site_appearance_rels" ("path");
   `)
 
-  // 3. Add cover_image_id column to categories
   await db.execute(sql`
     ALTER TABLE "categories"
       ADD COLUMN IF NOT EXISTS "cover_image_id" integer REFERENCES "media"("id") ON DELETE SET NULL;

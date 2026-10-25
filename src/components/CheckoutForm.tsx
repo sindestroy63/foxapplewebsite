@@ -73,7 +73,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
   const [formData, setFormData] = useState<FormFields>(initialFormFields)
   const [utmParams, setUtmParams] = useState<UtmParams>({})
 
-  // Собираем UTM-метки при монтировании
   useEffect(() => {
     setUtmParams(getUtmParams())
   }, [])
@@ -123,7 +122,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
         <input type="hidden" name="shopAddress" value={settings.address || ''} />
         <input type="hidden" name="utm" value={utmToString(utmParams)} />
 
-        {/* Honeypot - скрытое поле для защиты от ботов */}
         <input
           name="website"
           type="text"
@@ -133,7 +131,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           aria-hidden="true"
         />
 
-        {/* Name */}
         <label className="checkout-field">
           <span>ФИО *</span>
           <input
@@ -149,7 +146,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           {state.errors?.name ? <small className="form-error">{state.errors.name}</small> : null}
         </label>
 
-        {/* Phone */}
         <label className="checkout-field">
           <span>Телефон *</span>
           <input
@@ -165,7 +161,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           {state.errors?.phone ? <small className="form-error">{state.errors.phone}</small> : null}
         </label>
 
-        {/* Contact method */}
         <label className="checkout-field">
           <span>Способ связи *</span>
           <select
@@ -183,7 +178,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           {state.errors?.contactMethod ? <small className="form-error">{state.errors.contactMethod}</small> : null}
         </label>
 
-        {/* Telegram username (conditional) */}
         {contactMethod === 'Telegram' && (
           <label className="checkout-field">
             <span>Telegram username *</span>
@@ -199,7 +193,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           </label>
         )}
 
-        {/* Delivery method */}
         <label className="checkout-field">
           <span>Способ получения *</span>
           <select
@@ -213,7 +206,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           </select>
         </label>
 
-        {/* Pickup address */}
         {deliveryMethod === 'pickup' && (
           <div className="checkout-pickup-address">
             <span className="checkout-field-label">Адрес магазина</span>
@@ -222,7 +214,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           </div>
         )}
 
-        {/* Delivery address */}
         {deliveryMethod === 'delivery' && (
           <>
             <div className="checkout-field-row">
@@ -320,7 +311,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           </>
         )}
 
-        {/* Comment */}
         <label className="checkout-field checkout-field-full">
           <span>Комментарий</span>
           <textarea

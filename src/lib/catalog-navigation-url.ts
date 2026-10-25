@@ -17,7 +17,6 @@ function hrefFromFilter(filter?: Record<string, string>): string | undefined {
   return query ? `/catalog?${query}` : undefined
 }
 
-/** Resolves a CMS navigation node to its canonical public catalog destination. */
 export function catalogNavigationHref(node: CatalogNavigationLink): string {
   const placement = getCatalogPlacementByChildKey(node.key)
   if (placement) {

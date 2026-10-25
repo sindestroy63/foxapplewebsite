@@ -1,9 +1,9 @@
-/**
- * FOXSTORE PRODUCTION AUDIT
- *
- * READ-ONLY аудит production БД через SSH tunnel
- * Port: 15433 (localhost) → production PostgreSQL
- */
+
+
+
+
+
+
 
 import { Client } from 'pg'
 import * as readline from 'readline'
@@ -37,7 +37,7 @@ async function productionAudit() {
   try {
     await client.connect()
 
-    // Verify read-only mode
+    
     const { rows: [mode] } = await client.query('SHOW transaction_read_only')
     console.log('✅ Connection verified:', mode.transaction_read_only === 'on' ? 'READ-ONLY' : 'WARNING: NOT READ-ONLY')
 
@@ -45,7 +45,7 @@ async function productionAudit() {
     console.log('  PRODUCTION AUDIT REPORT')
     console.log('='.repeat(80) + '\n')
 
-    // 1. Ray-Ban Products
+    
     console.log('1️⃣  RAY-BAN PRODUCTS (101, 173, 174, 175)\n')
     const { rows: rayban } = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -63,7 +63,7 @@ async function productionAudit() {
       console.log()
     })
 
-    // Ray-Ban Navigation
+    
     const { rows: raybanNav } = await client.query(`
       SELECT cn.id, cn.href, cn.product_group, p.slug, p.product_group as actual_group
       FROM catalog_navigation cn
@@ -83,7 +83,7 @@ async function productionAudit() {
     })
     console.log()
 
-    // 2. DualSense PS5
+    
     console.log('2️⃣  DUALSENSE PS5\n')
     const { rows: dualsense } = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -95,7 +95,7 @@ async function productionAudit() {
 
     if (dualsense.length === 0) {
       console.log('   ⚠️  No DualSense products found')
-      // Check navigation
+      
       const { rows: dualsenseNav } = await client.query(`
         SELECT id, title, href, product
         FROM catalog_navigation
@@ -117,7 +117,7 @@ async function productionAudit() {
     }
     console.log()
 
-    // 3. Best Offers
+    
     console.log('3️⃣  BEST OFFERS IMAGES\n')
     const { rows: [appearance] } = await client.query(`
       SELECT best_offers FROM site_appearance LIMIT 1
@@ -153,7 +153,7 @@ async function productionAudit() {
     }
     console.log()
 
-    // 4. Navigation Sync Dry Run
+    
     console.log('4️⃣  NAVIGATION SYNC DRY RUN\n')
     const { rows: allNav } = await client.query(`
       SELECT cn.id, cn.href, cn.product_group as nav_group,
@@ -204,10 +204,10 @@ async function productionAudit() {
     }
     console.log()
 
-    // 5. Code vs Production State
+    
     console.log('5️⃣  SYSTEMFIX STATUS\n')
 
-    // Check if buildProductUrl is used (code already updated)
+    
     console.log('   Code changes from SYSTEMFIX-REPORT:')
     console.log('   ✅ buildProductUrl() created (local code)')
     console.log('   ✅ ProductCard updated (local code)')

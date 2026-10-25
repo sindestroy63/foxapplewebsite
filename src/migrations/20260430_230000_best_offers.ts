@@ -1,7 +1,6 @@
 import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
-  // Add products_id column to site_appearance_rels for bestOffers relationship
   await db.execute(sql`
     ALTER TABLE "site_appearance_rels"
       ADD COLUMN IF NOT EXISTS "products_id" integer REFERENCES "products"("id") ON DELETE CASCADE;

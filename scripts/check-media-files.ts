@@ -9,7 +9,7 @@ async function checkMediaFiles() {
   await client.connect()
 
   try {
-    // Check media records
+    
     const { rows } = await client.query(`
       SELECT id, filename, url, mime_type
       FROM media
@@ -20,7 +20,7 @@ async function checkMediaFiles() {
     console.log('=== Media Record ===')
     console.log(rows[0])
 
-    // Check sample media records
+    
     const { rows: samples } = await client.query(`
       SELECT id, filename, url
       FROM media
@@ -31,7 +31,7 @@ async function checkMediaFiles() {
     console.log('\n=== Sample Media Records ===')
     samples.forEach(r => console.log(r))
 
-    // Check media directory
+    
     const mediaDir = path.resolve(process.cwd(), 'media')
     console.log('\n=== Media Directory ===')
     console.log('Path:', mediaDir)

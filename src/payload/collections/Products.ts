@@ -54,12 +54,9 @@ export const Products: CollectionConfig = {
     beforeDelete: [
       async ({ req, id }) => {
         try {
-          // 1. Удалить связанные catalog-navigation записи
-          // Используем прямой SQL запрос для поиска связей через catalog_navigation_rels
           try {
             const db = req.payload.db
             if (db && typeof (db as any).drizzle !== 'undefined') {
-              // PostgreSQL через Drizzle
               const drizzle = (db as any).drizzle
               const navigationRels = await drizzle.execute({
                 sql: 'SELECT parent_id FROM catalog_navigation_rels WHERE products_id = $1',
@@ -86,10 +83,8 @@ export const Products: CollectionConfig = {
             }
           } catch (navError: any) {
             req.payload.logger.error({ err: navError, productId: id }, 'Failed to cleanup catalog navigation')
-            // Продолжаем - база должна обработать ON DELETE SET NULL сама
           }
 
-          // 2. Удалить товар из BrandCatalogNavigation
           try {
             const brandNav = await req.payload.findGlobal({
               slug: 'brand-catalog-navigation',
@@ -128,7 +123,6 @@ export const Products: CollectionConfig = {
             req.payload.logger.error({ err: brandNavError, productId: id }, 'Failed to cleanup BrandCatalogNavigation')
           }
 
-          // 3. Удалить redirects ведущие на этот товар
           try {
             const product = await req.payload.findByID({
               collection: 'products',
@@ -165,15 +159,12 @@ export const Products: CollectionConfig = {
 
         } catch (error: any) {
           req.payload.logger.error({ err: error, productId: id }, 'Failed to cleanup before product deletion')
-          // Не бросаем ошибку — позволяем удалить товар даже если cleanup не удался
         }
       },
     ],
     afterChange: [
       async ({ doc, req, previousDoc, operation }) => {
-        // Обернуть весь hook в try-catch, чтобы ошибки не ломали UI
         try {
-          // 1. Сохранить redirect при изменении URL
           if (operation === 'update' && previousDoc) {
             const oldPath = buildProductPath(previousDoc.productGroup, previousDoc.slug)
             const newPath = buildProductPath(doc.productGroup, doc.slug)
@@ -184,12 +175,10 @@ export const Products: CollectionConfig = {
                 req.payload.logger.info({ productId: doc.id, from: oldPath, to: newPath }, 'URL redirect saved')
               } catch (redirectError: any) {
                 req.payload.logger.error({ err: redirectError, productId: doc.id }, 'Failed to save URL redirect')
-                // Не бросаем ошибку выше — товар уже сохранён
               }
             }
           }
 
-          // 2. Синхронизация navigation
           const href = productCanonicalUrl({
             slug: doc.slug,
             productGroup: doc.productGroup,
@@ -221,16 +210,13 @@ export const Products: CollectionConfig = {
                 })
               } catch (navError: any) {
                 req.payload.logger.error({ err: navError, productId: doc.id, navId: item.id }, 'Failed to update navigation item')
-                // Продолжаем обработку других элементов навигации
               }
             }
           }
         } catch (error: any) {
-          // Логируем критические ошибки, но не бросаем исключение
           req.payload.logger.error({ err: error, productId: doc.id }, 'Product saved but post-processing failed')
         }
 
-        // ВСЕГДА возвращаем doc, даже если были ошибки
         return doc
       },
     ],
@@ -242,14 +228,11 @@ export const Products: CollectionConfig = {
     beforeValidate: [
       async ({ data, operation, originalDoc, req }) => {
         try {
-          // 1. Auto-generate slug на создании
           if (operation === 'create' && data) {
             if (!data.slug && data.name) {
-              // Генерация из name
               data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
               req.payload.logger.info({ productName: data.name, generatedSlug: data.slug }, 'Auto-generated slug for new product')
             } else if (data.slug) {
-              // Нормализация ручного slug
               const normalized = normalizeSlug(String(data.slug))
               const validation = validateSlug(normalized)
 
@@ -257,15 +240,11 @@ export const Products: CollectionConfig = {
                 throw new Error(`Некорректный slug: ${validation.error}`)
               }
 
-              // Проверка уникальности
               data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
               req.payload.logger.info({ originalSlug: data.slug, normalizedSlug: data.slug }, 'Normalized manual slug')
             }
-            // Если ни slug, ни name не заданы — не генерируем slug
-            // Payload сам покажет ошибку для обязательного поля name
           }
 
-          // 2. Validate slug на update (если изменён вручную)
           if (operation === 'update' && data?.slug && data.slug !== originalDoc?.slug) {
             const normalized = normalizeSlug(String(data.slug))
             const validation = validateSlug(normalized)
@@ -274,11 +253,9 @@ export const Products: CollectionConfig = {
               throw new Error(`Некорректный slug: ${validation.error}`)
             }
 
-            // Проверка уникальности (исключая текущий документ)
             data.slug = await generateUniqueSlug(req.payload, 'products', normalized, originalDoc?.id)
           }
 
-          // 3. Защита от variant slugs
           if (data?.slug && (operation === 'create' || operation === 'update')) {
             const s = data.slug as string
             const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)/
@@ -310,7 +287,6 @@ export const Products: CollectionConfig = {
             req,
           })
         } catch (error: any) {
-          // Улучшенное сообщение об ошибке для пользователя
           const message = error.message || 'Неизвестная ошибка валидации'
           req.payload.logger.error({ err: error, operation, productId: originalDoc?.id }, 'Product validation failed')
           throw new Error(`Ошибка валидации товара: ${message}`)
@@ -342,7 +318,7 @@ export const Products: CollectionConfig = {
       name: 'slug',
       type: 'text',
       label: 'URL slug',
-      required: false,  // ✅ Не обязательно при создании — генерируется автоматически
+      required: false,   
       unique: true,
       index: true,
       admin: {
@@ -352,12 +328,10 @@ export const Products: CollectionConfig = {
         },
       },
       validate: (value: unknown, options: any) => {
-        // При создании slug может отсутствовать — будет сгенерирован в beforeValidate
         if (options.operation === 'create') {
           return true
         }
 
-        // При обновлении slug должен существовать
         if (!value) {
           return 'URL slug обязателен'
         }
@@ -619,7 +593,6 @@ export const Products: CollectionConfig = {
       name: 'variantGenerator',
       type: 'ui',
       admin: {
-        // Variant generation remains available in the component code, but is not rendered in the ordinary form.
         condition: () => false,
         components: {
           Field: '/payload/components/admin/VariantGenerator',

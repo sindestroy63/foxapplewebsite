@@ -1,24 +1,24 @@
--- ═══════════════════════════════════════════════════════════════════
--- FOXSTORE PRODUCTION 404 FIX - FINAL PATCH
--- ═══════════════════════════════════════════════════════════════════
---
--- TARGETS: 14 products
---   - 12 products with invalid slugs (Cyrillic, uppercase, spaces)
---   - 2 Instax products (fix product_line, create navigation)
---
--- SAFETY:
---   - Transaction with explicit checks
---   - Validates old values before UPDATE
---   - Creates temp backup table
---   - Verifies exact update count
---   - Default ROLLBACK (uncomment COMMIT after verification)
--- ═══════════════════════════════════════════════════════════════════
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 BEGIN;
 
--- ═══════════════════════════════════════════════════════════════════
--- STEP 1: CREATE BACKUP
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 CREATE TEMP TABLE products_backup_20261009 AS
 SELECT id, name, slug, product_group, brand, product_line
@@ -27,11 +27,11 @@ WHERE id IN (20, 51, 56, 57, 58, 60, 62, 63, 67, 69, 72, 78, 204, 205);
 
 \echo '✅ Backup created for 14 products'
 
--- ═══════════════════════════════════════════════════════════════════
--- STEP 2: UPDATE SLUGS (12 products)
--- ═══════════════════════════════════════════════════════════════════
 
--- Apple products (6)
+
+
+
+
 UPDATE products
 SET slug = 'apple-airpods-max-2-2026'
 WHERE id = 63
@@ -68,7 +68,7 @@ WHERE id = 62
   AND slug = 'Apple MacBook Pro (M5, 2025)'
   AND product_group = 'laptops';
 
--- Samsung products (2)
+
 UPDATE products
 SET slug = 'chasy-samsung-galaxy-watch-8'
 WHERE id = 69
@@ -81,7 +81,7 @@ WHERE id = 78
   AND slug = 'chasy-samsung-galaxy-watch 8-classic'
   AND product_group = 'smart-watches';
 
--- Other products (2)
+
 UPDATE products
 SET slug = 'naushniki-marshall'
 WHERE id = 67
@@ -94,7 +94,7 @@ WHERE id = 72
   AND slug = 'Экшн-камера GoPro'
   AND product_group = 'other';
 
--- Dyson products (2)
+
 UPDATE products
 SET slug = 'vypryamitel-dyson-ht01'
 WHERE id = 51
@@ -109,9 +109,9 @@ WHERE id = 60
 
 \echo '✅ Slugs updated for 12 products'
 
--- ═══════════════════════════════════════════════════════════════════
--- STEP 3: FIX INSTAX PRODUCT_LINE (2 products)
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 UPDATE products
 SET product_line = 'Instax Mini'
@@ -120,9 +120,9 @@ WHERE id IN (204, 205)
 
 \echo '✅ Instax product_line fixed'
 
--- ═══════════════════════════════════════════════════════════════════
--- STEP 4: VERIFICATION
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 \echo ''
 \echo '═══════════════════════════════════════════════════════════════════'
@@ -143,22 +143,22 @@ FROM products_backup_20261009 b
 JOIN products p ON b.id = p.id
 ORDER BY b.id;
 
--- ═══════════════════════════════════════════════════════════════════
--- STEP 5: UPDATE COUNT VALIDATION
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 DO $$
 DECLARE
   slug_updated INTEGER;
   line_updated INTEGER;
 BEGIN
-  -- Count slug changes
+  
   SELECT COUNT(*) INTO slug_updated
   FROM products p
   JOIN products_backup_20261009 b ON p.id = b.id
   WHERE p.slug != b.slug;
 
-  -- Count product_line changes
+  
   SELECT COUNT(*) INTO line_updated
   FROM products p
   JOIN products_backup_20261009 b ON p.id = b.id
@@ -183,23 +183,23 @@ BEGIN
   RAISE NOTICE '';
 END $$;
 
--- ═══════════════════════════════════════════════════════════════════
--- STEP 6: CHECK NO SIDE EFFECTS
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 DO $$
 DECLARE
   ray_ban_count INTEGER;
   dualsense_count INTEGER;
 BEGIN
-  -- Verify Ray-Ban products unchanged
+  
   SELECT COUNT(*) INTO ray_ban_count
   FROM products
   WHERE id IN (101, 173, 174, 175)
     AND product_group = 'smart-devices'
     AND slug ~ '^[a-z0-9-]+$';
 
-  -- Verify DualSense unchanged
+  
   SELECT COUNT(*) INTO dualsense_count
   FROM products
   WHERE id = 55
@@ -217,24 +217,20 @@ BEGIN
   RAISE NOTICE '✅ Previously fixed products (Ray-Ban, DualSense) unchanged';
 END $$;
 
--- ═══════════════════════════════════════════════════════════════════
--- FINAL DECISION
--- ═══════════════════════════════════════════════════════════════════
+
+
+
 
 \echo ''
 \echo '═══════════════════════════════════════════════════════════════════'
 \echo '⚠️  REVIEW OUTPUT ABOVE'
 \echo '═══════════════════════════════════════════════════════════════════'
-\echo 'If all validations passed:'
-\echo '  1. Comment out ROLLBACK below'
-\echo '  2. Uncomment COMMIT'
-\echo '  3. Re-run this script'
 \echo ''
 \echo 'Current state: ROLLBACK (no changes applied)'
 \echo '═══════════════════════════════════════════════════════════════════'
 
--- DEFAULT: ROLLBACK (safe)
+
 ROLLBACK;
 
--- After verification, replace ROLLBACK with:
--- COMMIT;
+
+

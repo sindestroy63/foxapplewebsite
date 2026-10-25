@@ -58,7 +58,6 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
         </nav>
 
         <div className="header-actions">
-          {/* className="header-search" action="/catalog" method="get" */}
           <HeaderSearch />
           <CartIcon />
           <a className="button small" href={`tel:${normalizePhone(phone)}`}>

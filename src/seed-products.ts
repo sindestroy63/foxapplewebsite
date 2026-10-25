@@ -1,8 +1,3 @@
-/**
- * Product catalog seed data.
- * Colors use structured objects: { value, englishLabel, russianLabel, primaryHex, secondaryHex? }
- * All product specs follow official Apple specifications.
- */
 
 export type ColorSeed = {
   value: string
@@ -43,25 +38,21 @@ export type ProductSeed = {
   variants?: VariantSeed[]
 }
 
-// ─── Color palette (official Apple names) ───
 function c(value: string, en: string, ru: string, hex: string, hex2?: string): ColorSeed {
   return { value, englishLabel: en, russianLabel: ru, primaryHex: hex, secondaryHex: hex2 }
 }
 
-// iPhone 16 colors
 const BLACK        = c('black', 'Black', 'Чёрный', '#1d1d1f')
 const WHITE        = c('white', 'White', 'Белый', '#f5f5f7')
 const PINK         = c('pink', 'Pink', 'Розовый', '#f4c2c2')
 const TEAL         = c('teal', 'Teal', 'Бирюзовый', '#5ac8c8')
 const ULTRAMARINE  = c('ultramarine', 'Ultramarine', 'Ультрамарин', '#3f51b5')
 
-// iPhone 16 Pro colors
 const BLACK_TI     = c('black-titanium', 'Black Titanium', 'Чёрный титан', '#3a3a3c')
 const WHITE_TI     = c('white-titanium', 'White Titanium', 'Белый титан', '#e8e3de')
 const NATURAL_TI   = c('natural-titanium', 'Natural Titanium', 'Натуральный титан', '#a8a39d')
 const DESERT_TI    = c('desert-titanium', 'Desert Titanium', 'Пустынный титан', '#c4a882')
 
-// iPad colors
 const SILVER       = c('silver', 'Silver', 'Серебристый', '#c0c0c0')
 const BLUE         = c('blue', 'Blue', 'Голубой', '#7ec8e3')
 const YELLOW       = c('yellow', 'Yellow', 'Жёлтый', '#f9d949')
@@ -69,32 +60,25 @@ const SPACE_GRAY   = c('space-gray', 'Space Gray', 'Серый космос', '#
 const STARLIGHT    = c('starlight', 'Starlight', 'Сияющая звезда', '#f0e6d3')
 const PURPLE       = c('purple', 'Purple', 'Фиолетовый', '#7b5ea7')
 
-// iPad Pro
 const SPACE_BLACK  = c('space-black', 'Space Black', 'Чёрный космос', '#2c2c2e')
 
-// MacBook colors
 const MIDNIGHT     = c('midnight', 'Midnight', 'Тёмная ночь', '#2c2c2e')
 const SKYBLUE      = c('sky-blue', 'Sky Blue', 'Небесно-голубой', '#a1c6ea')
 
-// Apple Watch
 const ROSE_GOLD    = c('rose-gold', 'Rose Gold', 'Розовое золото', '#e8b4b8')
 const JET_BLACK    = c('jet-black', 'Jet Black', 'Глянцевый чёрный', '#0a0a0a')
 
-// iPhone 17 / 17e colors
 const MIST_BLUE    = c('mist-blue', 'Mist Blue', 'Дымчато-голубой', '#a3c4d9')
 const SAGE         = c('sage', 'Sage', 'Шалфей', '#9caf88')
 const LAVENDER     = c('lavender', 'Lavender', 'Лавандовый', '#c9b8d9')
 const SOFT_PINK    = c('soft-pink', 'Soft Pink', 'Нежно-розовый', '#f5c6c6')
 
-// iPhone 17 Pro / Pro Max colors
 const COSMIC_ORANGE = c('cosmic-orange', 'Cosmic Orange', 'Космический оранжевый', '#e06030')
 const DEEP_BLUE    = c('deep-blue', 'Deep Blue', 'Глубокий синий', '#1a3a5c')
 
-// iPhone Air colors
 const LIGHT_GOLD   = c('light-gold', 'Light Gold', 'Светлое золото', '#e8d5b7')
 const CLOUD_WHITE  = c('cloud-white', 'Cloud White', 'Облачно-белый', '#f0ede8')
 
-// AirPods Max (USB-C)
 const ORANGE       = c('orange', 'Orange', 'Оранжевый', '#f5845c')
 
 type SimType = 'SIM_ESIM' | 'ESIM'
@@ -152,7 +136,6 @@ function expand(m: ModelDef): ProductSeed {
   }
 }
 
-// ─── iPhone 16 (official: Black, White, Pink, Teal, Ultramarine / 128GB, 256GB, 512GB) ───
 const iphone16: ModelDef[] = [
   {
     categorySlug: 'iphone', model: 'iPhone 16',
@@ -180,7 +163,6 @@ const iphone16: ModelDef[] = [
   },
 ]
 
-// ─── iPhone 17 (official: Black, White, Mist Blue, Sage, Lavender / 256GB, 512GB) ───
 const iphone17: ModelDef[] = [
   {
     categorySlug: 'iphone', model: 'iPhone 17',
@@ -214,72 +196,61 @@ const iphone17: ModelDef[] = [
   },
 ]
 
-// ─── iPad ───
 const ipads: ModelDef[] = [
-  // iPad 11″ 2025 A16 — Silver, Blue, Pink, Yellow — 128/256GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad',
     colors: [SILVER, BLUE, PINK, YELLOW],
     memories: ['128GB', '256GB'], basePrice: 31000, priceStep: 9500,
     connectivity: 'Wi-Fi', chip: 'A16', screenSize: '11″',
   },
-  // iPad Air 11″ M3 2025 — Gray, Starlight, Purple, Blue — 128/256GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Air M3',
     colors: [SPACE_GRAY, STARLIGHT, PURPLE, BLUE],
     memories: ['128GB', '256GB'], basePrice: 47500, priceStep: 9500,
     connectivity: 'Wi-Fi', chip: 'M3', screenSize: '11″',
   },
-  // iPad Air 13″ M3 2025 — Gray, Blue, Starlight, Purple — 128GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Air 13″ M3',
     colors: [SPACE_GRAY, BLUE, STARLIGHT, PURPLE],
     memories: ['128GB'], basePrice: 60500,
     connectivity: 'Wi-Fi', chip: 'M3', screenSize: '13″',
   },
-  // iPad Air 11″ M4 2026 — Gray, Purple, Starlight, Blue — 128/256GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Air M4',
     colors: [SPACE_GRAY, PURPLE, STARLIGHT, BLUE],
     memories: ['128GB', '256GB'], basePrice: 49500, priceStep: 13500,
     connectivity: 'Wi-Fi', chip: 'M4', screenSize: '11″', isNew: true, isFeatured: true,
   },
-  // iPad Air 13″ M4 2026 — Gray, Purple, Starlight, Blue — 128GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Air 13″ M4',
     colors: [SPACE_GRAY, PURPLE, STARLIGHT, BLUE],
     memories: ['128GB'], basePrice: 71000,
     connectivity: 'Wi-Fi', chip: 'M4', screenSize: '13″', isNew: true,
   },
-  // iPad Pro 11″ M4 2024 — Black, Silver — 256GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Pro M4',
     colors: [SPACE_BLACK, SILVER],
     memories: ['256GB'], basePrice: 75000,
     connectivity: 'Wi-Fi', chip: 'M4', screenSize: '11″',
   },
-  // iPad Pro 13″ M4 2024 — Black, Silver — 256GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad Pro 13″ M4',
     colors: [SPACE_BLACK, SILVER],
     memories: ['256GB'], basePrice: 90000,
     connectivity: 'Wi-Fi', chip: 'M4', screenSize: '13″',
   },
-  // iPad Pro 11″ M5 2025 — Black, Silver — 256/512GB — Wi-Fi, Wi-Fi + eSIM
   {
     categorySlug: 'ipad', model: 'iPad Pro M5',
     colors: [SPACE_BLACK, SILVER],
     memories: ['256GB', '512GB'], basePrice: 80000, priceStep: 15000,
     connectivity: 'Wi-Fi', chip: 'M5', screenSize: '11″', isNew: true, isFeatured: true,
   },
-  // iPad Pro 13″ M5 2025 — Black, Silver — 256/512GB — Wi-Fi, Wi-Fi + eSIM
   {
     categorySlug: 'ipad', model: 'iPad Pro 13″ M5',
     colors: [SPACE_BLACK, SILVER],
     memories: ['256GB', '512GB'], basePrice: 100000, priceStep: 15000,
     connectivity: 'Wi-Fi', chip: 'M5', screenSize: '13″', isNew: true,
   },
-  // iPad mini (2024) A17 Pro — Space Gray, Blue, Purple, Starlight — 128/256/512GB — Wi-Fi
   {
     categorySlug: 'ipad', model: 'iPad mini',
     colors: [SPACE_GRAY, BLUE, PURPLE, STARLIGHT],
@@ -288,7 +259,6 @@ const ipads: ModelDef[] = [
   },
 ]
 
-// ─── MacBook (official specs) ───
 const macbooks: ModelDef[] = [
   {
     categorySlug: 'macbook', model: 'MacBook Air 13″ M4',
@@ -323,10 +293,6 @@ const macbooks: ModelDef[] = [
   },
 ]
 
-// ─── Apple Watch (official specs) ───
-// SE 2: Midnight, Starlight, Silver — 40mm, 44mm
-// Series 10 (aluminium): Jet Black, Rose Gold, Silver — 42mm, 46mm
-// Series 11 (aluminium): Jet Black, Rose Gold, Silver, Space Gray — 42mm, 46mm
 const watches: ModelDef[] = [
   {
     categorySlug: 'apple-watch', model: 'Apple Watch SE (2-го поколения)',
@@ -354,7 +320,6 @@ const watches: ModelDef[] = [
   },
 ]
 
-// ─── AirPods ───
 const airpods: ProductSeed[] = [
   { categorySlug: 'airpods', model: 'EarPods USB-C', name: 'EarPods USB-C', color: 'White', price: 2990,
     shortDescription: 'Проводные EarPods с разъёмом USB-C для iPhone, iPad и MacBook.' },
@@ -375,7 +340,6 @@ const airpods: ProductSeed[] = [
   ] },
 ]
 
-// ─── PlayStation ───
 const playstation: ProductSeed[] = [
   { categorySlug: 'playstation', model: 'PlayStation 5 Pro', name: 'PlayStation 5 Pro', color: 'White', price: 78000, isFeatured: true,
     shortDescription: 'Флагманская консоль PlayStation с SSD.',
@@ -394,7 +358,6 @@ const playstation: ProductSeed[] = [
     ] },
 ]
 
-// ─── Accessories ───
 const accessories: ProductSeed[] = [
   { categorySlug: 'accessories', model: 'Кабель USB-C — Lightning 1м', name: 'Кабель USB-C — Lightning 1м', color: 'White', price: 1990 },
   { categorySlug: 'accessories', model: 'Кабель USB-C — Lightning 2м', name: 'Кабель USB-C — Lightning 2м', color: 'White', price: 2590 },
@@ -406,7 +369,6 @@ const accessories: ProductSeed[] = [
   { categorySlug: 'accessories', model: 'Защитное стекло Supglass', name: 'Защитное стекло Supglass (без рамок)', price: 2490 },
 ]
 
-// ─── Combine all ───
 const allVariants: ModelDef[] = [
   ...iphone16, ...iphone17, ...ipads, ...macbooks, ...watches,
 ]

@@ -58,7 +58,6 @@ export function LeadForm({
   const [phoneValue, setPhoneValue] = useState('')
   const [utmParams, setUtmParams] = useState<UtmParams>({})
 
-  // Собираем UTM-метки при монтировании
   useEffect(() => {
     setUtmParams(getUtmParams())
   }, [])
@@ -114,7 +113,6 @@ export function LeadForm({
             {categoryName ? <input name="categoryName" type="hidden" value={categoryName} /> : null}
             {categorySlug ? <input name="categorySlug" type="hidden" value={categorySlug} /> : null}
 
-            {/* Honeypot - скрытое поле для защиты от ботов */}
             <input
               name="website"
               type="text"

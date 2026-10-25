@@ -1,17 +1,14 @@
 import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
-  // 1. Add size column to products
   await db.execute(sql`
     ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "size" varchar;
   `)
 
-  // 2. Create enum for variant status
   await db.execute(sql`
     CREATE TYPE "public"."enum_products_variants_status" AS ENUM('in_stock', 'preorder', 'out_of_stock');
   `)
 
-  // 3. Create products_variants table for the array field
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "products_variants" (
       "_order" integer NOT NULL,
@@ -28,7 +25,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     );
   `)
 
-  // 4. Indexes for variants
   await db.execute(sql`
     CREATE INDEX IF NOT EXISTS "products_variants_order_idx" ON "products_variants" USING btree ("_order");
   `)
@@ -36,13 +32,11 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     CREATE INDEX IF NOT EXISTS "products_variants_parent_id_idx" ON "products_variants" USING btree ("_parent_id");
   `)
 
-  // 5. Foreign key
   await db.execute(sql`
     ALTER TABLE "products_variants" ADD CONSTRAINT "products_variants_parent_id_fk"
       FOREIGN KEY ("_parent_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;
   `)
 
-  // 6. Create rels table for variant images (upload hasMany inside array)
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "products_variants_rels" (
       "id" serial PRIMARY KEY NOT NULL,

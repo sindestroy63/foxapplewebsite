@@ -1,6 +1,5 @@
 'use client'
 
-// @ts-ignore -- Payload CMS UI client types
 import { useField, useFormFields } from '@payloadcms/ui'
 import React, { useCallback, useEffect, useState } from 'react'
 

@@ -153,7 +153,6 @@ export async function submitCartOrder(
 ): Promise<CartOrderState> {
   const timestamp = new Date().toISOString()
 
-  // Honeypot check
   const website = one(formData.get('website'))
   if (website) {
     console.log(`[CheckoutForm] [${timestamp}] Honeypot triggered - bot detected`)
@@ -186,7 +185,6 @@ export async function submitCartOrder(
 
   console.log(`[CheckoutForm] [${timestamp}] Processing cart order`)
 
-  // Validation
   if (!name) {
     return { errors: { name: 'Укажите ваше имя.' }, success: false }
   }
@@ -267,7 +265,6 @@ export async function submitCartOrder(
 
   const total = Number(String(totalRaw)) || items.reduce((s, i) => s + i.price * i.quantity, 0)
 
-  // Send to Telegram ONLY (no CMS saving)
   const botToken = process.env.TELEGRAM_BOT_TOKEN
   const chatId = process.env.TELEGRAM_CHAT_ID
 

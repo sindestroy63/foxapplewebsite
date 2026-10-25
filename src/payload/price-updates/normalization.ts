@@ -51,7 +51,6 @@ export function normalizeModelKey(value: unknown): string {
 
 export function normalizeModel(value: unknown, contextHeading?: unknown): NormalizedModel {
   const raw = clean(value)
-  // A group heading may be the only model signal after storage/color/SIM are removed.
   const key = normalizeModelKey(raw) || normalizeModelKey(contextHeading)
   if (/^iphone\s+\d+(?:\s+pro(?:\s+max)?|\s+max)?$/u.test(key)) return { key, label: key.replace(/^iphone\s+/u, 'iPhone ') }
   if (key === 'samsung galaxy s25 ultra') return { key, label: 'Samsung Galaxy S25 Ultra' }

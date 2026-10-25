@@ -7,7 +7,7 @@ async function test() {
 
   console.log('=== TESTING getProductBySlugs LOGIC ===\n')
 
-  // Test Product 78
+  
   const p78 = await payload.find({
     collection: 'products',
     depth: 2,
@@ -39,7 +39,7 @@ async function test() {
 
   console.log('\n=== TESTING iPhone ===\n')
 
-  // Test working iPhone
+  
   const iphone = await payload.find({
     collection: 'products',
     depth: 2,

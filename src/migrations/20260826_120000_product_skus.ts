@@ -37,7 +37,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
         RETURN NEW;
       END IF;
 
-      -- Serialize writes for the same normalized SKU across both tables.
       PERFORM PG_ADVISORY_XACT_LOCK(HASHTEXTEXTENDED(UPPER(NEW."sku"), 0));
 
       IF TG_TABLE_NAME = 'products' THEN

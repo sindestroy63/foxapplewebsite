@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-/**
- * Seed Reference Data Script
- *
- * Безопасное пополнение системных справочников
- * Использование: npm run seed:references
- */
+
+
+
+
+
+
 
 import { getPayload } from 'payload'
 import config from '../src/payload.config'
@@ -16,30 +16,30 @@ interface ReferenceItem {
 }
 
 const REFERENCE_DATA: ReferenceItem[] = [
-  // Пример: добавить новый цвет
-  // {
-  //   collection: 'colors',
-  //   uniqueKey: 'value',
-  //   data: {
-  //     value: 'midnight-blue',
-  //     englishLabel: 'Midnight Blue',
-  //     russianLabel: 'Полуночный синий',
-  //     primaryHex: '#1B1F3A',
-  //     deviceTypes: ['iphone', 'ipad'],
-  //     sortOrder: 100,
-  //   }
-  // },
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
-  // Пример: добавить новый размер накопителя
-  // {
-  //   collection: 'storage-options',
-  //   uniqueKey: 'value',
-  //   data: {
-  //     value: '4TB',
-  //     sortOrder: 50,
-  //     archived: false,
-  //   }
-  // },
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 ]
 
 async function seedReferences() {
@@ -55,7 +55,7 @@ async function seedReferences() {
     try {
       const { collection, uniqueKey, data } = item
 
-      // Проверка на дубликаты
+      
       const existing = await payload.find({
         collection: collection as any,
         where: {
@@ -71,7 +71,7 @@ async function seedReferences() {
         continue
       }
 
-      // Создание записи с overrideAccess
+      
       await payload.create({
         collection: collection as any,
         data,

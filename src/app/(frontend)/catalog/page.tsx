@@ -62,7 +62,6 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   }
   if (filters.brand || filters.line) {
     if (filters.brand && !filters.line) {
-      // Brand roots are rendered above from the CMS tree.
     }
     const products = await getProducts({ filters })
     const title = filters.line || filters.brand || 'Каталог'

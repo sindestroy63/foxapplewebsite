@@ -33,7 +33,7 @@ async function auditMedia() {
       missing.slice(0, 20).forEach(m => console.log(`ID ${m.id}: ${m.filename}`))
       if (missing.length > 20) console.log(`... and ${missing.length - 20} more`)
 
-      // Check specific products we know about
+      
       const { rows: p51 } = await client.query('SELECT id, name FROM products WHERE id = 51')
       const { rows: p78 } = await client.query('SELECT id, name FROM products WHERE id = 78')
 
@@ -42,7 +42,7 @@ async function auditMedia() {
       console.log(`Product 78 (Samsung): Working ✅`)
     }
 
-    // Save results
+    
     fs.writeFileSync('media-audit-report.json', JSON.stringify({
       totalMedia: allMedia.length,
       filesExist: exists.length,

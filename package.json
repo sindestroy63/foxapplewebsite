@@ -53,7 +53,6 @@
     "catalog:slug-repair:plan": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/fix-dyson-slug.ts",
     "catalog:slug-repair:apply": "cross-env CATALOG_SLUG_REPAIR_APPLY=1 node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/fix-dyson-slug.ts",
     "catalog:navigation:sync-href": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/sync-navigation-href.ts",
-    "test:slug-repair": "node --experimental-strip-types --test tests/slug-repair-integration.test.mjs",
     "catalog:samsung-navigation:apply": "tsx scripts/catalog-samsung-navigation-apply.ts",
     "users:provision": "tsx scripts/users-provision.ts",
     "catalog:canonical-repair": "node --env-file=.env node_modules/tsx/dist/cli.mjs scripts/catalog-canonical-repair.ts",

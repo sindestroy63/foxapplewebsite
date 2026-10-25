@@ -1,12 +1,10 @@
 import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
-  // Delete variants with SIM_SIM
   await db.execute(sql`
     DELETE FROM "products_variants" WHERE "sim_type" = 'SIM_SIM';
   `)
 
-  // Recreate enum without SIM_SIM
   await db.execute(sql`
     ALTER TABLE "products_variants" ALTER COLUMN "sim_type" TYPE varchar;
   `)
@@ -23,7 +21,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
-  // Restore enum with SIM_SIM
   await db.execute(sql`
     ALTER TABLE "products_variants" ALTER COLUMN "sim_type" TYPE varchar;
   `)

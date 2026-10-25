@@ -41,9 +41,6 @@ const dirname = path.dirname(filename)
 const serverURL =
   process.env.PAYLOAD_PUBLIC_SERVER_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost'
 
-// Единый список разрешённых origin для CORS/CSRF. Технический (punycode) домен обязателен —
-// кириллица в Origin-заголовках браузеров не встречается. Список расширяется через ENV,
-// без хардкода конкретного бренд-домена в коде.
 const extraAllowedOrigins = (process.env.PAYLOAD_ALLOWED_ORIGINS || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -123,8 +120,6 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
-    // Локальная база уже синхронизирована миграциями; schema push запускает
-    // интерактивное переименование enum и блокирует dev-сервер на HTTP-запросах.
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     prodMigrations: migrations,

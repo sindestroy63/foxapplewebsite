@@ -1,7 +1,3 @@
-/**
- * Default product images — publicly available Apple / Sony press images.
- * Key = model name, value = image URL.
- */
 
 const APPLE = 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is'
 

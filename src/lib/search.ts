@@ -3,8 +3,6 @@ import { getCatalogPrice } from './pricing.ts'
 
 type SearchAlias = { terms: string[]; phrases?: string[] }
 
-// Keep this dictionary small and catalog-oriented. Aliases add candidates;
-// they never replace the user's original query.
 const aliases: Record<string, SearchAlias> = {
   часы: { terms: ['watch'], phrases: ['часы'] },
   'смарт часы': { terms: ['watch'], phrases: ['смарт часы', 'смарт-часы'] },

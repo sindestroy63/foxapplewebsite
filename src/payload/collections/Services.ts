@@ -12,7 +12,7 @@ export const Services: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'price', 'isAvailable', 'sortOrder'],
-    hidden: false,  // ✅ Показываем в админке
+    hidden: false,   
   },
   fields: [
     {
@@ -75,7 +75,6 @@ export const Services: CollectionConfig = {
   hooks: {
     beforeValidate: [
       async ({ data, operation }) => {
-        // Auto-generate slug on create
         if (operation === 'create' && data?.name && !data?.slug) {
           const { normalizeSlug } = await import('@/lib/slug-generator')
           data.slug = normalizeSlug(data.name)

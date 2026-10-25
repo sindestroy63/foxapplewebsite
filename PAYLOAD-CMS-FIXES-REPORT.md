@@ -51,14 +51,14 @@ Production build успешен, TypeScript проходит без ошибок
 
 ```typescript
 admin: {
-  hidden: true,  // ✅ Скрыто из бокового меню
+  hidden: true,   
 }
 
 access: {
-  read: ({ req }) => req.user !== undefined,  // Только авторизованные
-  create: () => false,  // ❌ Только через hooks/миграции
-  update: () => false,  // ❌ Только через hooks/миграции
-  delete: () => false,  // ❌ Только через миграции
+  read: ({ req }) => req.user !== undefined,   
+  create: () => false,   
+  update: () => false,   
+  delete: () => false,   
 }
 ```
 
@@ -86,7 +86,7 @@ access: {
 ```typescript
 admin: {
   group: 'Справочники',
-  hidden: true,  // ✅ Скрыто из бокового меню
+  hidden: true,   
 }
 ```
 
@@ -104,10 +104,10 @@ admin: {
 
 ```typescript
 access: {
-  read: anyone,  // ✅ Чтение для всех (нужно для relationship)
-  create: () => false,  // ❌ Только через seed/миграции
-  update: () => false,  // ❌ Только через seed/миграции
-  delete: () => false,  // ❌ Только через seed/миграции
+  read: anyone,   
+  create: () => false,   
+  update: () => false,   
+  delete: () => false,   
 }
 ```
 
@@ -139,13 +139,13 @@ access: {
 
 **Использование:**
 ```bash
-# 1. Отредактировать REFERENCE_DATA в scripts/seed-reference-data.ts
-# 2. Запустить:
+
+
 npm run seed:references
 
-# Пример вывода:
-# ✅ Added colors: midnight-blue
-# ⏭️  Skipped storage-options: 4TB (already exists)
+
+
+
 ```
 
 **Добавить в package.json:**
@@ -219,8 +219,8 @@ npm run seed:references
 ✅ **Build successful**
 ```bash
 npm run build
-# ✓ Compiled successfully
-# ✓ TypeScript passed
+
+
 ```
 
 ✅ **TypeScript проходит без ошибок**
@@ -300,13 +300,13 @@ git commit -m "fix: Payload CMS black screen + protect reference collections
 
 Fixes: #black-screen, #reference-protection
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+"
 ```
 
 2. **НЕ PUSH без подтверждения:**
 ```bash
-# ❌ НЕ ВЫПОЛНЯТЬ автоматически:
-# git push origin main
+
+
 ```
 
 3. **На production сервере (после подтверждения):**
@@ -315,7 +315,7 @@ cd /opt/foxapple
 git pull origin main
 docker compose restart app
 
-# Проверить логи:
+
 docker logs foxapple-app-1 --tail 100
 ```
 
@@ -393,18 +393,18 @@ docker logs foxapple-app-1 --tail 100
 {
   name: 'slug',
   type: 'text',
-  required: false,  // ✅ Не обязательно при создании
+  required: false,   
   unique: true,
   admin: {
     description: 'Генерируется автоматически из названия товара. Изменение создаст redirect старого URL.',
   },
   validate: (value: unknown, options: any) => {
-    // При создании slug может отсутствовать — будет сгенерирован в beforeValidate
+    
     if (options.operation === 'create') {
       return true
     }
 
-    // При обновлении slug должен существовать
+    
     if (!value) {
       return 'URL slug обязателен'
     }
@@ -418,11 +418,11 @@ docker logs foxapple-app-1 --tail 100
 ```typescript
 if (operation === 'create' && data) {
   if (!data.slug && data.name) {
-    // Генерация из name
+    
     data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
     req.payload.logger.info({ productName: data.name, generatedSlug: data.slug }, 'Auto-generated slug')
   } else if (data.slug) {
-    // Нормализация ручного slug
+    
     const normalized = normalizeSlug(String(data.slug))
     const validation = validateSlug(normalized)
     if (!validation.valid) {
@@ -430,7 +430,7 @@ if (operation === 'create' && data) {
     }
     data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
   }
-  // Если name пустое — не бросаем ошибку, Payload сам покажет ошибку для name (required: true)
+  
 }
 ```
 
@@ -518,7 +518,7 @@ docker compose restart app
 4. **Проверить доступность CMS:**
 ```bash
 curl -I http://localhost:3000/admin
-# Expected: HTTP/1.1 200 OK
+
 ```
 
 ---

@@ -33,7 +33,6 @@ const placement = (
   condition: productGroup === 'trade-in' ? 'used' : 'new', query, matchLines,
 })
 
-/** One source of truth for CMS placement and public child filters. */
 export const PRODUCT_CATALOG_PLACEMENTS: CatalogPlacementDefinition[] = [
   placement('apple', 'APPLE', 'iphone', 'iPhone', 'smartphones', 'Apple'),
   placement('apple', 'APPLE', 'ipad', 'iPad', 'tablets', 'Apple'),

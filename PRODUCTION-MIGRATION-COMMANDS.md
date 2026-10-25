@@ -42,7 +42,7 @@
 ### Legacy Redirects (5 новых)
 
 ```typescript
-// Добавить в src/lib/legacy-redirects.ts
+
 ['/catalog/gaming-consoles/umnye-ochki', '/catalog/smart-devices/umnye-ochki'],
 ['/catalog/gaming-consoles/ray-ban-display-uq0icl', '/catalog/smart-devices/ray-ban-display-uq0icl'],
 ['/catalog/gaming-consoles/ray-ban-skyler-gen-2-rw4014-cfnorf', '/catalog/smart-devices/ray-ban-skyler-gen-2-rw4014-cfnorf'],
@@ -58,22 +58,22 @@
 
 ### 1. PostgreSQL Backup
 ```bash
-# SSH tunnel должен быть активен
+
 ssh -L 15433:localhost:5432 production-server
 
-# Backup всей БД
+
 pg_dump -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple \
   --format=custom \
   --file=backup-foxapple-$(date +%Y%m%d-%H%M%S).dump
 
-# Backup только затрагиваемых таблиц
+
 pg_dump -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple \
   --format=custom \
   --table=products \
   --table=catalog_navigation \
   --file=backup-migration-$(date +%Y%m%d-%H%M%S).dump
 
-# Проверка backup
+
 pg_restore --list backup-foxapple-*.dump | head -20
 ```
 
@@ -92,49 +92,49 @@ git push origin --tags
 ### Step 1: Database Migration (idempotent, transactional)
 
 ```bash
-# Создать migration script
+
 cat > /tmp/foxstore-migration.sql << 'EOF'
 BEGIN;
 
--- Verification queries
+
 SELECT 'BEFORE STATE' as status, id, product_group, slug 
 FROM products WHERE id IN (55, 101, 173, 174, 175);
 
--- Ray-Ban: gaming-consoles → smart-devices
+
 UPDATE products 
 SET product_group = 'smart-devices', updated_at = NOW()
 WHERE id IN (101, 173, 174, 175) 
   AND product_group = 'gaming-consoles';
 
--- DualSense: Cyrillic slug → transliterated
+
 UPDATE products 
 SET slug = 'geympady-ps5', updated_at = NOW()
 WHERE id = 55 
   AND slug = 'Геймпады-PS5';
 
--- Verification
+
 SELECT 'AFTER STATE' as status, id, product_group, slug 
 FROM products WHERE id IN (55, 101, 173, 174, 175);
 
--- Commit (remove this line for DRY RUN)
+
 COMMIT;
 EOF
 
-# DRY RUN (with ROLLBACK)
+
 psql -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple < /tmp/foxstore-migration.sql
 
-# APPLY (если DRY RUN успешен)
+
 psql -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple < /tmp/foxstore-migration.sql
 ```
 
 ### Step 2: Navigation Sync
 
 ```bash
-# DRY RUN
+
 DATABASE_URL="postgresql://foxstore_admin:PASSWORD@127.0.0.1:15433/foxapple" \
   npm run catalog:navigation:sync-href
 
-# APPLY
+
 DATABASE_URL="postgresql://foxstore_admin:PASSWORD@127.0.0.1:15433/foxapple" \
   CATALOG_NAVIGATION_SYNC_APPLY=1 \
   npm run catalog:navigation:sync-href
@@ -143,7 +143,7 @@ DATABASE_URL="postgresql://foxstore_admin:PASSWORD@127.0.0.1:15433/foxapple" \
 ### Step 3: Code Deploy
 
 ```bash
-# Add legacy redirects
+
 git add src/lib/legacy-redirects.ts
 git add src/lib/product-url-builder.ts
 git add src/lib/media.ts
@@ -157,12 +157,12 @@ git commit -m "fix: Ray-Ban category and DualSense slug normalization
 - Legacy redirects for old URLs
 - Best Offers variant images support
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+"
 
-# Push to production
+
 git push origin main
 
-# Vercel/Docker deploy will trigger automatically
+
 ```
 
 ---
@@ -198,26 +198,26 @@ WHERE id IN (263, 275);
 
 ### 3. HTTP Verification
 ```bash
-# Ray-Ban новый URL
+
 curl -I https://foxapple.ru/catalog/smart-devices/umnye-ochki
-# Expected: HTTP 200
 
-# Ray-Ban старый URL (redirect)
+
+
 curl -I https://foxapple.ru/catalog/gaming-consoles/umnye-ochki
-# Expected: HTTP 308 → /catalog/smart-devices/umnye-ochki
 
-# DualSense новый URL
+
+
 curl -I https://foxapple.ru/catalog/gaming-consoles/geympady-ps5
-# Expected: HTTP 200
 
-# DualSense старый URL (redirect)
+
+
 curl -I https://foxapple.ru/catalog/gaming-consoles/Геймпады-PS5
-# Expected: HTTP 308 → /catalog/gaming-consoles/geympady-ps5
+
 ```
 
 ### 4. Best Offers Images
 ```bash
-# Проверить variant images на production
+
 curl -s https://foxapple.ru/ | grep -o 'apple-watch.*\.webp' | head -3
 curl -s https://foxapple.ru/ | grep -o 'iphone-18.*\.webp' | head -3
 ```
@@ -237,7 +237,7 @@ ROLLBACK;
 
 **2. Database Rollback (после commit)**
 ```bash
-# Restore из backup
+
 pg_restore -h 127.0.0.1 -p 15433 -U foxstore_admin \
   --clean --if-exists \
   -d foxapple backup-migration-*.dump

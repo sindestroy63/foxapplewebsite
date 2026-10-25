@@ -35,7 +35,6 @@ function saveCart(items: CartItem[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
   } catch {
-    // localStorage may be unavailable (Safari incognito, etc.)
   }
 }
 
@@ -107,6 +106,5 @@ export function clearCart(): void {
   try {
     localStorage.removeItem(STORAGE_KEY)
   } catch {
-    // localStorage may be unavailable
   }
 }

@@ -27,7 +27,6 @@ function providerErrorDetails(error: unknown, model: string, baseURL: string, mo
   const status = typeof providerError.status === 'number' ? providerError.status : undefined
   const code = typeof providerError.code === 'string' ? providerError.code : undefined
   const type = typeof providerError.type === 'string' ? providerError.type : undefined
-  // Do not include request input, credentials, or response bodies in logs or UI errors.
   const rawMessage = typeof providerError.message === 'string' ? providerError.message : 'Unknown provider error'
   const message = rawMessage
     .replace(/Bearer\s+\S+/giu, 'Bearer [redacted]')

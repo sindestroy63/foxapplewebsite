@@ -1,14 +1,6 @@
-/**
- * FOXSTORE Slug Generation & URL Protection
- *
- * Автоматическая генерация уникальных slug с транслитерацией и защитой URL
- */
 
 import type { CollectionSlug, Payload } from 'payload'
 
-/**
- * Транслитерация кириллицы в латиницу (ГОСТ 7.79-2000)
- */
 const CYRILLIC_TO_LATIN: Record<string, string> = {
   а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'zh', з: 'z',
   и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r',
@@ -20,9 +12,6 @@ const CYRILLIC_TO_LATIN: Record<string, string> = {
   Ъ: '', Ы: 'Y', Ь: '', Э: 'E', Ю: 'Yu', Я: 'Ya'
 }
 
-/**
- * Транслитерация строки
- */
 function transliterate(text: string): string {
   return text
     .split('')
@@ -30,22 +19,16 @@ function transliterate(text: string): string {
     .join('')
 }
 
-/**
- * Нормализация slug
- */
 export function normalizeSlug(text: string): string {
   return transliterate(text)
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '') // Только буквы, цифры, пробелы, дефисы
-    .replace(/[\s_]+/g, '-') // Пробелы и _ → дефис
-    .replace(/-+/g, '-') // Множественные дефисы → один
-    .replace(/^-+|-+$/g, '') // Удалить дефисы с концов
+    .replace(/[^\w\s-]/g, '')  
+    .replace(/[\s_]+/g, '-')  
+    .replace(/-+/g, '-')  
+    .replace(/^-+|-+$/g, '')  
 }
 
-/**
- * Генерация уникального slug
- */
 export async function generateUniqueSlug(
   payload: Payload,
   collection: CollectionSlug,
@@ -58,7 +41,6 @@ export async function generateUniqueSlug(
     throw new Error('Cannot generate slug from empty string')
   }
 
-  // Проверка уникальности
   const existing = await payload.find({
     collection,
     where: {
@@ -72,7 +54,6 @@ export async function generateUniqueSlug(
     return normalized
   }
 
-  // Поиск свободного суффикса
   let counter = 2
   while (counter < 1000) {
     const candidate = `${normalized}-${counter}`
@@ -96,9 +77,6 @@ export async function generateUniqueSlug(
   throw new Error(`Cannot generate unique slug for: ${baseSlug}`)
 }
 
-/**
- * Проверка, изменился ли slug
- */
 export function isSlugChanged(
   oldSlug: string | undefined | null,
   newSlug: string | undefined | null
@@ -108,9 +86,6 @@ export function isSlugChanged(
   return oldSlug !== newSlug
 }
 
-/**
- * Валидация slug
- */
 export function validateSlug(slug: string): { valid: boolean; error?: string } {
   if (!slug) {
     return { valid: false, error: 'Slug cannot be empty' }

@@ -56,7 +56,7 @@
 access: {
   read: anyone,
   create: admins,
-  update: authenticated,  // ❌ СЛИШКОМ ШИРОКО
+  update: authenticated,   
   delete: admins,
 }
 ```
@@ -74,9 +74,9 @@ access: {
 hooks: {
   afterChange: [
     async ({ doc, req, previousDoc, operation }) => {
-      // Обернуть в try-catch с логированием
-      // Не бросать ошибку — только логировать
-      // Вернуть doc в любом случае
+      
+      
+      
     }
   ]
 }
@@ -88,9 +88,9 @@ hooks: {
 hooks: {
   beforeDelete: [
     async ({ req, id }) => {
-      // Удалить связанные catalog-navigation записи
-      // Удалить url-redirects, которые ссылаются на этот товар
-      // Логировать процесс
+      
+      
+      
     }
   ]
 }
@@ -103,9 +103,9 @@ hooks: {
   beforeValidate: [
     async ({ data, operation, originalDoc, req }) => {
       try {
-        // Существующая логика
+        
       } catch (error) {
-        // Добавить понятное сообщение об ошибке
+        
         throw new Error(`Ошибка валидации товара: ${error.message}`)
       }
     }
@@ -116,17 +116,17 @@ hooks: {
 ### Шаг 4: Скрыть URL Redirects из меню
 
 ```typescript
-// src/payload/collections/UrlRedirects.ts
+
 export const UrlRedirects: CollectionConfig = {
   slug: 'url-redirects',
   admin: {
-    hidden: true,  // ✅ Скрыть из меню
+    hidden: true,   
   },
   access: {
-    read: ({ req }) => req.user !== undefined,  // Только для авторизованных
-    create: () => false,  // ❌ Запретить через UI
-    update: () => false,  // ❌ Запретить через UI
-    delete: () => false,  // ❌ Запретить через UI
+    read: ({ req }) => req.user !== undefined,   
+    create: () => false,   
+    update: () => false,   
+    delete: () => false,   
   },
 }
 ```
@@ -134,10 +134,10 @@ export const UrlRedirects: CollectionConfig = {
 ### Шаг 5: Скрыть справочники из меню
 
 ```typescript
-// Для каждого справочника добавить:
+
 admin: {
-  hidden: true,  // ✅ Скрыть из бокового меню
-  group: 'Справочники',  // Сохранить для будущего
+  hidden: true,   
+  group: 'Справочники',   
 }
 ```
 
@@ -155,20 +155,20 @@ admin: {
 
 ```typescript
 access: {
-  read: anyone,  // ✅ Чтение разрешено
-  create: () => false,  // ❌ Только через seed/миграции
-  update: () => false,  // ❌ Только через seed/миграции
-  delete: () => false,  // ❌ Только через seed/миграции
+  read: anyone,   
+  create: () => false,   
+  update: () => false,   
+  delete: () => false,   
 }
 ```
 
 ### Шаг 7: Создать seed-скрипт для справочников
 
 ```typescript
-// scripts/seed-reference-data.ts
-// Безопасное добавление новых значений
-// Проверка на дубликаты
-// Возможность деактивации (archived: true)
+
+
+
+
 ```
 
 ### Шаг 8: Улучшить UI для выбора характеристик

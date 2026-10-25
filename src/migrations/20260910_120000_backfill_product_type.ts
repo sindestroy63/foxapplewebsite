@@ -22,5 +22,4 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 }
 
 export async function down(_args: MigrateDownArgs): Promise<void> {
-  // Existing and backfilled text values cannot be distinguished safely.
 }

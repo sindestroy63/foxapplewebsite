@@ -1,14 +1,14 @@
-/**
- * FOXSTORE СИСТЕМНЫЙ ФИКС
- *
- * Этот скрипт создаёт migration для синхронизации navigation.href
- * с актуальными productGroup товаров.
- *
- * ИСПОЛЬЗОВАНИЕ:
- * 1. DRY RUN: npm run catalog:navigation:sync-href
- * 2. Проверить отчёт
- * 3. APPLY: CATALOG_NAVIGATION_SYNC_APPLY=1 npm run catalog:navigation:sync-href
- */
+
+
+
+
+
+
+
+
+
+
+
 
 import payload from 'payload'
 import config from '../src/payload.config'

@@ -99,13 +99,13 @@ pg_dump -h 127.0.0.1 -p 15433 -U foxstore_reader foxapple > backup-$(date +%Y%m%
 ```sql
 BEGIN;
 
--- Ray-Ban: gaming-consoles → smart-devices
+
 UPDATE products 
 SET product_group = 'smart-devices' 
 WHERE id IN (101, 173, 174, 175) 
   AND product_group = 'gaming-consoles';
 
--- DualSense: транслитерация slug
+
 UPDATE products 
 SET slug = 'geympady-ps5' 
 WHERE id = 55 
@@ -117,21 +117,21 @@ COMMIT;
 ### Шаг 3: Navigation Sync
 ```bash
 DATABASE_URL=production npm run catalog:navigation:sync-href -- --dry-run
-# Проверить отчёт
+
 DATABASE_URL=production CATALOG_NAVIGATION_SYNC_APPLY=1 npm run catalog:navigation:sync-href
 ```
 
 ### Шаг 4: Code Deploy
 ```bash
 git push origin main
-# Vercel/deploy trigger
+
 ```
 
 ### Шаг 5: Verify
 ```bash
-curl https://foxapple.ru/catalog/smart-devices/umnye-ochki  # 200
-curl https://foxapple.ru/catalog/drugoe/umnye-ochki  # 308
-curl https://foxapple.ru/catalog/gaming-consoles/geympady-ps5  # 200
+curl https://foxapple.ru/catalog/smart-devices/umnye-ochki   
+curl https://foxapple.ru/catalog/drugoe/umnye-ochki   
+curl https://foxapple.ru/catalog/gaming-consoles/geympady-ps5   
 ```
 
 ---

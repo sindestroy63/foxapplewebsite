@@ -43,20 +43,20 @@
 **SQL Migration:** `migrations/production-catalog-404-fix.sql`
 
 ```sql
--- 1. Marshall: productGroup fix (ID 67)
+
 UPDATE products SET product_group = 'audio' WHERE id = 67;
 
--- 2. GoPro: slug normalization (ID 72)
+
 UPDATE products SET slug = 'ekshn-kamera-gopro' WHERE id = 72;
 
--- 3. Dyson Supersonic: slug normalization
+
 UPDATE products SET slug = 'feny-dyson-supersonic-nural-hd16'
 WHERE name ILIKE '%Dyson Supersonic%';
 
--- 4. Dyson HT01: slug normalization (ID 51)
+
 UPDATE products SET slug = 'vypryamitel-dyson-ht01' WHERE id = 51;
 
--- 5. Navigation sync (выполнить после UPDATE products)
+
 ```
 
 **Instax Mini 12/13:** Требуется диагностика production данных для проверки их `productGroup` и соответствия navigation filters.
@@ -120,7 +120,7 @@ git commit -m "feat: services section, catalog 404 fixes, best offers images
 - Prepare SQL migration for Marshall/GoPro/Dyson slug fixes
 - Auto-generate slug with transliteration in Services
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+"
 
 git push origin main
 ```

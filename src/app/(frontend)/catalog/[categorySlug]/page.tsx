@@ -57,9 +57,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       const grouped = await getProductsByProductGroup(aliasGroup)
       return <GroupCatalogPage group={grouped.group!} products={grouped.products} />
     }
-    // Keep the historical used-items URL available even when the local dump
-    // does not contain a `used` category record. Used is a technical state,
-    // not one of the approved product groups.
     if (categorySlug === 'used') {
       return (
         <section className="page-section"><div className="container">

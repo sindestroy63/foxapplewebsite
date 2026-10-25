@@ -1,8 +1,8 @@
-/**
- * FOXSTORE PRODUCTION AUDIT - READ ONLY
- *
- * Требует переменную окружения: PROD_DB_PASSWORD
- */
+
+
+
+
+
 
 import { Client } from 'pg'
 
@@ -31,7 +31,7 @@ async function auditProduction() {
     console.log('  PRODUCTION AUDIT REPORT')
     console.log('='.repeat(80))
 
-    // 1. Ray-Ban Products
+    
     console.log('\n1️⃣  RAY-BAN PRODUCTS\n')
     const { rows: rb } = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -48,7 +48,7 @@ async function auditProduction() {
       console.log()
     })
 
-    // Check catalog_navigation schema
+    
     const { rows: cols } = await client.query(`
       SELECT column_name FROM information_schema.columns
       WHERE table_name = 'catalog_navigation'
@@ -56,7 +56,7 @@ async function auditProduction() {
     `)
     console.log('  catalog_navigation columns:', cols.slice(0, 10).map(c => c.column_name).join(', '), '...')
 
-    // 2. DualSense
+    
     console.log('\n2️⃣  DUALSENSE PS5\n')
     const { rows: ds } = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -66,7 +66,7 @@ async function auditProduction() {
     if (ds.length === 0) {
       console.log('  ⚠️  No DualSense products found in products table')
 
-      // Check navigation
+      
       const { rows: dsnav } = await client.query(`
         SELECT id, title, href FROM catalog_navigation
         WHERE title ILIKE '%dualsense%' OR title ILIKE '%геймпад%'
@@ -84,7 +84,7 @@ async function auditProduction() {
       })
     }
 
-    // 3. Best Offers
+    
     console.log('\n3️⃣  BEST OFFERS IMAGES\n')
     const { rows: [app] } = await client.query(`SELECT best_offers FROM site_appearance LIMIT 1`)
 
@@ -105,7 +105,7 @@ async function auditProduction() {
       })
     }
 
-    // 4. Compare localhost vs production
+    
     console.log('\n4️⃣  LOCALHOST vs PRODUCTION STATE\n')
 
     console.log('  Localhost (already fixed):')

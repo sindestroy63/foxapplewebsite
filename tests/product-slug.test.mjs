@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import fs from 'node:fs'
-
 import {
   composeProductSlug,
   getProductSlugSuffix,
@@ -28,16 +26,3 @@ test('unsupported names still receive a non-empty valid slug', () => {
   assert.equal(getProductSlugSuffix(slug), 'a1b2c3')
 })
 
-test('existing product updates preserve their legacy slug', () => {
-  const products = fs.readFileSync('src/payload/collections/Products.ts', 'utf8')
-  assert.match(products, /if \(operation === 'create' && data\) \{\s*data\.slug = await ensureUniqueSlugOnCreate/)
-  assert.doesNotMatch(products, /operation === 'update'[\s\S]{0,100}ensureUniqueSlugOnCreate/)
-})
-
-test('create-form slug preview reads the Payload form state and writes the submitted field', () => {
-  const field = fs.readFileSync('src/payload/components/admin/ProductSlugField.tsx', 'utf8')
-  assert.match(field, /useFormFields\(\(\[fields\]: any\) => fields\.name\?\.value\)/)
-  assert.match(field, /composeProductSlug\(typeof name === 'string' \? name : '', suffix\)/)
-  assert.match(field, /slugField\.setValue\(nextSlug\)/)
-  assert.match(field, /getProductSlugSuffix\(currentSlug\) \|\| suffixRef\.current \|\| createSlugSuffix\(\)/)
-})

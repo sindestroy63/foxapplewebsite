@@ -117,12 +117,12 @@ pg_dump -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple \
 ```bash
 psql -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple \
   < migrations/production-catalog-fix.sql
-# Проверить BEFORE/AFTER STATE
+
 ```
 
 **APPLY:**
 ```bash
-# Раскомментировать COMMIT в SQL
+
 psql -h 127.0.0.1 -p 15433 -U foxstore_admin foxapple \
   < migrations/production-catalog-fix.sql
 ```
@@ -154,31 +154,31 @@ git commit -m "feat: automatic slug generation and URL protection
 - Ray-Ban category fix + DualSense slug normalization
 - Production migration ready
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+"
 
 git push origin main
 ```
 
 ### 5. VERIFY
 ```bash
-# Ray-Ban new URLs
-curl -I https://foxapple.ru/catalog/smart-devices/umnye-ochki  # 200
 
-# Ray-Ban old URLs (redirects)
-curl -I https://foxapple.ru/catalog/gaming-consoles/umnye-ochki  # 308
+curl -I https://foxapple.ru/catalog/smart-devices/umnye-ochki   
 
-# DualSense new URL
-curl -I https://foxapple.ru/catalog/gaming-consoles/geympady-ps5  # 200
 
-# DualSense old URL (redirect)
-curl -I https://foxapple.ru/catalog/gaming-consoles/Геймпады-PS5  # 308
+curl -I https://foxapple.ru/catalog/gaming-consoles/umnye-ochki   
+
+
+curl -I https://foxapple.ru/catalog/gaming-consoles/geympady-ps5   
+
+
+curl -I https://foxapple.ru/catalog/gaming-consoles/Геймпады-PS5   
 ```
 
 ### 6. NORMALIZE REMAINING SLUGS (optional)
 ```bash
-# После деплоя кода
-DATABASE_URL=prod npm run catalog:slug-normalize:plan  # DRY RUN
-DATABASE_URL=prod npm run catalog:slug-normalize:apply  # APPLY
+
+DATABASE_URL=prod npm run catalog:slug-normalize:plan   
+DATABASE_URL=prod npm run catalog:slug-normalize:apply   
 ```
 
 ---

@@ -1,7 +1,6 @@
 import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
-  // Add new structured color columns (color_secondary_hex already exists from previous migration)
   await db.execute(sql`
     ALTER TABLE "products_variants"
       ADD COLUMN IF NOT EXISTS "color_value" varchar,
@@ -10,7 +9,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
       ADD COLUMN IF NOT EXISTS "color_primary_hex" varchar;
   `)
 
-  // Migrate existing flat color data into new structure
   await db.execute(sql`
     UPDATE "products_variants"
     SET
@@ -21,7 +19,6 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     WHERE color IS NOT NULL AND color != '';
   `)
 
-  // Drop old flat columns (keep color_secondary_hex — reused by group schema)
   await db.execute(sql`
     ALTER TABLE "products_variants"
       DROP COLUMN IF EXISTS "color",
@@ -30,14 +27,12 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
-  // Recreate old columns
   await db.execute(sql`
     ALTER TABLE "products_variants"
       ADD COLUMN IF NOT EXISTS "color" varchar,
       ADD COLUMN IF NOT EXISTS "color_hex" varchar;
   `)
 
-  // Migrate back
   await db.execute(sql`
     UPDATE "products_variants"
     SET
@@ -46,7 +41,6 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
     WHERE color_english_label IS NOT NULL;
   `)
 
-  // Drop new columns
   await db.execute(sql`
     ALTER TABLE "products_variants"
       DROP COLUMN IF EXISTS "color_value",

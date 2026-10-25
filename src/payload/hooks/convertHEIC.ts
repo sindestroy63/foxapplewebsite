@@ -1,10 +1,3 @@
-/**
- * Payload Media Collection Hook
- *
- * Automatically converts HEIC uploads to WebP format for browser compatibility.
- *
- * Runs before media validation to ensure browsers can display uploaded images.
- */
 
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -13,7 +6,6 @@ import sharp from 'sharp'
 import { CollectionBeforeValidateHook } from 'payload'
 
 export const convertHEICBeforeValidate: CollectionBeforeValidateHook = async ({ data, req }) => {
-  // Only process on create with file upload
   if (req.file && data?.filename) {
     const filename = data.filename as string
     const isHEIC = /\.heic$/i.test(filename)
@@ -27,10 +19,8 @@ export const convertHEICBeforeValidate: CollectionBeforeValidateHook = async ({ 
 
         req.payload.logger.info(`[HEIC Hook] Converting ${filename} to ${newFilename}`)
 
-        // Read original HEIC
         const inputBuffer = await fs.readFile(originalPath)
 
-        // Convert HEIC → JPEG → WebP
         const jpegBuffer = await convert({
           buffer: inputBuffer,
           format: 'JPEG',
@@ -41,26 +31,20 @@ export const convertHEICBeforeValidate: CollectionBeforeValidateHook = async ({ 
           .webp({ quality: 85 })
           .toBuffer()
 
-        // Write WebP file
         await fs.writeFile(newPath, webpBuffer)
 
-        // Get image dimensions
         const metadata = await sharp(webpBuffer).metadata()
 
-        // Update data to point to WebP instead of HEIC
         data.filename = newFilename
         data.mimeType = 'image/webp'
         data.filesize = webpBuffer.length
         data.width = metadata.width
         data.height = metadata.height
 
-        // Optionally keep original HEIC or delete it
-        // await fs.unlink(originalPath) // Uncomment to delete HEIC after conversion
 
         req.payload.logger.info(`[HEIC Hook] Successfully converted to ${newFilename} (${(webpBuffer.length / 1024).toFixed(2)} KB)`)
       } catch (error: unknown) {
         req.payload.logger.error({ err: error, msg: `[HEIC Hook] Conversion failed for ${filename}` })
-        // Let the original upload proceed if conversion fails
       }
     }
   }

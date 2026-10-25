@@ -53,9 +53,9 @@
 
 **После получения доступа:**
 ```bash
-DATABASE_URL=prod npm run catalog:navigation:sync-href  # DRY RUN
-DATABASE_URL=prod CATALOG_NAVIGATION_SYNC_APPLY=1 npm run catalog:navigation:sync-href  # APPLY
-git push origin main  # Deploy кода
+DATABASE_URL=prod npm run catalog:navigation:sync-href   
+DATABASE_URL=prod CATALOG_NAVIGATION_SYNC_APPLY=1 npm run catalog:navigation:sync-href   
+git push origin main   
 ```
 
 ---
@@ -72,8 +72,6 @@ git push origin main  # Deploy кода
 - `src/components/ProductCard.tsx`
 - `src/lib/media.ts`
 - `src/lib/product-url.ts`
-- `tests/catalog-navigation-ui.test.mjs`
-- `tests/trade-in-public-catalog.test.mjs`
 - `package.json`
 
 ---

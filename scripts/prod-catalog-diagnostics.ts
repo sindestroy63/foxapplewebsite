@@ -26,7 +26,7 @@ async function main() {
 
   console.log('\n═══ PRODUCTION CATALOG DIAGNOSTICS ═══\n')
 
-  // 1. Marshall headphones
+  
   console.log('1. Marshall headphones:')
   const marshall = await client.query(`
     SELECT id, name, slug, product_group, is_available
@@ -36,7 +36,7 @@ async function main() {
   `)
   console.table(marshall.rows)
 
-  // 2. GoPro
+  
   console.log('\n2. GoPro:')
   const gopro = await client.query(`
     SELECT id, name, slug, product_group, is_available
@@ -46,7 +46,7 @@ async function main() {
   `)
   console.table(gopro.rows)
 
-  // 3. Dyson products
+  
   console.log('\n3. Dyson products:')
   const dyson = await client.query(`
     SELECT id, name, slug, product_group, is_available
@@ -56,7 +56,7 @@ async function main() {
   `)
   console.table(dyson.rows)
 
-  // 4. Instax cameras
+  
   console.log('\n4. Instax cameras:')
   const instax = await client.query(`
     SELECT id, name, slug, product_group, is_available
@@ -66,7 +66,7 @@ async function main() {
   `)
   console.table(instax.rows)
 
-  // 5. Navigation entries for these products
+  
   console.log('\n5. Navigation entries:')
   const nav = await client.query(`
     SELECT cn.id, cn.href, cn.placement, p.id as product_id, p.name, p.slug, p.product_group
@@ -80,7 +80,7 @@ async function main() {
   `)
   console.table(nav.rows)
 
-  // 6. Catalog navigation structure
+  
   console.log('\n6. Photo/Video category navigation:')
   const photoNav = await client.query(`
     SELECT id, key, placement, href, product

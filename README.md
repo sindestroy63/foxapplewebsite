@@ -33,7 +33,6 @@ docker-compose.yml        app + postgres + nginx
 
 ```bash
 cp .env.example .env
-# задайте POSTGRES_PASSWORD и PAYLOAD_SECRET
 docker compose up -d --build
 ```
 
@@ -146,6 +145,6 @@ Compose запускает три сервиса:
 
 Базовый порядок на Ubuntu: установить Docker Engine и Compose plugin, развернуть проект, создать `.env`, задать production URL/секреты/Telegram, затем выполнить `docker compose up -d --build`. После запуска проверить `docker compose ps`, логи app/Nginx и доступность `/admin`.
 
-Активный конфиг `nginx/conf.d/foxapple.conf` пока обслуживает текущий домен `foxapple.ru`. Шаблоны нового домена находятся в `nginx/examples/foxstore.conf` и `nginx/examples/foxstore.ssl.conf`; они не подключаются автоматически. Для перехода на `фохстор.рф` сначала направьте DNS A-записи `фохстор.рф` и `www.фохстор.рф` на сервер, используйте punycode `xn--n1aagcfji.xn--p1ai`, выпустите сертификат Let's Encrypt через HTTP-конфиг, затем активируйте SSL-конфиг и перезапустите Nginx.
+Production использует `nginx/conf.d/fohstore-all.conf`. Основной домен — `https://xn--n1aagcfji.xn--p1ai` (фохстор.рф); дополнительные домены перенаправляются на него. Сертификаты находятся в `/etc/letsencrypt/live/fohstore-all/`.
 
-До ручной активации нового конфига DNS и SSL для нового домена не считаются переключёнными. Шаблоны предусматривают 301-редирект со старого `foxapple.ru` после готовности нового домена; не удаляйте активный конфиг до проверки DNS, сертификата и редиректов.
+Контейнер приложения монтирует `.next`, `public` и `scripts` из рабочей папки сервера. PostgreSQL и загруженные через CMS файлы в `media_data` хранятся отдельно от Git. Видео главной находятся в `public/hero`, изображения описаний — в `public/stories`.

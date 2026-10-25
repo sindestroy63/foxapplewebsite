@@ -1,12 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { admins, anyone } from '../access'
 
-/**
- * URL Redirects Collection
- *
- * Автоматически управляемая коллекция редиректов при изменении slug/category
- * ВНИМАНИЕ: Скрыта из UI, управляется только автоматически через hooks
- */
 export const UrlRedirects: CollectionConfig = {
   slug: 'url-redirects',
   labels: {
@@ -17,16 +11,15 @@ export const UrlRedirects: CollectionConfig = {
     useAsTitle: 'from',
     defaultColumns: ['from', 'to', 'permanent', 'createdAt'],
     description: 'Автоматически создаются при изменении URL товаров',
-    hidden: true,  // ✅ Скрыто из бокового меню
+    hidden: true,   
   },
   access: {
     read: ({ req }) => {
-      // Только авторизованные пользователи могут читать для internal проверок
       return req.user !== undefined
     },
-    create: () => false,  // ❌ Только через hooks и миграции
-    update: () => false,  // ❌ Только через hooks и миграции
-    delete: () => false,  // ❌ Только через миграции с подтверждением
+    create: () => false,   
+    update: () => false,   
+    delete: () => false,   
   },
   fields: [
     {

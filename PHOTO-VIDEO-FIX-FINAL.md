@@ -32,10 +32,10 @@ FOXSTORE использует **двухуровневую навигацию:**
       title: 'ДРУГОЕ',
       children: [
         {
-          key: 'other-photo-video',  // ← НОВЫЙ
+          key: 'other-photo-video',   
           title: 'Фото и видео',
           href: '/catalog?placement=other-photo-video',
-          products: [72],  // ← Прямой список ID товаров
+          products: [72],   
         }
       ]
     }
@@ -45,14 +45,14 @@ FOXSTORE использует **двухуровневую навигацию:**
 
 **2. catalog_navigation (Collection)** — управляет SEO и хлебными крошками
 ```sql
--- Line-подкатегория
+
 INSERT INTO catalog_navigation (
   title='Фото и видео', kind='line', parent_id=229,
   stable_key='line:other:photo-video'
 )
 
--- Product-запись под line
-UPDATE catalog_navigation SET parent_id = (line.id) WHERE id = 276  -- GoPro
+
+UPDATE catalog_navigation SET parent_id = (line.id) WHERE id = 276   
 ```
 
 ### Как работает фильтрация:
@@ -62,12 +62,12 @@ UPDATE catalog_navigation SET parent_id = (line.id) WHERE id = 276  -- GoPro
 if (args?.filters?.placement) {
   const navigation = await payload.findGlobal({ slug: 'brand-catalog-navigation' })
   const placementChild = findNode(navigation.groups, args.filters.placement)
-  directPlacementIds = placementChild?.products.map(p => p.id)  // [72]
+  directPlacementIds = placementChild?.products.map(p => p.id)   
 }
 
-// Строка 193-194:
+
 if (directPlacementIds.length > 0) {
-  conditions.push({ id: { in: directPlacementIds } })  // WHERE id IN (72)
+  conditions.push({ id: { in: directPlacementIds } })   
 }
 ```
 
@@ -120,63 +120,63 @@ WHERE id = 276
 ### ШАГ 1: Backup production БД
 
 ```bash
-# SSH в production
+
 ssh user@production-server
 
-# Backup
+
 docker exec foxapple-postgres-1 pg_dump -U postgres foxstore > \
   /tmp/foxstore_backup_photo_video_$(date +%Y%m%d_%H%M%S).sql
 
-# Проверка
+
 ls -lh /tmp/foxstore_backup_*.sql
 ```
 
 ### ШАГ 2: Проверка текущего состояния
 
 ```bash
-# Проверить группу «Другое»
+
 docker exec foxapple-postgres-1 psql -U postgres -d foxstore -c \
   "SELECT id, title, kind, parent_id FROM catalog_navigation WHERE id = 229;"
 
-# Проверить GoPro navigation
+
 docker exec foxapple-postgres-1 psql -U postgres -d foxstore -c \
   "SELECT id, title, parent_id, product_id FROM catalog_navigation WHERE id = 276;"
 
-# Проверить, что подкатегория ещё не создана
+
 docker exec foxapple-postgres-1 psql -U postgres -d foxstore -c \
   "SELECT COUNT(*) FROM catalog_navigation WHERE stable_key = 'line:other:photo-video';"
-# Expected: count = 0
+
 ```
 
 ### ШАГ 3: DRY RUN миграции (с ROLLBACK)
 
 ```bash
-# Скопировать миграцию на сервер
+
 scp migrations/production-photo-video-fix.sql user@production-server:/tmp/
 
-# Запустить с ROLLBACK (тестирование)
+
 docker exec -i foxapple-postgres-1 psql -U postgres foxstore < /tmp/production-photo-video-fix.sql
 
-# Проверить вывод:
-# ✅ Все NOTICE должны показать успех
-# ✅ В конце должно быть: ROLLBACK
-# ✅ Никаких ERROR или EXCEPTION
+
+
+
+
 ```
 
 ### ШАГ 4: Применение миграции (с COMMIT)
 
 ```bash
-# Отредактировать миграцию
+
 nano /tmp/production-photo-video-fix.sql
 
-# Изменить последние строки:
-# ROLLBACK;  ← Закомментировать
-# COMMIT;    ← Раскомментировать
 
-# Применить миграцию
+
+
+
+
 docker exec -i foxapple-postgres-1 psql -U postgres foxstore < /tmp/production-photo-video-fix.sql
 
-# Проверить результат
+
 docker exec foxapple-postgres-1 psql -U postgres -d foxstore -c "
   SELECT id, title, kind, parent_id, stable_key
   FROM catalog_navigation
@@ -184,56 +184,56 @@ docker exec foxapple-postgres-1 psql -U postgres -d foxstore -c "
   ORDER BY id;
 "
 
-# Expected output:
-# 229 | Другое         | group | NULL | group:other
-# 276 | Экшн-камера... | product | (line.id) | product:72
-# (line.id) | Фото и видео | line | 229 | line:other:photo-video
+
+
+
+
 ```
 
 ### ШАГ 5: Обновление BrandCatalogNavigation
 
 ```bash
-# Зайти в Payload CMS
+
 open https://фохстор.рф/admin
 
-# Навигация:
-# 1. Globals → Brand Catalog Navigation
-# 2. Найти группу "ДРУГОЕ" (key: other)
-# 3. Нажать "Add children"
-# 4. Заполнить:
-#    title: "Фото и видео"
-#    key: "other-photo-video"
-#    href: "/catalog?placement=other-photo-video"
-#    sortOrder: 95
-#    isVisible: true
-#    products: [выбрать "Экшн-камера GoPro" из списка]
-# 5. Сохранить (Save)
+
+
+
+
+
+
+
+
+
+
+
+
 ```
 
 ### ШАГ 6: Проверка работоспособности
 
 ```bash
-# 1. Проверить меню каталога (должна появиться подкатегория)
+
 curl -I "https://фохстор.рф/catalog?group=other"
-# Expected: 200 OK
 
-# 2. Проверить фильтрацию "Фото и видео"
+
+
 curl -I "https://фохстор.рф/catalog?placement=other-photo-video"
-# Expected: 200 OK
 
-# 3. Проверить карточку GoPro
+
+
 curl -I "https://фохстор.рф/catalog/other/ekshn-kamera-gopro"
-# Expected: 200 OK
 
-# 4. Проверить, что GoPro показывается в подкатегории
+
+
 curl -s "https://фохстор.рф/catalog?placement=other-photo-video" | grep -i "gopro"
-# Expected: найдены результаты
+
 ```
 
 ### ШАГ 7: Откат (если проблемы)
 
 ```bash
-# SQL откат
+
 docker exec foxapple-postgres-1 psql -U postgres -d foxstore << 'EOF'
 BEGIN;
 
@@ -249,8 +249,8 @@ WHERE stable_key = 'line:other:photo-video';
 COMMIT;
 EOF
 
-# В Payload CMS:
-# - Удалить "Фото и видео" из BrandCatalogNavigation.groups[other].children
+
+
 ```
 
 ---
@@ -300,13 +300,13 @@ brand_catalog_navigation.groups[other].children:
 
 **2. Обновить BrandCatalogNavigation:**
 ```typescript
-// Globals → Brand Catalog Navigation → ДРУГОЕ → Фото и видео
-products: [72, 186, 187]  // Добавить новые ID
+
+products: [72, 186, 187]   
 ```
 
 **3. Создать navigation записи (SQL):**
 ```sql
--- Для Instax Mini 12
+
 INSERT INTO catalog_navigation (
   title, kind, parent_id, product_id, product_group, product_line,
   stable_key, sort_order, is_visible, href, created_at, updated_at
@@ -320,7 +320,7 @@ SELECT
 FROM products p
 WHERE p.id = 186;
 
--- Для Instax Mini 13 (аналогично, id=187, sort_order=30)
+
 ```
 
 **4. Результат:**
@@ -359,13 +359,13 @@ WHERE p.id = 186;
 **Проверено SQL-аудитом:**
 ```sql
 SELECT id, name FROM products WHERE id IN (204, 205);
--- Result: 0 rows
+
 
 SELECT MAX(id) FROM products;
--- Result: 185
+
 
 SELECT id, name FROM products WHERE LOWER(name) LIKE '%instax%';
--- Result: 0 rows
+
 ```
 
 **Вывод:** Товары с ID 204, 205 **не существуют** в production БД.

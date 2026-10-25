@@ -197,7 +197,6 @@ async function previewFromSourceText(req: PayloadRequest, sourceText: string, ve
     return { ...line, status: 'not_found', errorMessage: 'SKU не найден.' }
   })
 
-  // A direct product price and one of its variant prices cannot both define the final root price.
   const productsWithVariantUpdates = new Set(
     items.filter((item) => item.status === 'ready' && item.matchType === 'variant').map((item) => item.product),
   )

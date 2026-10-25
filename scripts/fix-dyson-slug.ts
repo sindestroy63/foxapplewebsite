@@ -70,7 +70,7 @@ async function fixAllSlugs() {
   const existingSlugs = new Set(products.map(p => p.slug))
   const productMap = new Map(products.map(p => [p.id, p]))
 
-  // First pass: identify all fixes and check for conflicts
+  
   for (const product of products) {
     if (!product.slug) continue
 
@@ -81,12 +81,12 @@ async function fixAllSlugs() {
     if (hasTrailingSpace || hasInternalSpace || hasCyrillic) {
       let normalized = normalizeSlug(product.slug)
 
-      // Conflict resolution: if normalized slug already exists, append product model/suffix
+      
       if (existingSlugs.has(normalized) && normalized !== product.slug) {
-        // Try to extract unique part from product name
+        
         const nameParts = normalizeSlug(product.name).split('-')
 
-        // For Samsung watches: try to append model number
+        
         if (product.name.includes('Watch 8')) {
           if (product.name.includes('Classic')) {
             normalized = 'chasy-samsung-galaxy-watch-8-classic'
@@ -96,10 +96,10 @@ async function fixAllSlugs() {
             normalized = 'chasy-samsung-galaxy-watch-8'
           }
         } else if (nameParts.length > 2) {
-          // Generic: use full normalized name
+          
           normalized = nameParts.join('-')
         } else {
-          // Fallback: append product ID
+          
           normalized = `${normalized}-${product.id}`
         }
 
@@ -126,12 +126,12 @@ async function fixAllSlugs() {
         isAvailable: product.isAvailable ?? false
       })
 
-      // Mark this normalized slug as taken
+      
       existingSlugs.add(normalized)
     }
   }
 
-  // Final conflict check after resolution
+  
   const slugCounts = new Map<string, number[]>()
   fixes.forEach(f => {
     if (!slugCounts.has(f.newSlug)) {
@@ -175,7 +175,7 @@ async function fixAllSlugs() {
   if (apply) {
     console.log('\n⚠️  APPLYING CHANGES...\n')
 
-    // Backup current state
+    
     const backupPath = path.resolve(process.cwd(), 'backups', `slug-repair-backup-${stamp()}.json`)
     await fs.mkdir(path.dirname(backupPath), { recursive: true })
     await fs.writeFile(backupPath, JSON.stringify({
@@ -210,7 +210,7 @@ async function fixAllSlugs() {
     console.log(`\n✅ Updated ${updated} product slugs`)
     console.log('⚠️  Navigation hrefs will be auto-synced by afterChange hook')
 
-    // Generate middleware redirects
+    
     if (redirects.length > 0) {
       const middlewarePath = path.resolve(process.cwd(), 'src', 'middleware.ts')
       let middlewareContent = await fs.readFile(middlewarePath, 'utf-8')
@@ -228,7 +228,7 @@ async function fixAllSlugs() {
       console.log(`\n✅ Generated ${redirects.length} legacy redirects in src/middleware.ts`)
     }
 
-    // Save report
+    
     const reportPath = path.resolve(process.cwd(), 'backups', `slug-repair-report-${stamp()}.json`)
     await fs.writeFile(reportPath, JSON.stringify({
       generatedAt: new Date().toISOString(),
@@ -246,7 +246,7 @@ async function fixAllSlugs() {
   } else {
     console.log('\n💡 Dry-run mode. Set CATALOG_SLUG_REPAIR_APPLY=1 to apply changes.')
 
-    // Save dry-run report
+    
     const reportPath = path.resolve(process.cwd(), 'backups', `slug-repair-plan-${stamp()}.json`)
     await fs.mkdir(path.dirname(reportPath), { recursive: true })
     await fs.writeFile(reportPath, JSON.stringify({

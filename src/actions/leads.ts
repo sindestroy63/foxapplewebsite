@@ -102,7 +102,6 @@ function formatTelegramMessage(data: {
     lines.push(`\uD83D\uDCAC <b>Telegram:</b> ${escapeHtml(data.telegram)}`)
   }
 
-  // Product info
   if (data.productName) {
     lines.push('')
     lines.push(`\uD83D\uDCE6 <b>Товар:</b> ${escapeHtml(data.productName)}`)
@@ -117,7 +116,6 @@ function formatTelegramMessage(data: {
     lines.push(`\uD83D\uDCE6 <b>Товар ID:</b> ${escapeHtml(data.productId)}`)
   }
 
-  // Category info
   if (data.categoryName || data.categorySlug) {
     const catParts: string[] = []
     if (data.categoryName) catParts.push(escapeHtml(data.categoryName))
@@ -125,13 +123,11 @@ function formatTelegramMessage(data: {
     lines.push(`\uD83D\uDCC1 <b>Категория:</b> ${catParts.join(' ')}`)
   }
 
-  // Page URL
   if (data.pageUrl) {
     const fullUrl = data.pageUrl.startsWith('http') ? data.pageUrl : absoluteUrl(data.pageUrl)
     lines.push(`\uD83D\uDD17 <b>Страница:</b> <a href="${escapeHtml(fullUrl)}">${escapeHtml(fullUrl)}</a>`)
   }
 
-  // UTM parameters
   const utmLines = formatUtmForTelegram(data.utm)
   if (utmLines) {
     lines.push('')
@@ -153,7 +149,6 @@ export async function submitLeadAction(
 ): Promise<LeadActionState> {
   const timestamp = new Date().toISOString()
 
-  // Honeypot check
   const website = one(formData.get('website'))
   if (website) {
     console.log(`[LeadForm] [${timestamp}] Honeypot triggered - bot detected`)
@@ -180,7 +175,6 @@ export async function submitLeadAction(
 
   console.log(`[LeadForm] [${timestamp}] Processing ${source} from ${pageUrl}`)
 
-  // Validation
   if (!name) {
     return { errors: { name: 'Укажите ваше имя.' }, success: false }
   }
@@ -211,7 +205,6 @@ export async function submitLeadAction(
     return { errors: { consent: 'Нужно подтвердить согласие на обработку персональных данных.' }, success: false }
   }
 
-  // Send to Telegram ONLY (no CMS saving)
   const botToken = process.env.TELEGRAM_BOT_TOKEN
   const chatId = process.env.TELEGRAM_CHAT_ID
 

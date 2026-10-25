@@ -1,8 +1,3 @@
-/**
- * FOXSTORE URL Redirect Manager
- *
- * Автоматическое сохранение старых URL при изменении slug/category
- */
 
 import type { Payload } from 'payload'
 
@@ -14,9 +9,6 @@ export interface UrlRedirect {
   createdAt?: string
 }
 
-/**
- * Сохранение redirect при изменении URL
- */
 export async function saveUrlRedirect(
   payload: Payload,
   oldPath: string,
@@ -26,7 +18,6 @@ export async function saveUrlRedirect(
   if (!oldPath || !newPath) return
 
   try {
-    // Проверка на циклические редиректы
     const existingRedirect = await payload.find({
       collection: 'url-redirects' as any,
       where: {
@@ -39,7 +30,6 @@ export async function saveUrlRedirect(
       throw new Error(`Circular redirect detected: ${newPath} → ${oldPath}`)
     }
 
-    // Проверка на дубликат
     const duplicate = await payload.find({
       collection: 'url-redirects' as any,
       where: {
@@ -49,7 +39,6 @@ export async function saveUrlRedirect(
     })
 
     if (duplicate.docs.length > 0) {
-      // Обновить существующий redirect
       await payload.update({
         collection: 'url-redirects' as any,
         id: duplicate.docs[0].id,
@@ -59,7 +48,6 @@ export async function saveUrlRedirect(
         } as any,
       })
     } else {
-      // Создать новый redirect
       await payload.create({
         collection: 'url-redirects' as any,
         data: {
@@ -72,13 +60,9 @@ export async function saveUrlRedirect(
     }
   } catch (err: any) {
     payload.logger.error({ err, oldPath, newPath }, 'Failed to save URL redirect')
-    // Не прерываем сохранение продукта из-за ошибки redirect
   }
 }
 
-/**
- * Product URL из данных
- */
 export function buildProductPath(
   productGroup: string | null | undefined,
   slug: string | null | undefined
@@ -87,9 +71,6 @@ export function buildProductPath(
   return `/catalog/${productGroup}/${slug}`
 }
 
-/**
- * Проверка изменения URL продукта
- */
 export function hasProductUrlChanged(
   oldData: { productGroup?: string | null; slug?: string | null },
   newData: { productGroup?: string | null; slug?: string | null }

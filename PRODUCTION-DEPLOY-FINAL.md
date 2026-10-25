@@ -68,36 +68,36 @@
 **On production server:**
 
 ```bash
-# Connect to server
+
 ssh user@server
 
-# Create backup directory
+
 mkdir -p /opt/foxapple/backups
 cd /opt/foxapple/backups
 
-# Full database backup
+
 docker exec foxapple-postgres-1 pg_dump \
   -U postgres \
   -Fc \
   -f /tmp/backup-$(date +%Y%m%d-%H%M%S).dump \
   foxapple
 
-# Copy backup out of container
+
 docker cp foxapple-postgres-1:/tmp/backup-$(date +%Y%m%d-%H%M%S).dump \
   ./backup-$(date +%Y%m%d-%H%M%S).dump
 
-# Verify backup
+
 docker exec foxapple-postgres-1 pg_restore \
   --list \
   /tmp/backup-$(date +%Y%m%d-%H%M%S).dump | head -20
 
-# Expected: table list including "products", "catalog_navigation", "url_redirects"
+
 ```
 
 **Windows (local test):**
 
 ```powershell
-# If testing backup locally first
+
 docker exec foxapple-postgres-1 pg_dump -U postgres -Fc foxapple > backup-test.dump
 docker exec foxapple-postgres-1 pg_restore --list backup-test.dump
 ```
@@ -111,10 +111,10 @@ docker exec foxapple-postgres-1 pg_restore --list backup-test.dump
 **Copy migration to server:**
 
 ```bash
-# On local machine
+
 scp migrations/production-404-final-patch.sql user@server:/opt/foxapple/migrations/
 
-# On server
+
 cd /opt/foxapple
 docker cp migrations/production-404-final-patch.sql foxapple-postgres-1:/tmp/
 ```
@@ -145,15 +145,15 @@ ROLLBACK
 **Edit migration file to COMMIT:**
 
 ```bash
-# On server
+
 docker exec -it foxapple-postgres-1 bash
 vi /tmp/production-404-final-patch.sql
 
-# At the end of file:
-# Comment out:   -- ROLLBACK;
-# Uncomment:     COMMIT;
 
-# Save and exit
+
+
+
+
 exit
 ```
 
@@ -237,7 +237,7 @@ COMMIT
 **Update legacy redirects in code:**
 
 ```bash
-# On local machine
+
 git add src/lib/legacy-redirects.ts migrations/
 git commit -m "feat: fix 404 for 12 products + Instax navigation
 
@@ -250,7 +250,7 @@ Fixes: AirPods Max 2, MacBook Neo, iPad Air/Pro M5, MacBook Air/Pro M5,
        Galaxy Watch 8/Classic, Marshall, GoPro, Dyson HT01/Supersonic,
        Instax Mini 12/13
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+"
 
 git push origin main
 ```
@@ -272,7 +272,7 @@ docker compose restart app
 **Check new URLs (should return 200):**
 
 ```bash
-# Apple products
+
 curl -I https://фохстор.рф/catalog/audio/apple-airpods-max-2-2026
 curl -I https://фохстор.рф/catalog/laptops/apple-macbook-neo-a18-pro-2026
 curl -I https://фохстор.рф/catalog/tablets/apple-ipad-air-m4-2026
@@ -280,17 +280,17 @@ curl -I https://фохстор.рф/catalog/tablets/apple-ipad-pro-m5-2025
 curl -I https://фохстор.рф/catalog/laptops/apple-macbook-air-m5-2026
 curl -I https://фохстор.рф/catalog/laptops/apple-macbook-pro-m5-2025
 
-# Samsung products
+
 curl -I https://фохстор.рф/catalog/smart-watches/chasy-samsung-galaxy-watch-8
 curl -I https://фохстор.рф/catalog/smart-watches/chasy-samsung-galaxy-watch-8-classic
 
-# Other products
+
 curl -I https://фохстор.рф/catalog/audio/naushniki-marshall
 curl -I https://фохстор.рф/catalog/other/ekshn-kamera-gopro
 curl -I https://фохстор.рф/catalog/other/fujifilm-instax-mini-12-4c3xh0
 curl -I https://фохстор.рф/catalog/other/fujifilm-instax-mini-13-87u31o
 
-# Dyson products
+
 curl -I https://фохстор.рф/catalog/home-appliances/vypryamitel-dyson-ht01
 curl -I https://фохстор.рф/catalog/home-appliances/fen-dyson-supersonic-nural-hd16
 ```
@@ -300,10 +300,10 @@ curl -I https://фохстор.рф/catalog/home-appliances/fen-dyson-supersonic
 **Check old URLs (should redirect 308):**
 
 ```bash
-# URL-encoded Cyrillic
+
 curl -I https://фохстор.рф/catalog/audio/%D0%9D%D0%B0%D1%83%D1%88%D0%BD%D0%B8%D0%BA%D0%B8%20Marshall
 
-# Brand-based URLs
+
 curl -I https://фохстор.рф/catalog/airpods/Apple%20AirPods%20Max%202%20%282026%29
 curl -I https://фохстор.рф/catalog/macbook/Apple%20MacBook%20Neo%20%28A18%20Pro,%202026%29
 curl -I https://фохстор.рф/catalog/samsung-watch/chasy-samsung-galaxy-watch%208-classic
@@ -315,10 +315,10 @@ curl -I https://фохстор.рф/catalog/dyson/%D0%A4%D0%B5%D0%BD%D1%8B%20Dys
 **Check previously fixed products unchanged:**
 
 ```bash
-# Ray-Ban
+
 curl -I https://фохстор.рф/catalog/smart-devices/umnye-ochki
 
-# DualSense
+
 curl -I https://фохстор.рф/catalog/gaming-consoles/geympady-ps5
 ```
 
@@ -333,10 +333,10 @@ curl -I https://фохстор.рф/catalog/gaming-consoles/geympady-ps5
 **If issues detected:**
 
 ```bash
-# Stop application
+
 docker compose stop app
 
-# Restore database from backup
+
 docker exec -i foxapple-postgres-1 pg_restore \
   -U postgres \
   -d foxapple \
@@ -344,11 +344,11 @@ docker exec -i foxapple-postgres-1 pg_restore \
   --if-exists \
   /tmp/backup-YYYYMMDD-HHMMSS.dump
 
-# Revert code
+
 git revert HEAD
 git push origin main
 
-# Restart
+
 docker compose up -d app
 ```
 

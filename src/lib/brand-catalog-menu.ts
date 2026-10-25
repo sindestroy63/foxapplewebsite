@@ -82,15 +82,13 @@ export const BRAND_CATALOG_CARDS = DEFAULT_BRAND_CATALOG_MENU.map(({ key, label,
 
 export function visibleBrandMenu(groups: BrandMenu[]): BrandMenu[] {
   return groups.filter((group) => group.isVisible !== false).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)).map((group) => {
-    // Filter items and deduplicate by title (keep first occurrence)
     const seenTitles = new Set<string>()
     const items = (group.items || [])
       .filter((child) => child.isVisible !== false)
       .filter((child) => {
-        // Deduplicate PlayStation accessories: keep ps5-accessories, hide playstation-6
         if (group.key === 'playstation' && child.label === 'Аксессуары для PS5') {
-          if (child.key === 'playstation-6') return false // Hide old duplicate
-          if (seenTitles.has(child.label)) return false // Hide any other duplicates
+          if (child.key === 'playstation-6') return false  
+          if (seenTitles.has(child.label)) return false  
           seenTitles.add(child.label)
           return true
         }

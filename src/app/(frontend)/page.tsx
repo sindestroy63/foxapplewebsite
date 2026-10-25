@@ -32,9 +32,6 @@ export default async function HomePage() {
   ])
   const bestOffers = featuredProducts
 
-  console.log('[HomePage] bestOffers count:', bestOffers.length)
-  console.log('[HomePage] bestOffers names:', bestOffers.map(p => p.name))
-
   const phone = settings.phone || '+7 (917) 954-64-64'
 
   const heroSlides: HeroSlide[] = [
@@ -109,7 +106,6 @@ export default async function HomePage() {
         <HeroSlideshow slides={heroSlides} />
       </section>
 
-      {/* ── КАТЕГОРИИ ── */}
       <ScrollReveal>
       <section className="section">
         <div className="container section-head">
@@ -127,7 +123,6 @@ export default async function HomePage() {
       </section>
       </ScrollReveal>
 
-      {/* ── ПОПУЛЯРНЫЕ ТОВАРЫ ── */}
       <ScrollReveal>
       <section className="section section-muted">
         <div className="container section-head">
@@ -145,7 +140,6 @@ export default async function HomePage() {
       </section>
       </ScrollReveal>
 
-      {/* ── ПРЕИМУЩЕСТВА ── */}
       <ScrollReveal>
       <section className="section">
         <div className="container section-head">
@@ -166,9 +160,7 @@ export default async function HomePage() {
       </section>
       </ScrollReveal>
 
-      {/* ── МЕДИА ── */}
 
-      {/* ── РАССРОЧКА + КОНТАКТЫ ── */}
       <ScrollReveal>
       <section className="section">
         <div className="container split-grid">

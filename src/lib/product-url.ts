@@ -6,7 +6,6 @@ export type ProductUrlFields = {
   category?: { slug?: string | null } | string | number | null
 }
 
-/** The only public product URL builder. Legacy category data is a fallback only. */
 export function productCanonicalUrl(product: ProductUrlFields): string | null {
   const slug = String(product.slug || '').trim()
   if (!slug) return null

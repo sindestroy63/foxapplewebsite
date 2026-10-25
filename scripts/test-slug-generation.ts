@@ -1,6 +1,6 @@
-/**
- * Test slug generation for new products
- */
+
+
+
 import { getPayload } from 'payload'
 import config from '../src/payload.config'
 import { normalizeSlug, generateUniqueSlug, validateSlug } from '../src/lib/slug-generator'
@@ -20,11 +20,11 @@ async function testSlugGeneration() {
     try {
       console.log(`Testing: "${product.name}"`)
 
-      // Step 1: Normalize
+      
       const normalized = normalizeSlug(product.name)
       console.log(`  1️⃣ Normalized: "${normalized}"`)
 
-      // Step 2: Validate
+      
       const validation = validateSlug(normalized)
       console.log(`  2️⃣ Validation: ${validation.valid ? '✅ Valid' : '❌ Invalid - ' + validation.error}`)
 
@@ -32,11 +32,11 @@ async function testSlugGeneration() {
         throw new Error(validation.error)
       }
 
-      // Step 3: Check uniqueness
+      
       const slug = await generateUniqueSlug(payload, 'products', product.name)
       console.log(`  3️⃣ Final slug: "${slug}"`)
 
-      // Step 4: Verify it's not taken
+      
       const existing = await payload.find({
         collection: 'products',
         where: { slug: { equals: slug } },

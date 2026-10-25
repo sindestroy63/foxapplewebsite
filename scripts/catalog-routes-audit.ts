@@ -22,7 +22,7 @@ async function main() {
   const client = new Client({ connectionString: process.env.DATABASE_URL })
   await client.connect()
   try {
-    // A single pg.Client cannot execute concurrent queries reliably.
+    
     const productsResult = await client.query(`SELECT p.id, p.sku, p.name, p.model, p.slug, p.product_group, p.brand, p.product_line, p.category_id, c.name AS category_name, c.slug AS category_slug FROM products p LEFT JOIN categories c ON c.id = p.category_id ORDER BY p.id`)
     const categoriesResult = await client.query(`SELECT id, name, slug, is_active FROM categories ORDER BY id`)
     const navigationResult = await client.query(`SELECT id, kind, title, stable_key, parent_id, product_id, href, product_group, brand, product_line, is_visible FROM catalog_navigation ORDER BY sort_order, id`)

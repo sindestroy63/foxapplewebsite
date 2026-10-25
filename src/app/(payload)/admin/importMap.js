@@ -44,7 +44,6 @@ import { default as default_516bd9d8b1b67af76d8b375a39242e01 } from '../../../pa
 import { default as default_cc8dc95a2bccc5ab171a0a2eb9f4a2df } from '../../../payload/components/admin/CatalogNavigationView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
-/** @type import('payload').ImportMap */
 export const importMap = {
   "/payload/components/admin/ProductSection#BasicsSection": BasicsSection_0f23eed0731f5cda2046b74e09ae11a5,
   "/payload/components/admin/ProductSlugField#default": default_8ea1fec1fbdc06b6f021a8ef233fc70c,

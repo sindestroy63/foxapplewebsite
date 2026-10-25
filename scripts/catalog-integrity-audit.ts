@@ -11,7 +11,7 @@ async function status(route: string | null) {
   if (!route) return null
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000)  
     const response = await fetch(new URL(route, baseUrl), {
       redirect: 'manual',
       signal: controller.signal
@@ -19,14 +19,14 @@ async function status(route: string | null) {
     clearTimeout(timeoutId)
     return response.status
   } catch (err: any) {
-    // Distinguish timeout/network errors from HTTP errors
+    
     if (err.name === 'AbortError') return 'TIMEOUT' as any
     if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') return 'NETWORK_ERROR' as any
     return null
   }
 }
 
-// Concurrency-limited Promise.all
+
 async function pLimit<T>(items: T[], limit: number, fn: (item: T, index: number) => Promise<any>): Promise<any[]> {
   const results: any[] = []
   let index = 0

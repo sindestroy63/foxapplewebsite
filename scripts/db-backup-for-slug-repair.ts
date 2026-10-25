@@ -11,7 +11,7 @@ async function createBackup() {
   try {
     const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '').replace('T', '-')
 
-    // Backup products table (relevant columns only)
+    
     const { rows: products } = await client.query(`
       SELECT id, name, slug, product_group, is_available, category_id
       FROM products
@@ -19,7 +19,7 @@ async function createBackup() {
       ORDER BY id
     `)
 
-    // Backup catalog_navigation (relevant entries)
+    
     const { rows: navigation } = await client.query(`
       SELECT id, product_id, href, kind
       FROM catalog_navigation

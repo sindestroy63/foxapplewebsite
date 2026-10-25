@@ -11,11 +11,11 @@
 **Поле `slug` имело `required: true` на уровне схемы Payload**
 
 ```typescript
-// ❌ НЕПРАВИЛЬНО (до исправления)
+
 {
   name: 'slug',
   type: 'text',
-  required: true,  // ❌ Payload проверяет ДО выполнения hooks
+  required: true,   
   unique: true,
 }
 ```
@@ -44,22 +44,22 @@
 ### 1. Убрать `required: true` из схемы поля
 
 ```typescript
-// ✅ ПРАВИЛЬНО (после исправления)
+
 {
   name: 'slug',
   type: 'text',
-  required: false,  // ✅ Не обязательно при создании
+  required: false,   
   unique: true,
   admin: {
     description: 'Генерируется автоматически из названия товара. Изменение создаст redirect старого URL.',
   },
   validate: (value: unknown, options: any) => {
-    // При создании slug может отсутствовать — будет сгенерирован в beforeValidate
+    
     if (options.operation === 'create') {
       return true
     }
 
-    // При обновлении slug должен существовать
+    
     if (!value) {
       return 'URL slug обязателен'
     }
@@ -80,11 +80,11 @@
 ```typescript
 if (operation === 'create' && data) {
   if (!data.slug && data.name) {
-    // Генерация из name
+    
     data.slug = await generateUniqueSlug(req.payload, 'products', String(data.name))
     req.payload.logger.info({ productName: data.name, generatedSlug: data.slug }, 'Auto-generated slug for new product')
   } else if (data.slug) {
-    // Нормализация ручного slug
+    
     const normalized = normalizeSlug(String(data.slug))
     const validation = validateSlug(normalized)
 
@@ -95,8 +95,8 @@ if (operation === 'create' && data) {
     data.slug = await generateUniqueSlug(req.payload, 'products', normalized)
     req.payload.logger.info({ originalSlug: data.slug, normalizedSlug: data.slug }, 'Normalized manual slug')
   }
-  // Если ни slug, ни name не заданы — не генерируем slug
-  // Payload сам покажет ошибку для обязательного поля name
+  
+  
 }
 ```
 

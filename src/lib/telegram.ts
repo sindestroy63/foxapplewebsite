@@ -6,11 +6,6 @@ export type TelegramResult = {
   body: string
 }
 
-/**
- * Определяет базовый URL для Telegram API.
- * Если задана TELEGRAM_API_BASE — использует её,
- * иначе использует https://api.telegram.org/bot
- */
 function getTelegramBaseUrl(): string {
   const envBase = process.env.TELEGRAM_API_BASE
   if (envBase) {
@@ -19,12 +14,6 @@ function getTelegramBaseUrl(): string {
   return 'https://api.telegram.org/bot'
 }
 
-/**
- * Отправляет сообщение в Telegram через Bot API.
- *
- * Если задана TELEGRAM_API_BASE — использует fetch() (работает с Docker proxy).
- * Если не задана — использует https.request() с принудительным IPv4 (для production api.telegram.org).
- */
 export async function sendTelegramMessage(
   botToken: string,
   chatId: string,
@@ -41,7 +30,6 @@ export async function sendTelegramMessage(
 
   console.log(`[Telegram] Using API base: ${baseUrl}`)
 
-  // Если задан TELEGRAM_API_BASE — используем fetch (Docker proxy / кастомный endpoint)
   if (process.env.TELEGRAM_API_BASE) {
     try {
       const res = await fetch(fullUrl, {
@@ -65,7 +53,6 @@ export async function sendTelegramMessage(
     }
   }
 
-  // Без TELEGRAM_API_BASE — используем https.request() с принудительным IPv4
   return new Promise((resolve, reject) => {
     const url = new URL(fullUrl)
 

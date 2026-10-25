@@ -8,9 +8,6 @@ export type UtmParams = {
   utm_content?: string
 }
 
-/**
- * Извлекает UTM-метки из URL
- */
 export function getUtmParams(): UtmParams {
   if (typeof window === 'undefined') {
     return {}
@@ -34,16 +31,10 @@ export function getUtmParams(): UtmParams {
   return utm
 }
 
-/**
- * Преобразует UTM-параметры в строку для hidden input
- */
 export function utmToString(utm: UtmParams): string {
   return JSON.stringify(utm)
 }
 
-/**
- * Форматирует UTM-метки для Telegram-сообщения
- */
 export function formatUtmForTelegram(utm: UtmParams): string {
   const lines: string[] = []
 

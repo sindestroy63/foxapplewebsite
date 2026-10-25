@@ -1,8 +1,8 @@
-/**
- * FOXSTORE PRODUCTION MIGRATION - FINAL VERIFICATION
- *
- * Полная верификация затрагиваемых записей перед migration
- */
+
+
+
+
+
 
 import { Client } from 'pg'
 
@@ -30,7 +30,7 @@ async function verifyMigration() {
     console.log('  PRODUCTION MIGRATION VERIFICATION')
     console.log('='.repeat(80))
 
-    // 1. Ray-Ban Products - точные данные
+    
     console.log('\n1️⃣  RAY-BAN PRODUCTS - BEFORE STATE\n')
     const { rows: rayban } = await client.query(`
       SELECT id, name, slug, product_group, is_available, created_at
@@ -45,14 +45,14 @@ async function verifyMigration() {
       console.log(`| ${p.id} | ${p.name.substring(0, 30)} | ${p.slug} | ${p.product_group} | ${p.is_available} |`)
     })
 
-    // Check if any Ray-Ban already in smart-devices
+    
     const { rows: [alreadyFixed] } = await client.query(`
       SELECT COUNT(*) as count FROM products
       WHERE id IN (101, 173, 174, 175) AND product_group = 'smart-devices'
     `)
     console.log(`\n✓ Already fixed: ${alreadyFixed.count}/4`)
 
-    // 2. DualSense - точные данные
+    
     console.log('\n2️⃣  DUALSENSE PS5 - BEFORE STATE\n')
     const { rows: dualsense } = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -67,7 +67,7 @@ async function verifyMigration() {
       console.log(`  productGroup: ${p.product_group}`)
       console.log(`  isAvailable: ${p.is_available}`)
 
-      // Check slug conflict
+      
       const { rows: [conflict] } = await client.query(`
         SELECT COUNT(*) as count FROM products
         WHERE slug = 'geympady-ps5' AND id != 55
@@ -77,7 +77,7 @@ async function verifyMigration() {
       console.log('⚠️  Product 55 not found')
     }
 
-    // 3. Navigation affected
+    
     console.log('\n3️⃣  NAVIGATION - AFFECTED ENTRIES\n')
     const { rows: nav } = await client.query(`
       SELECT cn.id, cn.title, cn.href, cn.product_group,
@@ -100,7 +100,7 @@ async function verifyMigration() {
       console.log()
     })
 
-    // 4. Legacy redirects needed
+    
     console.log('4️⃣  LEGACY REDIRECTS NEEDED\n')
 
     const redirects: Array<{old: string, new: string}> = []
@@ -124,7 +124,7 @@ async function verifyMigration() {
     console.log('Required redirects:')
     redirects.forEach(r => console.log(`  ${r.old} → ${r.new}`))
 
-    // 5. Existing variants, images, prices check
+    
     console.log('\n5️⃣  DATA INTEGRITY CHECK\n')
     const { rows: integrity } = await client.query(`
       SELECT
@@ -141,7 +141,7 @@ async function verifyMigration() {
     console.log('| ID  | Variants | Images | In Orders | Safe to Update |')
     console.log('|-----|----------|--------|-----------|----------------|')
     integrity.forEach(p => {
-      const safe = true // slug/productGroup updates don't affect these
+      const safe = true  
       console.log(`| ${p.id} | ${p.variants} | ${p.images} | ${p.in_orders} | ${safe ? '✅' : '⚠️'} |`)
     })
 

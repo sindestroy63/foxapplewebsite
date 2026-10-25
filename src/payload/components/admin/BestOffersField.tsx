@@ -14,7 +14,6 @@ type Product = {
 }
 
 function productPrice(product: Product): number | undefined {
-  // Сначала попытаться получить минимальную цену среди доступных вариантов
   const availablePrices = (product.variants || [])
     .filter((variant) => variant.isAvailable !== false)
     .map((variant) => Number(variant.price))
@@ -22,14 +21,12 @@ function productPrice(product: Product): number | undefined {
 
   if (availablePrices.length) return Math.min(...availablePrices)
 
-  // Если нет доступных вариантов с ценой, попытаться найти цену среди всех вариантов
   const allPrices = (product.variants || [])
     .map((variant) => Number(variant.price))
     .filter((price) => Number.isFinite(price) && price > 0)
 
   if (allPrices.length) return Math.min(...allPrices)
 
-  // Fallback на цену товара
   const fallback = Number(product.price)
   return Number.isFinite(fallback) && fallback > 0 ? fallback : undefined
 }

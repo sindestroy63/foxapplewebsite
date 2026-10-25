@@ -82,7 +82,6 @@ export async function getBestOffers(): Promise<Product[]> {
     const payload = await getPayloadClient()
     const appearance = await payload.findGlobal({ slug: 'site-appearance', depth: 1 }) as SiteAppearance
 
-    // Получить ID товаров из site-appearance
     const productIds = (appearance.bestOffers || [])
       .map((product) => typeof product === 'object' && product !== null && 'id' in product ? product.id : product)
       .filter((id): id is string | number => id != null)
@@ -90,7 +89,6 @@ export async function getBestOffers(): Promise<Product[]> {
     console.log('[getBestOffers] productIds from site-appearance:', productIds)
 
     if (productIds.length > 0) {
-      // Перезагрузить товары напрямую с полным depth для разрешения изображений
       const result = await payload.find({
         collection: 'products',
         depth: 3,
@@ -103,7 +101,6 @@ export async function getBestOffers(): Promise<Product[]> {
         },
       })
 
-      // Сохранить порядок из site-appearance
       const productsMap = new Map(result.docs.map((doc) => [String(doc.id), doc]))
       const ordered = productIds
         .map((id) => productsMap.get(String(id)))
@@ -202,7 +199,6 @@ export async function getProducts(args?: {
     }
     const conditions: any[] = [{ isAvailable: { equals: true } }, { id: { not_equals: 49 } }, { id: { not_equals: 61 } }, { id: { not_equals: 66 } }, { id: { not_equals: 70 } }]
 
-    // Trade-in inventory has its own public storefront and must not leak into brand filters.
     if (args?.filters?.productGroup !== 'trade-in') conditions.push({ productGroup: { not_equals: 'trade-in' } })
 
     if (args?.categoryId) {
@@ -222,9 +218,6 @@ export async function getProducts(args?: {
     if (directPlacementIds.length > 0) {
       conditions.push({ id: { in: directPlacementIds } })
     } else if (args?.filters?.productGroup) {
-      // The data migration from accessories to other is deliberately pending
-      // confirmation. Treat both values as Other meanwhile, so the public
-      // catalog does not split the same business group during the transition.
       if (args.filters.productGroup === 'other') {
         conditions.push({
           or: [
@@ -240,11 +233,6 @@ export async function getProducts(args?: {
       if (!directPlacementIds.length) conditions.push({ brand: { equals: args.filters.brand } })
     }
     if (args?.filters?.line) {
-      // Always apply productLine filter, even when directPlacementIds exist
-      // Apple Mac and MacBook are two menu branches over the shared laptops
-      // group. Their stored productLine values contain the concrete model
-      // name (for example "Apple MacBook Pro ..."), so exact matching would
-      // either merge the branches or hide every product.
       if (args.filters.line === 'MacBook') conditions.push({ productLine: { like: 'MacBook' } })
       else if (args.filters.line === 'Apple Mac') conditions.push({ or: [
         { productLine: { like: 'iMac' } },
@@ -335,7 +323,6 @@ export async function getProductsByProductGroup(productGroup: NonNullable<Catalo
   }
 }
 
-/** Public inventory for the separate Trade-in storefront. */
 export async function getTradeInProducts(): Promise<Product[]> {
   try {
     const payload = await getPayloadClient()
@@ -387,7 +374,6 @@ export const getProductBySlugs = cache(async function getProductBySlugs(category
         return productSlug
       }
     })()
-    // Always trim slugs to prevent matching products with trailing/leading whitespace
     const slugCandidates = [...new Set([productSlug.trim(), decodedSlug.trim()])]
     const result = await payload.find({
       collection: 'products',
@@ -457,7 +443,6 @@ export function findBrandNavigationRoot(navigation: BrandCatalogNavigationItem[]
   return navigation.find((group) => {
     if (group.isVisible === false) return false
     if (navigationFilterMatchesCatalogParams(group.filter, params)) return true
-    // Some legacy/public root links use the CMS group key as `brand`.
     return !params.line && !params.placement && params.brand?.toLowerCase() === group.key.toLowerCase()
   })
 }
@@ -487,11 +472,6 @@ export function filterProductsForNavigationChild(products: any[], children: Bran
   })
 }
 
-/**
- * Global rows created by older versions may have lost href/filter values.
- * Recover only from the explicit fallback map; never turn an unresolved item
- * into the unfiltered /catalog route.
- */
 function resolveBrandHref(key: string, href: unknown, filter: unknown): string | undefined {
   return catalogNavigationHref({ key, href: typeof href === 'string' ? href : undefined, filter: filter && typeof filter === 'object' && !Array.isArray(filter) ? filter as Record<string, string> : undefined })
 }
@@ -504,8 +484,6 @@ function productMatchesFilter(product: any, filter: Record<string, string> | und
   if (!filter) return false
   if (filter.group && product.productGroup !== filter.group) return false
 
-  // For PS5 accessories and gamepads: ignore brand requirement
-  // Many legitimate PS products don't have brand field
   if ((filter.line === 'Аксессуары для PS5' || filter.line === 'Геймпады PS5') && filter.brand) {
     const filterWithoutBrand = { ...filter }
     delete filterWithoutBrand.brand
@@ -530,12 +508,8 @@ function productsForMenuChild(products: any[], children: any[], child: any): any
   const specificity = (candidate: any) => Object.values(candidate.filter || {}).filter((value) => value !== '' && value != null).length
 
   return products.filter((product) => {
-    // For manually added products
     if (directIds.has(String(product.id))) {
-      // If child has a filter, manually added product must match it
       if (child.filter && Object.keys(child.filter).length > 0) {
-        // Special case: PS5 accessories and gamepads don't require brand match
-        // because many accessories don't have brand field but are legitimate PS products
         if (child.key === 'ps5-accessories' || child.key === 'gamepads-ps5' || child.key === 'playstation-6') {
           const filterWithoutBrand = { ...child.filter }
           delete filterWithoutBrand.brand
@@ -543,15 +517,12 @@ function productsForMenuChild(products: any[], children: any[], child: any): any
         }
         return productMatchesFilter(product, child.filter)
       }
-      // If no filter, allow manually added product
       return true
     }
 
-    // For auto-matched products, check filter match and specificity
     const matches = matchingChildren(product)
     if (!matches.some((candidate) => String(candidate.key) === String(child.key))) return false
 
-    // Use specificity to determine the best match
     const best = Math.max(...matches.map(specificity))
     return specificity(child) === best
   })
@@ -570,7 +541,6 @@ function productHref(product: any): string {
 }
 
 export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
-  // Temporarily disable caching to ensure PlayStation fixes are applied
   try {
     const payload = await getPayloadClient()
     const [value, productResult] = await Promise.all([

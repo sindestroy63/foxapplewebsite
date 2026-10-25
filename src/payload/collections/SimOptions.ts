@@ -1,13 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
-import { admins, anyone } from '../access'
+import { admins, anyone, denyAll } from '../access'
 
-/**
- * SIM Options Collection - Справочник типов SIM
- *
- * Системный справочник, скрыт из UI
- * Пополняется только владельцем проекта через seed-скрипты
- */
 export const SimOptions: CollectionConfig = {
   slug: 'sim-options',
   labels: { singular: 'Вариант SIM', plural: 'Варианты SIM' },
@@ -15,13 +9,13 @@ export const SimOptions: CollectionConfig = {
     useAsTitle: 'label',
     defaultColumns: ['label', 'value'],
     group: 'Справочники',
-    hidden: true,  // ✅ Скрыто из бокового меню
+    hidden: false,
   },
   access: {
-    read: anyone,  // ✅ Чтение для всех (нужно для relationship)
-    create: () => false,  // ❌ Только через seed/миграции
-    update: () => false,  // ❌ Только через seed/миграции
-    delete: () => false,  // ❌ Только через seed/миграции
+    read: anyone,
+    create: admins,
+    update: admins,
+    delete: denyAll,
   },
   fields: [
     {

@@ -26,7 +26,7 @@ async function main() {
     await client.connect()
     console.log('✅ Connected to production PostgreSQL\n')
 
-    // First, check catalog_navigation schema
+    
     console.log('🔍 CATALOG_NAVIGATION SCHEMA:')
     const schema = await client.query(`
       SELECT column_name, data_type
@@ -38,7 +38,7 @@ async function main() {
 
     console.log('\n═══ PRODUCTION 404 DIAGNOSTICS ═══\n')
 
-    // Apple products
+    
     console.log('📱 APPLE PRODUCTS:')
     const apple = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -53,7 +53,7 @@ async function main() {
     `)
     console.table(apple.rows)
 
-    // Samsung products
+    
     console.log('\n📱 SAMSUNG PRODUCTS:')
     const samsung = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -63,7 +63,7 @@ async function main() {
     `)
     console.table(samsung.rows)
 
-    // Other products
+    
     console.log('\n🎧 OTHER PRODUCTS:')
     const other = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -76,7 +76,7 @@ async function main() {
     `)
     console.table(other.rows)
 
-    // Dyson products
+    
     console.log('\n💨 DYSON PRODUCTS:')
     const dyson = await client.query(`
       SELECT id, name, slug, product_group, is_available
@@ -88,7 +88,7 @@ async function main() {
     `)
     console.table(dyson.rows)
 
-    // Navigation for these products
+    
     console.log('\n🗺️  NAVIGATION ENTRIES:')
     const nav = await client.query(`
       SELECT cn.id, cn.href, cn.stable_key, p.id as product_id, p.name, p.slug, p.product_group
@@ -111,7 +111,7 @@ async function main() {
     console.table(nav.rows)
     console.table(nav.rows)
 
-    // URL mismatches
+    
     console.log('\n⚠️  URL MISMATCHES (href != canonical):')
     const mismatches = await client.query(`
       SELECT
@@ -145,7 +145,7 @@ async function main() {
     `)
     console.table(mismatches.rows)
 
-    // Check for Cyrillic/invalid slugs
+    
     console.log('\n🔤 SLUG VALIDATION:')
     const invalidSlugs = await client.query(`
       SELECT id, name, slug, product_group,
@@ -174,7 +174,7 @@ async function main() {
     `)
     console.table(invalidSlugs.rows)
 
-    // Check existing redirects
+    
     console.log('\n🔄 EXISTING URL REDIRECTS:')
     const redirects = await client.query(`
       SELECT id, "from", "to", permanent, source, created_at

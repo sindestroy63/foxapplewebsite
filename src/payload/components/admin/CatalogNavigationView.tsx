@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import "./CatalogNavigationView.scss";
-// Legacy /api/catalog-navigation-admin remains intentionally unused by this UI.
 
 type Item = {
   title: string;
