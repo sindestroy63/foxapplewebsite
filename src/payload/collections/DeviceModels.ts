@@ -1,12 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
-import { admins, anyone } from '../access'
+import { admins, anyone, denyAll } from '../access'
 
 /**
  * Device Models Collection - Справочник моделей устройств
  *
- * Системный справочник, скрыт из UI
- * Пополняется только владельцем проекта через seed-скрипты
+ * Справочник моделей и доступных для них конфигураций.
  */
 export const DeviceModels: CollectionConfig = {
   slug: 'device-models',
@@ -15,13 +14,13 @@ export const DeviceModels: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'category', 'basePrice'],
     group: 'Справочники',
-    hidden: true,  // ✅ Скрыто из бокового меню
+    hidden: false,
   },
   access: {
     read: anyone,  // ✅ Чтение для всех (нужно для relationship)
-    create: () => false,  // ❌ Только через seed/миграции
-    update: () => false,  // ❌ Только через seed/миграции
-    delete: () => false,  // ❌ Только через seed/миграции
+    create: admins,
+    update: admins,
+    delete: denyAll,
   },
   fields: [
     {
