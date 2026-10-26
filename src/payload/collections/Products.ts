@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 import { randomBytes } from 'node:crypto'
 
 import { admins, anyone } from '../access'
@@ -32,6 +32,31 @@ const ensureUniqueSlugOnCreate = async ({ name, requestedSlug, req }: { name: un
   }
 
   throw new Error('Unable to generate a unique product URL slug.')
+}
+
+const variantSlugToken = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)(?=-|$)/
+
+const findVariantOfExistingProduct = async ({ slug, excludeId, req }: { slug: string; excludeId?: number | string; req: any }): Promise<string | null> => {
+  const body = isProductSlug(slug) ? slug.slice(0, -7) : slug
+  const token = variantSlugToken.exec(body)
+  if (!token || token.index === 0) return null
+
+  const base = body.slice(0, token.index)
+  const candidates = await req.payload.find({
+    collection: 'products',
+    where: { slug: { contains: base } },
+    limit: 50,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  const match = (candidates.docs as Array<{ id: number | string; name?: string; slug?: string }>).find((doc) => {
+    if (!doc.slug || String(doc.id) === String(excludeId)) return false
+    const docBody = isProductSlug(doc.slug) ? doc.slug.slice(0, -7) : doc.slug
+    return docBody === base
+  })
+
+  return match ? String(match.name || match.slug) : null
 }
 
 export const Products: CollectionConfig = {
@@ -256,11 +281,10 @@ export const Products: CollectionConfig = {
             data.slug = await generateUniqueSlug(req.payload, 'products', normalized, originalDoc?.id)
           }
 
-          if (data?.slug && (operation === 'create' || operation === 'update')) {
-            const s = data.slug as string
-            const variantParts = /-(128gb|256gb|512gb|1tb|2tb|sim-esim|esim|ultramarin|chernyy|belyy|rozovyy|biryuzovyy|seryy-kosmos|chyornyy-titan|belyy-titan|pustynyy-titan|naturalnyy-titan|serebristyy|goluboy|zhyoltyy|fioletovyy|syiyayuschaya-zvezda|tyomnaya-noch|nebosno-goluboy|rozovoe-zoloto|glyantsevyy-chyornyy|oranzhevyy|shalfey|dymchato-goluboy|lavandovyy|nezhno-rozovyy|kosmicheskiy-oranzhevyy|glubokiy-siniy|svetloe-zoloto|oblachno-belyy)/
-            if (variantParts.test(s)) {
-              throw new Error('Нельзя создавать отдельный товар для варианта. Используйте variants внутри товара.')
+          if (data?.slug && (operation === 'create' || (operation === 'update' && data.slug !== originalDoc?.slug))) {
+            const duplicatedProduct = await findVariantOfExistingProduct({ slug: String(data.slug), excludeId: originalDoc?.id, req })
+            if (duplicatedProduct) {
+              throw new Error(`Нельзя создавать отдельный товар для варианта. Добавьте вариант внутри товара «${duplicatedProduct}».`)
             }
           }
 
@@ -287,9 +311,10 @@ export const Products: CollectionConfig = {
             req,
           })
         } catch (error: any) {
+          if (error instanceof APIError) throw error
           const message = error.message || 'Неизвестная ошибка валидации'
           req.payload.logger.error({ err: error, operation, productId: originalDoc?.id }, 'Product validation failed')
-          throw new Error(`Ошибка валидации товара: ${message}`)
+          throw new APIError(`Ошибка валидации товара: ${message}`, 400, null, true)
         }
       },
     ],
