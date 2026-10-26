@@ -1,0 +1,11 @@
+[Unit]
+Description=Automatic MoySklad stock synchronization
+
+[Timer]
+OnBootSec=15s
+OnUnitInactiveSec=10s
+AccuracySec=1s
+Unit=moysklad-stock.service
+
+[Install]
+WantedBy=timers.target

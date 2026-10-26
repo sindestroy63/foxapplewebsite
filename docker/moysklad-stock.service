@@ -1,0 +1,11 @@
+[Unit]
+Description=MoySklad stock synchronization
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/foxapple
+ExecStart=/usr/bin/docker exec foxapple-app-1 node /app/scripts/moysklad-stock.mjs
+TimeoutStartSec=0
