@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
-import { LeadForm } from '@/components/LeadForm'
 import {
   getProductsByCategorySlug,
   getProductsByProductGroup,
@@ -88,14 +87,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           {categorySlug !== 'used' && (
             <p className="offer-note detail-offer-note">Товар имеет недостаток в виде невозможности предустановки RuStore.</p>
           )}
-
-          <LeadForm
-            categoryName={data.category.name}
-            categorySlug={categorySlug}
-            description="Оставьте номер телефона или Telegram. Мы уточним наличие, цену и свяжемся с вами."
-            source="product_form"
-            title="Оставить заявку по товару"
-          />
         </div>
       </div>
     </section>

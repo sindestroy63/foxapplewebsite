@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { LeadForm } from '@/components/LeadForm'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
 import { ProductStory } from '@/components/ProductStory'
 import { RichText } from '@/components/RichText'
@@ -62,23 +61,6 @@ export default async function ProductPage({ params }: Props) {
         {categorySlug !== 'used' && (
           <p className="offer-note detail-offer-note">Товар имеет недостаток в виде невозможности предустановки RuStore.</p>
         )}
-
-        <LeadForm
-          categoryName={
-            typeof product.category === 'object' &&
-            product.category !== null &&
-            'name' in product.category
-              ? product.category.name
-              : undefined
-          }
-          categorySlug={categorySlug}
-          description="Оставьте номер телефона или Telegram. Мы уточним наличие, цену и свяжемся с вами."
-          productId={product.id}
-          productName={product.name}
-          productSlug={productSlug}
-          source="product_form"
-          title="Оставить заявку по товару"
-        />
       </div>
     </section>
   )
