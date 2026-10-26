@@ -1,6 +1,5 @@
 import Link from 'next/link'
 
-import { BrandWordmark } from '@/components/BrandWordmark'
 import { CartIcon } from '@/components/CartIcon'
 import { MobileMenu } from '@/components/MobileMenu'
 import { DesktopCatalogMenu } from '@/components/DesktopCatalogMenu'
@@ -49,8 +48,8 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
       </div>
 
       <div className="container header-inner">
-        <Link href="/" className="brand" aria-label="ФОХСТОР">
-          <BrandWordmark />
+        <Link href="/" className="brand" aria-label="ФОХСТОР.РФ">
+          <span className="header-wordmark">ФОХСТОР.РФ</span>
         </Link>
 
         <nav className="desktop-nav" aria-label="Основная навигация">

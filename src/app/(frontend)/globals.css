@@ -199,6 +199,15 @@ textarea {
   opacity: 0.7;
 }
 
+.header-wordmark {
+  color: var(--navy);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
 .brand-wordmark {
   display: inline-flex;
   min-width: 0;
@@ -4554,22 +4563,8 @@ a.contact-item:hover {
     max-width: none;
   }
 
-  .site-header .brand-wordmark {
-    width: auto;
-    min-width: max-content;
-  }
-
-  .site-header .brand-wordmark-text {
-    flex-direction: row;
-    gap: 3px;
-    overflow-wrap: normal;
-    white-space: nowrap;
+  .header-wordmark {
     font-size: 18px;
-    line-height: 1;
-  }
-
-  .site-header .brand-wordmark-subtitle {
-    display: none;
   }
 
   .site-header .header-actions {
