@@ -59,6 +59,7 @@ export function MobileMenu({ phone, settings, navData: _navData, groupNavData: _
           <a className="button small mobile-call-btn" href={`tel:${phone}`}>Позвонить</a>
         </div>
       </nav>
+      <span className="mobile-nav-brand" aria-hidden="true">ФОХСТОР.РФ</span>
     </div>}
   </>
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { CallIcon } from '@/components/CallIcon'
 import { CartIcon } from '@/components/CartIcon'
 import { MobileMenu } from '@/components/MobileMenu'
 import { DesktopCatalogMenu } from '@/components/DesktopCatalogMenu'
@@ -59,8 +60,9 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
         <div className="header-actions">
           <HeaderSearch />
           <CartIcon />
-          <a className="button small" href={`tel:${normalizePhone(phone)}`}>
-            Позвонить
+          <a className="button small header-call" href={`tel:${normalizePhone(phone)}`} aria-label="Позвонить">
+            <CallIcon className="header-call-icon" />
+            <span className="header-call-text">Позвонить</span>
           </a>
           <MobileMenu phone={normalizePhone(phone)} settings={settings} navData={navData} groupNavData={groupNavData} brandNavigation={brandMenu} />
         </div>
