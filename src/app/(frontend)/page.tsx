@@ -6,6 +6,7 @@ import { ProductGrid } from '@/components/ProductGrid'
 import { normalizeProducts } from '@/lib/normalize'
 import { getBestOffers, getBrandCatalogNavigation, getSiteSettings } from '@/lib/cms'
 import { CatalogGroupCard } from '@/components/CatalogGroupCard'
+import { StoreAbout } from '@/components/StoreAbout'
 import { CONTACTS } from '@/lib/constants'
 import {
   mapEmbedUrl,
@@ -14,14 +15,6 @@ import {
 } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
-
-const benefits = [
-  { label: 'Оригинальная техника', desc: 'Только новые устройства из официальных каналов поставки' },
-  { label: 'Гарантия 12 месяцев', desc: 'Полная гарантийная поддержка после покупки' },
-  { label: 'Trade-In', desc: 'Обменяйте старое устройство на новое с доплатой' },
-  { label: 'Рассрочка', desc: 'Забирайте технику сегодня — платите частями' },
-  { label: 'Оплата картой', desc: 'Принимаем карты и наличные' },
-]
 
 export default async function HomePage() {
   const [settings, featuredProducts, brandNavigation] = await Promise.all([
@@ -140,25 +133,8 @@ export default async function HomePage() {
       </ScrollReveal>
 
       <ScrollReveal>
-      <section className="section">
-        <div className="container section-head">
-          <div>
-            <p className="eyebrow">Почему мы</p>
-            <h2>Преимущества ФОХСТОР</h2>
-          </div>
-        </div>
-        <div className="container benefit-grid">
-          {benefits.map((b, i) => (
-            <div className="benefit" key={b.label}>
-              <span>{String(i + 1).padStart(2, '0')}</span>
-              <strong>{b.label}</strong>
-              <p>{b.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <StoreAbout />
       </ScrollReveal>
-
 
       <ScrollReveal>
       <section className="section">
