@@ -42,7 +42,6 @@ export function MobileMenu({ phone, settings, navData: _navData, groupNavData: _
     <button className="burger-btn" aria-label={open ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={open} onClick={() => setOpen(!open)}><span className={`burger-icon ${open ? 'open' : ''}`} /></button>
     {open && <div className="mobile-overlay" onClick={close}>
       <nav className="mobile-nav" onClick={(event) => event.stopPropagation()} aria-label="Мобильная навигация">
-        <button className="mobile-nav-close" aria-label="Закрыть меню" onClick={close}>×</button>
         <form className="catalog-search mobile-catalog-search" action="/catalog" method="get">
           <label className="sr-only" htmlFor="mobile-search-input">Поиск товаров</label>
           <input id="mobile-search-input" name="q" placeholder="Найти товар" type="search" />
