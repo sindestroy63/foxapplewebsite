@@ -50,7 +50,7 @@ function DesktopNode({ node }: { node: CatalogNavNode }) {
 
       <div className="container header-inner">
         <Link href="/" className="brand" aria-label="ФОХСТОР">
-          <BrandWordmark subtitle="Apple техника в Самаре" />
+          <BrandWordmark />
         </Link>
 
         <nav className="desktop-nav" aria-label="Основная навигация">

@@ -12,8 +12,6 @@ import { getUtmParams, utmToString, type UtmParams } from '@/lib/utm'
 
 const initialCartOrderState: CartOrderState = { success: false }
 
-const FREE_DELIVERY_THRESHOLD = 9900
-
 function SubmitButton() {
   const { pending } = useFormStatus()
 
@@ -106,8 +104,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
       }
     }),
   )
-
-  const isFreeDelivery = total >= FREE_DELIVERY_THRESHOLD
 
   return (
     <div className="checkout-form-card">
@@ -300,14 +296,9 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
               <p className="checkfield-hint">Заполняется при необходимости и поможет курьеру быстрее найти адрес.</p>
             </div>
 
-            {!isFreeDelivery && (
-              <p className="cart-delivery-note">
-                Бесплатная доставка от 9&nbsp;900 ₽. Стоимость доставки уточнит менеджер.
-              </p>
-            )}
-            {isFreeDelivery && (
-              <p className="cart-delivery-free">Бесплатная доставка по Самаре</p>
-            )}
+            <p className="cart-delivery-note">
+              Стоимость доставки уточнит менеджер.
+            </p>
           </>
         )}
 

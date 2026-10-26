@@ -9,8 +9,6 @@ import type { SiteSettings } from '@/lib/types'
 import { CheckoutForm } from './CheckoutForm'
 import Link from 'next/link'
 
-const FREE_DELIVERY_THRESHOLD = 9900
-
 type Props = {
   settings: SiteSettings
 }
@@ -23,7 +21,6 @@ export function CartPageClient({ settings }: Props) {
   const [countdown, setCountdown] = useState(5)
 
   const hasItems = items.length > 0
-  const isFreeDelivery = total >= FREE_DELIVERY_THRESHOLD
 
   const handleOrderSuccess = () => {
     clearCart()
@@ -178,14 +175,9 @@ export function CartPageClient({ settings }: Props) {
                 <span>Товаров на сумму</span>
                 <strong>{formatPrice(total)}</strong>
               </div>
-              {!isFreeDelivery && (
-                <p className="cart-delivery-note">
-                  Бесплатная доставка от {formatPrice(FREE_DELIVERY_THRESHOLD)}. Стоимость доставки уточнит менеджер.
-                </p>
-              )}
-              {isFreeDelivery && (
-                <p className="cart-delivery-free">Бесплатная доставка по Самаре</p>
-              )}
+              <p className="cart-delivery-note">
+                Стоимость доставки уточнит менеджер.
+              </p>
             </div>
           </div>
 

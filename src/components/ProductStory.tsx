@@ -51,7 +51,6 @@ function getProductSpecs(product: Product): Array<{ label: string; value: string
   if (product.packageLabel) specs.push({ label: "Комплектация", value: product.packageLabel })
 
   specs.push({ label: "Гарантия", value: "1 год официальной гарантии ФОХСТОР" })
-  specs.push({ label: "Доставка", value: "Бесплатная доставка по Самаре в день заказа" })
 
   return specs
 }

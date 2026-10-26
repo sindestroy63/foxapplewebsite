@@ -3520,12 +3520,6 @@ a.contact-item:hover {
   border-radius: var(--radius-sm);
 }
 
-.cart-delivery-free {
-  font-size: 13px;
-  color: var(--green);
-  margin-top: 8px;
-  font-weight: 500;
-}
 .checkout-form-card {
   background: var(--paper);
   border: 1px solid var(--line);
