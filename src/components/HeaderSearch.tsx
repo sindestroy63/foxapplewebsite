@@ -5,6 +5,63 @@ import { useEffect, useRef, useState } from 'react'
 
 type Suggestion = { id: string | number; name: string; href: string; price?: number; thumbnail?: { url: string; width: number; height: number }; configuration?: string; available?: boolean }
 
+const idlePlaceholder = 'Поиск товаров'
+const typedPlaceholders = ['iPhone 17 Pro Max', 'AirPods Pro 3', 'Apple Watch', 'MacBook Air', 'iPad Pro', 'PlayStation 5', 'Dyson']
+const minTypingWidth = 140
+
+function useTypingPlaceholder(inputRef: React.RefObject<HTMLInputElement | null>, enabled: boolean) {
+  useEffect(() => {
+    const input = inputRef.current
+    if (!input) return
+    input.placeholder = idlePlaceholder
+    if (!enabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const phrases = [idlePlaceholder, ...typedPlaceholders]
+    let index = 0
+    let length = idlePlaceholder.length
+    let erasing = true
+    let timer = 0
+
+    const step = () => {
+      if (document.hidden) {
+        timer = window.setTimeout(step, 1000)
+        return
+      }
+      if (input.clientWidth < minTypingWidth) {
+        input.placeholder = idlePlaceholder
+        index = 0
+        length = idlePlaceholder.length
+        erasing = true
+        timer = window.setTimeout(step, 1000)
+        return
+      }
+      let delay = erasing ? 40 : 85
+      if (erasing) {
+        length -= 1
+        if (length === 0) {
+          erasing = false
+          index = (index + 1) % phrases.length
+          delay = 350
+        }
+      } else {
+        length += 1
+        if (length === phrases[index].length) {
+          erasing = true
+          delay = 1600
+        }
+      }
+      input.placeholder = phrases[index].slice(0, length)
+      timer = window.setTimeout(step, delay)
+    }
+
+    timer = window.setTimeout(step, 1800)
+    return () => {
+      window.clearTimeout(timer)
+      input.placeholder = idlePlaceholder
+    }
+  }, [inputRef, enabled])
+}
+
 export function HeaderSearch() {
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<Suggestion[]>([])
@@ -15,6 +72,7 @@ export function HeaderSearch() {
   const inputRef = useRef<HTMLInputElement>(null)
   const requestRef = useRef(0)
   const imageCache = useRef(new Set<string>())
+  useTypingPlaceholder(inputRef, query.length === 0 && !open)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
