@@ -24,6 +24,13 @@ const phone = [
   'Для кого: для тех, кому нужен максимум',
 ].join('\n')
 
+test('the intro stops at the first spec line even without a blank line before it', () => {
+  const parsed = parseDescription('Смартфон для работы и съёмки.\n- Экран: 6,3″ OLED\n- Процессор: Apple A19\n- Вес: 177 г')
+  assert.equal(parsed.intro, 'Смартфон для работы и съёмки.')
+  assert.deepEqual(parsed.specs, { screen: '6,3″ OLED', chip: 'Apple A19', weight: '177 г' })
+  assert.equal(parseDescription('- Экран: 6,3″ OLED\n- Вес: 177 г').intro, '')
+})
+
 const item = (id, specs) => ({ id, name: id, href: '/', image: null, imageAlt: '', price: 1, priceFrom: false, available: true, statusLabel: '', specs })
 
 test('a structured description is split into labeled specs and an intro', () => {

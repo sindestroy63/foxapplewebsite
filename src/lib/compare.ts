@@ -91,21 +91,25 @@ export function parseDescription(raw: unknown): ParsedDescription {
   if (!text) return { intro: '', specs: {} }
 
   const collected: Record<string, string[]> = {}
-  for (const line of text.split(/\r?\n/)) {
+  const lines = text.split(/\r?\n/)
+  let firstSpecLine = lines.length
+  lines.forEach((line, index) => {
     const match = line.match(/^[·•\s-]*([^:·\n]{2,40}):\s*(.+)$/)
-    if (!match) continue
+    if (!match) return
     const definition = DESCRIPTION_KEYS.find((entry) => entry.pattern.test(match[1].trim()))
-    if (!definition) continue
+    if (!definition) return
     const value = match[2].replace(/\s+/g, ' ').trim().replace(/\.$/, '')
-    if (!value) continue
+    if (!value) return
+    if (index < firstSpecLine) firstSpecLine = index
     const list = collected[definition.key] || (collected[definition.key] = [])
     list.push(definition.prefix ? `${definition.prefix}: ${value}` : value)
-  }
+  })
 
   const specs: Record<string, string> = {}
   for (const [key, list] of Object.entries(collected)) specs[key] = list.join('; ')
 
-  const firstBlock = text.split(/\r?\n\s*\r?\n/)[0] || ''
+  const head = lines.slice(0, firstSpecLine).join('\n')
+  const firstBlock = head.split(/\r?\n\s*\r?\n/)[0] || ''
   const intro = /^[·•\s-]*[^:·\n]{2,40}:\s/.test(firstBlock) ? '' : trimSentence(firstBlock, 220)
   return { intro, specs }
 }
