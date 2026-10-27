@@ -5510,3 +5510,244 @@ a.contact-item:hover {
     font-size: 14px;
   }
 }
+
+.gallery-main {
+  touch-action: pan-y;
+}
+
+.gallery-open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gallery-open:focus-visible {
+  outline: 2px solid var(--cta);
+  outline-offset: -2px;
+}
+
+.gallery-dots {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gallery-dot {
+  pointer-events: auto;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: var(--ink);
+  overscroll-behavior: contain;
+  touch-action: pinch-zoom;
+  animation: lightbox-in 0.18s ease;
+}
+
+.lightbox__bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(10px + env(safe-area-inset-top)) 12px 6px 20px;
+}
+
+.lightbox__counter {
+  min-width: 56px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.lightbox__close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--transition), color var(--transition);
+}
+
+.lightbox__close:hover,
+.lightbox__close:focus-visible {
+  background: #f1f1f4;
+  color: var(--ink);
+}
+
+.lightbox__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.lightbox__image,
+.lightbox .image-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 72px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: lightbox-photo 0.2s ease;
+}
+
+.lightbox__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  padding: 0 0 3px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f1f4;
+  color: var(--ink);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--transition);
+}
+
+.lightbox__arrow:hover {
+  background: #e4e4e8;
+}
+
+.lightbox__arrow--left {
+  left: 16px;
+}
+
+.lightbox__arrow--right {
+  right: 16px;
+}
+
+.lightbox__thumbs {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lightbox__thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.lightbox__thumb {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: #f4f4f6;
+  opacity: 0.45;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--transition), border-color var(--transition);
+}
+
+.lightbox__thumb:first-child {
+  margin-left: auto;
+}
+
+.lightbox__thumb:last-child {
+  margin-right: auto;
+}
+
+.lightbox__thumb:hover,
+.lightbox__thumb--active {
+  opacity: 1;
+}
+
+.lightbox__thumb--active {
+  border-color: var(--ink);
+}
+
+.lightbox__thumb img {
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  object-fit: contain;
+}
+
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lightbox-photo {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 720px) {
+  .lightbox__image,
+  .lightbox .image-placeholder {
+    padding: 0 8px;
+  }
+
+  .lightbox__arrow {
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 28px;
+  }
+
+  .lightbox__arrow--left {
+    left: 2px;
+  }
+
+  .lightbox__arrow--right {
+    right: 2px;
+  }
+
+  .lightbox__thumb {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox,
+  .lightbox__image {
+    animation: none;
+  }
+}
