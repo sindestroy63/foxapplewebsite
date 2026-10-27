@@ -11,6 +11,7 @@ import {
 import { getProductImage } from '@/lib/media'
 import type { Product, SiteSettings } from '@/lib/types'
 import { ProductPill } from './ProductPill'
+import { CompareToggle } from './CompareToggle'
 import { ImageWithFallback } from './ImageWithFallback'
 import { getCatalogPrice } from '@/lib/pricing'
 import { buildProductUrl } from '@/lib/product-url-builder'
@@ -46,6 +47,7 @@ export function ProductCard({ product, settings }: { product: Product; settings:
           <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />
           <ProductPill label="Гарантия" tooltip="1 год гарантии на новые устройства" tone="warranty" />
         </div>
+        <CompareToggle productId={product.id} productName={product.name} />
       </div>
 
       <div className="product-card-body">

@@ -10,6 +10,7 @@ import { Particles } from '@/components/Particles'
 import { SITE_URL } from '@/lib/constants'
 import { getSiteSettings, getNavData, getGroupNavData, getBrandCatalogNavigation } from '@/lib/cms'
 import { CartProvider } from '@/contexts/CartContext'
+import { CompareProvider } from '@/contexts/CompareContext'
 
 import './globals.css'
 
@@ -52,15 +53,17 @@ export default async function FrontendLayout({ children }: { children: React.Rea
     <html lang="ru">
       <body className="frontend-body">
         <CartProvider>
-          <Particles />
-          <div className="site-shell">
-            <Header settings={settings} navData={navData} groupNavData={groupNavData} brandNavigation={brandNavigation} />
-            <main className="site-main">{children}</main>
-            <Footer settings={settings} />
-          </div>
-          <BottomTicker />
-          <MobileStickyBar settings={settings} />
-          <CookieBanner />
+          <CompareProvider>
+            <Particles />
+            <div className="site-shell">
+              <Header settings={settings} navData={navData} groupNavData={groupNavData} brandNavigation={brandNavigation} />
+              <main className="site-main">{children}</main>
+              <Footer settings={settings} />
+            </div>
+            <BottomTicker />
+            <MobileStickyBar settings={settings} />
+            <CookieBanner />
+          </CompareProvider>
         </CartProvider>
       </body>
     </html>

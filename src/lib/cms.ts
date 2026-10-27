@@ -310,6 +310,27 @@ export async function getProducts(args?: {
   }
 }
 
+export async function getProductsByIds(ids: Array<string | number>): Promise<Product[]> {
+  const numericIds = ids.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0)
+  if (!numericIds.length) return []
+  try {
+    const payload = await getPayloadClient()
+    const result = await payload.find({
+      collection: 'products',
+      depth: 3,
+      limit: numericIds.length,
+      pagination: false,
+      where: {
+        and: [{ id: { in: numericIds } }, { isAvailable: { equals: true } }],
+      },
+    })
+    return normalizeProducts(result.docs)
+  } catch (error) {
+    console.error('Failed to load compared products', error)
+    return []
+  }
+}
+
 function requestedQuery(query?: string): boolean {
   return Boolean(query && query.trim().length >= 2)
 }

@@ -5,6 +5,7 @@ import type { Media, Product, ProductVariant } from '@/lib/types'
 import { ProductGallery } from './ProductGallery'
 import { ProductPill } from './ProductPill'
 import { AddToCartButton } from './AddToCartButton'
+import { CompareToggle } from './CompareToggle'
 import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
 import { PRODUCT_PRICING_NOTICE } from '@/lib/product-pricing-notice'
 
@@ -188,11 +189,14 @@ export function ProductDetailClient({ product, categorySlug }: Props) {
           images={displayImages}
           alt={product.name}
           overlay={
-            <div className="product-card-badges" aria-label="Плашки товара">
-              <ProductPill label="Trade-in" tooltip="Скидка при обмене старого устройства" tone="accent" />
-              <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />
-              <ProductPill label="Гарантия" tooltip="1 год гарантии на новые устройства" tone="warranty" />
-            </div>
+            <>
+              <CompareToggle productId={product.id} productName={product.name} />
+              <div className="product-card-badges" aria-label="Плашки товара">
+                <ProductPill label="Trade-in" tooltip="Скидка при обмене старого устройства" tone="accent" />
+                <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />
+                <ProductPill label="Гарантия" tooltip="1 год гарантии на новые устройства" tone="warranty" />
+              </div>
+            </>
           }
         />
       </div>

@@ -12,6 +12,7 @@ type NavCategory = { slug: string; name: string; products: { model: string; slug
 
 const secondaryLinks = [
   { href: '/installment', label: 'Рассрочка' },
+  { href: '/compare', label: 'Сравнение' },
   { href: '/trade-in', label: 'Trade-In' },
   { href: '/warranty', label: 'Гарантия и возврат' },
   { href: '/contacts', label: 'Контакты' },
