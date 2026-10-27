@@ -15,6 +15,7 @@ export function CompareView() {
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   const [onlyDifferent, setOnlyDifferent] = useState(false)
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
   const key = ids.join(',')
 
   useEffect(() => {
@@ -150,19 +151,41 @@ export function CompareView() {
             </article>
           ))}
 
-          {shownRows.map((row) => (
-            <Fragment key={row.key}>
-              <div className="compare-row-label">
-                <span>{row.label}</span>
-                {row.different && <em>отличается</em>}
-              </div>
-              {visible.map((item, index) => (
-                <div className={`compare-cell${row.different ? ' compare-cell--diff' : ''}`} key={item.id}>
-                  {row.values[index].length ? row.values[index].join(', ') : '—'}
+          {shownRows.map((row) => {
+            const open = expanded.has(row.key)
+            return (
+              <Fragment key={row.key}>
+                <div className="compare-row-label">
+                  <span>{row.label}</span>
+                  {row.different && <em>отличается</em>}
+                  {row.long && (
+                    <button
+                      type="button"
+                      className="compare-row-toggle"
+                      aria-expanded={open}
+                      onClick={() =>
+                        setExpanded((current) => {
+                          const next = new Set(current)
+                          if (next.has(row.key)) next.delete(row.key)
+                          else next.add(row.key)
+                          return next
+                        })
+                      }
+                    >
+                      {open ? 'Свернуть' : 'Показать полностью'}
+                    </button>
+                  )}
                 </div>
-              ))}
-            </Fragment>
-          ))}
+                {visible.map((item, index) => (
+                  <div className={`compare-cell${row.different ? ' compare-cell--diff' : ''}`} key={item.id}>
+                    <span className={row.long && !open ? 'compare-cell__text compare-cell__text--clamped' : 'compare-cell__text'}>
+                      {row.values[index].length ? row.values[index].join(', ') : '—'}
+                    </span>
+                  </div>
+                ))}
+              </Fragment>
+            )
+          })}
         </div>
       </div>
 

@@ -23,17 +23,26 @@ export type CompareRowView = {
   label: string
   values: string[][]
   different: boolean
+  long: boolean
 }
 
-const COMPARE_ROWS: Array<{ key: string; label: string }> = [
-  { key: 'brand', label: 'Бренд' },
-  { key: 'line', label: 'Линейка' },
+const LONG_VALUE_LENGTH = 120
+
+const COMPARE_ROWS: Array<{ key: string; label: string; hideWhenSame?: boolean }> = [
+  { key: 'brand', label: 'Бренд', hideWhenSame: true },
+  { key: 'line', label: 'Линейка', hideWhenSame: true },
+  { key: 'screen', label: 'Экран' },
   { key: 'chip', label: 'Процессор' },
   { key: 'ram', label: 'Оперативная память' },
-  { key: 'storage', label: 'Встроенная память' },
-  { key: 'screen', label: 'Дисплей' },
-  { key: 'connectivity', label: 'Подключение' },
+  { key: 'storage', label: 'Накопитель' },
+  { key: 'camera', label: 'Камеры' },
+  { key: 'battery', label: 'Аккумулятор' },
+  { key: 'charging', label: 'Зарядка' },
+  { key: 'protection', label: 'Защита' },
+  { key: 'weight', label: 'Вес и размеры' },
+  { key: 'connectivity', label: 'Связь' },
   { key: 'sim', label: 'SIM' },
+  { key: 'os', label: 'Система' },
   { key: 'colors', label: 'Цвета' },
   { key: 'size', label: 'Размер' },
   { key: 'material', label: 'Материал' },
@@ -41,8 +50,71 @@ const COMPARE_ROWS: Array<{ key: string; label: string }> = [
   { key: 'generation', label: 'Поколение' },
   { key: 'revision', label: 'Версия' },
   { key: 'package', label: 'Комплектация' },
-  { key: 'summary', label: 'Коротко о товаре' },
+  { key: 'extras', label: 'Дополнительно' },
+  { key: 'summary', label: 'О товаре' },
 ]
+
+const DESCRIPTION_KEYS: Array<{ pattern: RegExp; key: string; prefix?: string }> = [
+  { pattern: /^(экран|экраны|дисплей)$/i, key: 'screen' },
+  { pattern: /^(процессор|чип)$/i, key: 'chip' },
+  { pattern: /^память$/i, key: 'memory' },
+  { pattern: /^(камеры|камера)$/i, key: 'camera' },
+  { pattern: /^основная камера$/i, key: 'camera', prefix: 'Основная' },
+  { pattern: /^фронтальная камера$/i, key: 'camera', prefix: 'Фронтальная' },
+  { pattern: /^(аккумулятор|батарея|автономность)$/i, key: 'battery' },
+  { pattern: /^зарядка$/i, key: 'charging' },
+  { pattern: /^защита$/i, key: 'protection' },
+  { pattern: /^(вес|габариты и вес|вес и габариты)$/i, key: 'weight' },
+  { pattern: /^(связь и интерфейсы|связь|порты?)$/i, key: 'connectivity' },
+  { pattern: /^(ос|ос и по)$/i, key: 'os' },
+  { pattern: /^комплектация$/i, key: 'package' },
+  { pattern: /^(дополнительно|дополнительные особенности)$/i, key: 'extras' },
+]
+
+export type ParsedDescription = {
+  intro: string
+  specs: Record<string, string>
+}
+
+function trimSentence(text: string, limit: number): string {
+  const flat = text.replace(/\s+/g, ' ').trim()
+  if (flat.length <= limit) return flat
+  const cut = flat.slice(0, limit)
+  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '))
+  if (stop > limit * 0.5) return cut.slice(0, stop + 1).trim()
+  const space = cut.lastIndexOf(' ')
+  return `${cut.slice(0, space > 0 ? space : limit).trim()}…`
+}
+
+export function parseDescription(raw: unknown): ParsedDescription {
+  const text = clean(raw)
+  if (!text) return { intro: '', specs: {} }
+
+  const collected: Record<string, string[]> = {}
+  for (const line of text.split(/\r?\n/)) {
+    const match = line.match(/^[·•\s-]*([^:·\n]{2,40}):\s*(.+)$/)
+    if (!match) continue
+    const definition = DESCRIPTION_KEYS.find((entry) => entry.pattern.test(match[1].trim()))
+    if (!definition) continue
+    const value = match[2].replace(/\s+/g, ' ').trim().replace(/\.$/, '')
+    if (!value) continue
+    const list = collected[definition.key] || (collected[definition.key] = [])
+    list.push(definition.prefix ? `${definition.prefix}: ${value}` : value)
+  }
+
+  const specs: Record<string, string> = {}
+  for (const [key, list] of Object.entries(collected)) specs[key] = list.join('; ')
+
+  const firstBlock = text.split(/\r?\n\s*\r?\n/)[0] || ''
+  const intro = /^[·•\s-]*[^:·\n]{2,40}:\s/.test(firstBlock) ? '' : trimSentence(firstBlock, 220)
+  return { intro, specs }
+}
+
+function ramFromMemory(memory: string | undefined): string {
+  if (!memory) return ''
+  const match = memory.match(/(\d+(?:\s*(?:или|\/|-|–)\s*\d+)*)\s*ГБ\s*(?:ОЗУ|оперативн)/i)
+  return match ? `${match[1].replace(/\s+/g, ' ')} ГБ` : ''
+}
 
 function clean(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -96,24 +168,34 @@ function sortStorage(values: string[]): string[] {
 export function productSpecs(product: Product): CompareSpecs {
   const variants: ProductVariant[] = product.variants?.length ? product.variants : []
   const fromVariants = (pick: (variant: ProductVariant) => unknown) => variants.map(pick)
+  const description = parseDescription(product.shortDescription)
+  const described = (key: string) => (description.specs[key] ? [description.specs[key]] : [])
+  const preferred = (own: string[], key: string) => (own.length ? own : described(key))
 
   return {
     brand: unique([product.brand]),
     line: unique([product.productLine]),
-    chip: unique([...fromVariants((variant) => variant.chip), product.chip]),
-    ram: unique([...fromVariants((variant) => variant.ram), product.ram]),
+    screen: preferred(unique([...fromVariants((variant) => variant.screenSize), product.screenSize]), 'screen'),
+    chip: preferred(unique([...fromVariants((variant) => variant.chip), product.chip]), 'chip'),
+    ram: unique([...fromVariants((variant) => variant.ram), product.ram, ramFromMemory(description.specs.memory)]).slice(0, 1),
     storage: sortStorage(unique([...fromVariants((variant) => variant.storage || variant.memory), product.memory])),
-    screen: unique([...fromVariants((variant) => variant.screenSize), product.screenSize]),
-    connectivity: unique([...fromVariants((variant) => variant.connectivity), product.connectivity]),
+    camera: described('camera'),
+    battery: described('battery'),
+    charging: described('charging'),
+    protection: described('protection'),
+    weight: described('weight'),
+    connectivity: preferred(unique([...fromVariants((variant) => variant.connectivity), product.connectivity]), 'connectivity'),
     sim: unique([...fromVariants((variant) => simLabel(variant.sim || variant.simType)), simLabel(product.simType)]),
+    os: described('os'),
     colors: unique([...fromVariants((variant) => colorLabel(variant.color)), colorLabel(product.color)]),
     size: unique([...fromVariants((variant) => variant.size), product.size]),
     material: unique(fromVariants((variant) => variant.material)),
     strap: unique(fromVariants((variant) => variant.strapSize)),
     generation: unique([...fromVariants((variant) => variant.generation), product.generation]),
     revision: unique([...fromVariants((variant) => variant.revision), product.revision]),
-    package: unique([...fromVariants((variant) => variant.packageLabel), product.packageLabel]),
-    summary: unique([product.shortDescription]),
+    package: preferred(unique([...fromVariants((variant) => variant.packageLabel), product.packageLabel]), 'package'),
+    extras: described('extras'),
+    summary: unique([description.intro]),
   }
 }
 
@@ -124,11 +206,14 @@ export function buildCompareRows(items: CompareItem[]): CompareRowView[] {
     if (!values.some((list) => list.length > 0)) continue
     const filled = values.filter((list) => list.length > 0)
     const signatures = new Set(filled.map((list) => list.map((value) => value.toLowerCase()).join('|')))
+    const different = filled.length > 1 && signatures.size > 1
+    if (definition.hideWhenSame && !different) continue
     rows.push({
       key: definition.key,
       label: definition.label,
       values,
-      different: filled.length > 1 && signatures.size > 1,
+      different,
+      long: values.some((list) => list.join(', ').length > LONG_VALUE_LENGTH),
     })
   }
   return rows

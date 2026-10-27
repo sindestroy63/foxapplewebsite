@@ -5419,7 +5419,32 @@ a.contact-item:hover {
 .compare-cell--diff {
   border-top-color: var(--ink);
   background: var(--paper);
-  font-weight: 700;
+}
+
+.compare-cell__text {
+  display: block;
+}
+
+.compare-cell__text--clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+.compare-row-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cta);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compare-row-toggle:hover {
+  text-decoration: underline;
 }
 
 .compare-empty {
