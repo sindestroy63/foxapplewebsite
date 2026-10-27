@@ -493,12 +493,6 @@ async function main() {
     const productStatus = new Map()
     const productQty = new Map()
     for (const product of products.rows) {
-      if (/iphone\s*duo/i.test(product.name)) {
-        productAvail.set(product.id, false)
-        productStatus.set(product.id, 'out_of_stock')
-        productQty.set(product.id, 0)
-        continue
-      }
       const own = byProduct.get(product.id) || []
       const managed = own.filter((row) => decisions.has(row.id))
       let available = null
