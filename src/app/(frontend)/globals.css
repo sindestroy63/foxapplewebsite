@@ -5420,7 +5420,6 @@ a.contact-item:hover {
 
 .compare-cell--diff {
   border-top-color: var(--ink);
-  background: var(--paper);
 }
 
 .compare-cell__text {
