@@ -2,39 +2,38 @@
 
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
-import { COMPARE_LIMIT, COMPARE_STORAGE_KEY, parseCompareIds } from '@/lib/compare'
-
-type ToggleResult = 'added' | 'removed' | 'full'
+import { COMPARE_STORAGE_KEY, parseCompareEntries, toggleCompareEntry, type CompareEntry, type CompareToggleResult } from '@/lib/compare'
 
 type CompareContextValue = {
   ids: string[]
+  group: string | null
   ready: boolean
   count: number
   has: (id: string | number) => boolean
-  toggle: (id: string | number) => ToggleResult
+  toggle: (id: string | number, group: string) => CompareToggleResult
   remove: (id: string | number) => void
   clear: () => void
-  replace: (ids: string[]) => void
+  retain: (ids: string[]) => void
 }
 
 const CompareContext = createContext<CompareContextValue | null>(null)
 
-function readStoredIds(): string[] {
+function readStoredEntries(): CompareEntry[] {
   try {
-    return parseCompareIds(JSON.parse(window.localStorage.getItem(COMPARE_STORAGE_KEY) || '[]'))
+    return parseCompareEntries(JSON.parse(window.localStorage.getItem(COMPARE_STORAGE_KEY) || '[]'))
   } catch {
     return []
   }
 }
 
 export function CompareProvider({ children }: { children: ReactNode }) {
-  const [ids, setIds] = useState<string[]>([])
+  const [entries, setEntries] = useState<CompareEntry[]>([])
   const [ready, setReady] = useState(false)
-  const latest = useRef<string[]>([])
+  const latest = useRef<CompareEntry[]>([])
 
-  const commit = useCallback((next: string[]) => {
+  const commit = useCallback((next: CompareEntry[]) => {
     latest.current = next
-    setIds(next)
+    setEntries(next)
     try {
       window.localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(next))
     } catch {
@@ -43,32 +42,26 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const initial = readStoredIds()
+    const initial = readStoredEntries()
     latest.current = initial
-    setIds(initial)
+    setEntries(initial)
     setReady(true)
 
     const onStorage = (event: StorageEvent) => {
       if (event.key !== COMPARE_STORAGE_KEY) return
-      const next = readStoredIds()
+      const next = readStoredEntries()
       latest.current = next
-      setIds(next)
+      setEntries(next)
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   const toggle = useCallback(
-    (raw: string | number): ToggleResult => {
-      const id = String(raw)
-      const current = latest.current
-      if (current.includes(id)) {
-        commit(current.filter((entry) => entry !== id))
-        return 'removed'
-      }
-      if (current.length >= COMPARE_LIMIT) return 'full'
-      commit([...current, id])
-      return 'added'
+    (raw: string | number, group: string): CompareToggleResult => {
+      const { entries: next, result } = toggleCompareEntry(latest.current, { id: String(raw), group })
+      if (next !== latest.current) commit(next)
+      return result
     },
     [commit],
   )
@@ -76,20 +69,26 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const remove = useCallback(
     (raw: string | number) => {
       const id = String(raw)
-      commit(latest.current.filter((entry) => entry !== id))
+      commit(latest.current.filter((entry) => entry.id !== id))
     },
     [commit],
   )
 
   const clear = useCallback(() => commit([]), [commit])
 
-  const replace = useCallback((next: string[]) => commit(parseCompareIds(next)), [commit])
+  const retain = useCallback(
+    (ids: string[]) => commit(latest.current.filter((entry) => ids.includes(entry.id))),
+    [commit],
+  )
+
+  const ids = useMemo(() => entries.map((entry) => entry.id), [entries])
+  const group = entries.length > 0 ? entries[0].group : null
 
   const has = useCallback((raw: string | number) => ids.includes(String(raw)), [ids])
 
   const value = useMemo<CompareContextValue>(
-    () => ({ ids, ready, count: ids.length, has, toggle, remove, clear, replace }),
-    [ids, ready, has, toggle, remove, clear, replace],
+    () => ({ ids, group, ready, count: ids.length, has, toggle, remove, clear, retain }),
+    [ids, group, ready, has, toggle, remove, clear, retain],
   )
 
   return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>

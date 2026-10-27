@@ -229,3 +229,32 @@ export function parseCompareIds(raw: unknown): string[] {
   }
   return ids
 }
+
+export type CompareEntry = { id: string; group: string }
+
+export type CompareToggleResult = 'added' | 'removed' | 'full' | 'group'
+
+export function parseCompareEntries(raw: unknown): CompareEntry[] {
+  const list = Array.isArray(raw) ? raw : []
+  const entries: CompareEntry[] = []
+  for (const candidate of list) {
+    if (!candidate || typeof candidate !== 'object') continue
+    const id = String((candidate as CompareEntry).id).trim()
+    const group = String((candidate as CompareEntry).group || '').trim()
+    if (!/^\d{1,12}$/.test(id) || !/^[a-z0-9-]{1,40}$/.test(group)) continue
+    if (entries.some((entry) => entry.id === id)) continue
+    if (entries.length > 0 && entries[0].group !== group) continue
+    entries.push({ id, group })
+    if (entries.length >= COMPARE_LIMIT) break
+  }
+  return entries
+}
+
+export function toggleCompareEntry(entries: CompareEntry[], entry: CompareEntry): { entries: CompareEntry[]; result: CompareToggleResult } {
+  if (entries.some((current) => current.id === entry.id)) {
+    return { entries: entries.filter((current) => current.id !== entry.id), result: 'removed' }
+  }
+  if (entries.length > 0 && entries[0].group !== entry.group) return { entries, result: 'group' }
+  if (entries.length >= COMPARE_LIMIT) return { entries, result: 'full' }
+  return { entries: [...entries, entry], result: 'added' }
+}

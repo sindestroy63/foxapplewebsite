@@ -7,10 +7,11 @@ import { CompareGlyph } from '@/components/CompareGlyph'
 import { ImageWithFallback } from '@/components/ImageWithFallback'
 import { useCompare } from '@/contexts/CompareContext'
 import { COMPARE_LIMIT, buildCompareRows, type CompareItem } from '@/lib/compare'
+import { getCatalogGroup } from '@/lib/catalog-groups'
 import { formatPrice } from '@/lib/format'
 
 export function CompareView() {
-  const { ids, ready, remove, clear, replace } = useCompare()
+  const { ids, group, ready, remove, clear, retain } = useCompare()
   const [items, setItems] = useState<CompareItem[]>([])
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -36,7 +37,7 @@ export function CompareView() {
         setItems(data)
         setFailed(false)
         setLoaded(true)
-        if (data.length !== key.split(',').length) replace(data.map((item) => item.id))
+        if (data.length !== key.split(',').length) retain(data.map((item) => item.id))
       })
       .catch((error: Error) => {
         if (error.name === 'AbortError') return
@@ -44,13 +45,14 @@ export function CompareView() {
         setLoaded(true)
       })
     return () => controller.abort()
-  }, [key, ready, replace])
+  }, [key, ready, retain])
 
   const visible = useMemo(
     () => ids.map((id) => items.find((item) => item.id === id)).filter((item): item is CompareItem => Boolean(item)),
     [ids, items],
   )
   const rows = useMemo(() => buildCompareRows(visible), [visible])
+  const groupLabel = group ? getCatalogGroup(group)?.label : null
   const shownRows = onlyDifferent ? rows.filter((row) => row.different) : rows
 
   const prices = visible.filter((item) => item.available && item.price > 0).map((item) => item.price)
@@ -67,7 +69,7 @@ export function CompareView() {
           <CompareGlyph size={30} />
         </span>
         <h1>Сравнение пока пустое</h1>
-        <p>Нажмите значок весов на фото товара, чтобы добавить его сюда. Можно сравнить до {COMPARE_LIMIT} товаров.</p>
+        <p>Нажмите значок весов на фото товара, чтобы добавить его сюда. Можно сравнить до {COMPARE_LIMIT} товаров одной категории.</p>
         <Link className="button" href="/catalog">
           Перейти в каталог
         </Link>
@@ -93,6 +95,7 @@ export function CompareView() {
         <div>
           <h1>Сравнение</h1>
           <p className="compare-count">
+            {groupLabel ? `${groupLabel} · ` : ''}
             {visible.length} из {COMPARE_LIMIT} товаров
           </p>
         </div>
@@ -105,7 +108,7 @@ export function CompareView() {
             </label>
           )}
           {visible.length < COMPARE_LIMIT && (
-            <Link className="button small secondary" href="/catalog">
+            <Link className="button small secondary" href={group ? `/catalog?group=${group}` : '/catalog'}>
               Добавить товар
             </Link>
           )}

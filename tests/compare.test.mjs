@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const { COMPARE_LIMIT, buildCompareRows, parseCompareIds, productSpecs } = await import('../src/lib/compare.ts')
+const { COMPARE_LIMIT, buildCompareRows, parseCompareEntries, parseCompareIds, productSpecs, toggleCompareEntry } = await import('../src/lib/compare.ts')
 
 const item = (id, specs) => ({ id, name: id, href: '/', image: null, imageAlt: '', price: 1, priceFrom: false, available: true, statusLabel: '', specs })
 
@@ -10,6 +10,40 @@ test('ids are validated, deduplicated and capped at the compare limit', () => {
   assert.equal(parseCompareIds(['1', '2', '3', '4', '5', '6']).length, COMPARE_LIMIT)
   assert.deepEqual(parseCompareIds(null), [])
   assert.deepEqual(parseCompareIds('1;2,<script>'), [])
+})
+
+test('the first product sets the category and products from other categories are refused', () => {
+  const first = toggleCompareEntry([], { id: '1', group: 'smartphones' })
+  assert.equal(first.result, 'added')
+  const refused = toggleCompareEntry(first.entries, { id: '2', group: 'audio' })
+  assert.equal(refused.result, 'group')
+  assert.deepEqual(refused.entries, [{ id: '1', group: 'smartphones' }])
+  const same = toggleCompareEntry(first.entries, { id: '3', group: 'smartphones' })
+  assert.equal(same.result, 'added')
+  assert.deepEqual(same.entries.map((entry) => entry.id), ['1', '3'])
+})
+
+test('removing the last product frees the category and the limit is enforced inside it', () => {
+  let entries = []
+  for (const id of ['1', '2', '3', '4']) entries = toggleCompareEntry(entries, { id, group: 'laptops' }).entries
+  assert.equal(toggleCompareEntry(entries, { id: '5', group: 'laptops' }).result, 'full')
+  assert.equal(toggleCompareEntry(entries, { id: '5', group: 'tablets' }).result, 'group')
+  for (const id of ['1', '2', '3', '4']) entries = toggleCompareEntry(entries, { id, group: 'laptops' }).entries
+  assert.deepEqual(entries, [])
+  assert.equal(toggleCompareEntry(entries, { id: '9', group: 'tablets' }).result, 'added')
+})
+
+test('stored lists are sanitized: legacy ids, duplicates and foreign categories are dropped', () => {
+  assert.deepEqual(parseCompareEntries(['1', '2']), [])
+  assert.deepEqual(parseCompareEntries(null), [])
+  const stored = parseCompareEntries([
+    { id: '1', group: 'smartphones' },
+    { id: '1', group: 'smartphones' },
+    { id: '2', group: 'audio' },
+    { id: 'x', group: 'smartphones' },
+    { id: '3', group: 'smartphones' },
+  ])
+  assert.deepEqual(stored.map((entry) => entry.id), ['1', '3'])
 })
 
 test('a row is marked as different only when the products really differ', () => {

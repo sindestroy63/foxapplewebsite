@@ -5,10 +5,17 @@ import { useEffect, useRef, useState } from 'react'
 import { CompareGlyph } from '@/components/CompareGlyph'
 import { useCompare } from '@/contexts/CompareContext'
 import { COMPARE_LIMIT } from '@/lib/compare'
+import { getCatalogGroup, productGroupSlug } from '@/lib/catalog-groups'
 
-export function CompareToggle({ productId, productName }: { productId: string | number; productName: string }) {
-  const { has, toggle, ready } = useCompare()
-  const [full, setFull] = useState(false)
+type Props = {
+  productId: string | number
+  productName: string
+  productGroup?: string | null
+}
+
+export function CompareToggle({ productId, productName, productGroup }: Props) {
+  const { has, toggle, ready, group: listGroup } = useCompare()
+  const [hint, setHint] = useState<string | null>(null)
   const timer = useRef(0)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
@@ -16,13 +23,21 @@ export function CompareToggle({ productId, productName }: { productId: string | 
   const active = ready && has(productId)
   const label = active ? 'Убрать из сравнения' : 'Добавить в сравнение'
 
+  const showHint = (message: string) => {
+    setHint(message)
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => setHint(null), 3200)
+  }
+
   const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     event.stopPropagation()
-    if (toggle(productId) === 'full') {
-      setFull(true)
-      window.clearTimeout(timer.current)
-      timer.current = window.setTimeout(() => setFull(false), 2600)
+    const result = toggle(productId, productGroupSlug(productGroup) || 'other')
+    if (result === 'full') {
+      showHint(`В сравнении уже ${COMPARE_LIMIT} товара`)
+    } else if (result === 'group') {
+      const current = listGroup ? getCatalogGroup(listGroup)?.label : null
+      showHint(current ? `Сравнивать можно товары одной категории: «${current}»` : 'Сравнивать можно товары одной категории')
     }
   }
 
@@ -36,9 +51,9 @@ export function CompareToggle({ productId, productName }: { productId: string | 
       onClick={onClick}
     >
       <CompareGlyph size={18} />
-      {full && (
+      {hint && (
         <span className="compare-toggle__hint" role="status">
-          В сравнении уже {COMPARE_LIMIT} товара
+          {hint}
         </span>
       )}
     </button>

@@ -190,7 +190,7 @@ export function ProductDetailClient({ product, categorySlug }: Props) {
           alt={product.name}
           overlay={
             <>
-              <CompareToggle productId={product.id} productName={product.name} />
+              <CompareToggle productId={product.id} productName={product.name} productGroup={product.productGroup} />
               <div className="product-card-badges" aria-label="Плашки товара">
                 <ProductPill label="Trade-in" tooltip="Скидка при обмене старого устройства" tone="accent" />
                 <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />

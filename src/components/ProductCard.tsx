@@ -47,7 +47,7 @@ export function ProductCard({ product, settings }: { product: Product; settings:
           <ProductPill label="Рассрочка" tooltip="Рассрочка до 36 месяцев" />
           <ProductPill label="Гарантия" tooltip="1 год гарантии на новые устройства" tone="warranty" />
         </div>
-        <CompareToggle productId={product.id} productName={product.name} />
+        <CompareToggle productId={product.id} productName={product.name} productGroup={product.productGroup} />
       </div>
 
       <div className="product-card-body">
