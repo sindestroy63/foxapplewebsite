@@ -45,6 +45,19 @@ export function ProductGallery({ images, alt, overlay }: Props) {
             <button className="gallery-arrow gallery-arrow--right" onClick={next} aria-label="Следующее фото" type="button">›</button>
           </>
         )}
+        {images.length > 1 && (
+          <div className="gallery-dots">
+            {images.map((img, i) => (
+              <button
+                key={img.id}
+                className={`gallery-dot ${i === idx ? 'gallery-dot--active' : ''}`}
+                onClick={() => setIdx(i)}
+                type="button"
+                aria-label={`Фото ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
         </div>
         {overlay}
       </div>
