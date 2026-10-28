@@ -139,12 +139,9 @@ export function ProductDetailClient({ product, categorySlug }: Props) {
 
   const stringAxes = useMemo(() => {
     if (!hasVariants) return []
-    return STRING_AXES.filter(({ key }) => {
-      const vals = uniqueStrings(variants, key)
-      if (vals.length === 0) return false
-      if (vals.length <= 1) return false
-      return true
-    })
+    return STRING_AXES
+      .map((axis) => ({ ...axis, values: uniqueStrings(variants, axis.key) }))
+      .filter(({ values }) => values.length > 0)
   }, [hasVariants, variants])
 
   const [selectedColor, setSelectedColor] = useState<string | null>(() => {
@@ -208,9 +205,17 @@ export function ProductDetailClient({ product, categorySlug }: Props) {
 
         {hasVariants && (stringAxes.length > 0 || hasColors) && (
           <div className="variant-selector">
-            {stringAxes.map(({ key, title }) => {
-              const values = uniqueStrings(variants, key)
-              if (values.length === 0) return null
+            {stringAxes.map(({ key, title, values }) => {
+              if (values.length === 1) {
+                const value = firstText(activeVariant?.[key])
+                if (!value) return null
+                return (
+                  <div className="variant-group" key={key}>
+                    <span className="variant-label">{title}</span>
+                    <span className="variant-detail-value">{displayLabel(key, value)}</span>
+                  </div>
+                )
+              }
               return (
                 <div className="variant-group" key={key}>
                   <span className="variant-label">{title}</span>
