@@ -5,11 +5,11 @@ import { useEffect, useState } from 'react'
 
 import { ImageWithFallback } from '@/components/ImageWithFallback'
 import { formatPrice, statusLabel, statusTone } from '@/lib/format'
-import { isPlayStation5Console, type RecommendedProduct } from '@/lib/product-recommendations'
+import { recommendationCategory, type RecommendedProduct } from '@/lib/product-recommendations'
 import type { Product } from '@/lib/types'
 
 export function ProductRecommendations({ product }: { product: Product }) {
-  const eligible = isPlayStation5Console(product)
+  const eligible = recommendationCategory(product) !== null
   const [result, setResult] = useState<{ id: string; items: RecommendedProduct[] } | null>(null)
   const id = String(product.id)
 
@@ -33,7 +33,7 @@ export function ProductRecommendations({ product }: { product: Product }) {
   return (
     <section className="product-recommendations" aria-label="Рекомендуем к покупке">
       <h2>Рекомендуем к покупке</h2>
-      <div className="product-recommendations__list" tabIndex={0} aria-label="Аксессуары для PlayStation 5">
+      <div className="product-recommendations__list" tabIndex={0} aria-label={`Аксессуары для ${product.name}`}>
         {result.items.map((item) => (
           <article className="recommendation-card" key={item.id}>
             <Link href={item.href} className="recommendation-card__image" aria-label={item.name}>
