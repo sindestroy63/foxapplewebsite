@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 
-import { LeadForm } from '@/components/LeadForm'
 import { RichText } from '@/components/RichText'
 import { getPageBySlug } from '@/lib/cms'
 
@@ -37,11 +36,6 @@ export default async function TradeInPage() {
             </ul>
           </div>
         )}
-        <LeadForm
-          description="Оставьте заявку, если хотите уточнить оценку устройства или условия обмена."
-          source="trade_in_form"
-          title="Заявка на Trade-In"
-        />
       </div>
     </section>
   )

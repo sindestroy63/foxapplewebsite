@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 
-import { LeadForm } from '@/components/LeadForm'
 import { RichText } from '@/components/RichText'
 import { getPageBySlug, getSiteSettings } from '@/lib/cms'
 import { mapEmbedUrl, mapLinkUrl, normalizePhone, telegramLinkProps } from '@/lib/format'
@@ -9,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Контакты',
-  description: 'ФОХСТОР: ТЦ «Русь на Волге», 1 этаж, секция 113. Телефон, Telegram и график работы магазина.',
+  description: 'ФОХСТОР.РФ: ТЦ «Русь на Волге», 1 этаж, секция 113. Телефон, Telegram и график работы магазина.',
   alternates: {
     canonical: '/contacts',
   },
@@ -24,7 +23,7 @@ export default async function ContactsPage() {
       <div className="container contacts-grid">
         <div className="contacts-left">
           <p className="eyebrow">Контакты</p>
-          <h1>{page?.title || 'Контакты ФОХСТОР'}</h1>
+          <h1>{page?.title || 'Контакты ФОХСТОР.РФ'}</h1>
           {page?.content ? <RichText content={page.content} /> : null}
 
           <div className="contact-cards">
@@ -37,7 +36,7 @@ export default async function ContactsPage() {
             </a>
 
             <a {...telegramLinkProps(settings.telegramUsername)} className="contact-item">
-              <span className="contact-icon">✈️</span>
+              <span className="contact-icon"><img src="/telegram.svg" width="32" height="32" alt="" /></span>
               <div>
                 <span className="contact-item-label">Telegram</span>
                 <span className="contact-item-value">{settings.telegramUsername}</span>
@@ -45,7 +44,7 @@ export default async function ContactsPage() {
             </a>
 
             <a href={settings.telegramChannelUrl} rel="noreferrer" target="_blank" className="contact-item">
-              <span className="contact-icon">📢</span>
+              <span className="contact-icon"><img src="/telegram.svg" width="32" height="32" alt="" /></span>
               <div>
                 <span className="contact-item-label">Telegram-канал</span>
                 <span className="contact-item-value">Новости и поступления</span>
@@ -53,7 +52,7 @@ export default async function ContactsPage() {
             </a>
 
             <a href="https://max.ru/join/vYzHGGiZB4AZttyMGsyZXVsYWGXrLKmM86quZjZOTXs" rel="noreferrer" target="_blank" className="contact-item">
-              <span className="contact-icon">💬</span>
+              <span className="contact-icon"><img src="/max.png" width="32" height="32" alt="" /></span>
               <div>
                 <span className="contact-item-label">MAX</span>
                 <span className="contact-item-value">Наш канал в MAX</span>
@@ -89,7 +88,7 @@ export default async function ContactsPage() {
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               src={mapEmbedUrl(settings.address, settings.mapUrl)}
-              title="Карта магазина ФОХСТОР"
+              title="Карта магазина ФОХСТОР.РФ"
             />
           </div>
           <div className="request-card">
@@ -103,11 +102,6 @@ export default async function ContactsPage() {
                 Написать
               </a>
             </div>
-            <LeadForm
-              description="Если удобнее, оставьте заявку. Мы свяжемся с вами и уточним все детали."
-              source="contact_form"
-              title="Оставить заявку"
-            />
           </div>
         </div>
       </div>

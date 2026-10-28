@@ -42,7 +42,7 @@ const pageText: Record<string, string[]> = {
   ],
   warranty: [],
   contacts: [
-    'Магазин ФОХСТОР находится в Самаре. Напишите в Telegram или позвоните, чтобы уточнить наличие нужной модели перед визитом.',
+    'Магазин ФОХСТОР.РФ находится в Самаре. Напишите в Telegram или позвоните, чтобы уточнить наличие нужной модели перед визитом.',
   ],
 }
 
@@ -305,7 +305,7 @@ export const script = async (config: SanitizedConfig) => {
     { slug: 'installment', title: 'Рассрочка на технику Apple' },
     { slug: 'trade-in', title: 'Trade-In в ФОХСТОР' },
     { slug: 'warranty', title: 'Гарантия 12 месяцев' },
-    { slug: 'contacts', title: 'Контакты ФОХСТОР' },
+    { slug: 'contacts', title: 'Контакты ФОХСТОР.РФ' },
   ]
 
   for (const page of pages) {

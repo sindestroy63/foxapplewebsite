@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 
-import { LeadForm } from '@/components/LeadForm'
 
 export const metadata: Metadata = {
   title: 'Рассрочка и кредит на технику',
@@ -102,11 +101,6 @@ export default function InstallmentPage() {
           />
         </div>
 
-        <LeadForm
-          description="Оставьте контакт, и мы подскажем доступные варианты рассрочки под нужную модель."
-          source="installment_form"
-          title="Заявка на рассрочку"
-        />
       </div>
     </section>
   )
