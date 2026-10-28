@@ -354,6 +354,64 @@ const ACCESSORY_NAMES = {
   lens: 'Линзы камеры Keephone',
 }
 
+const APPLE_CHARGER_PRODUCT = 'Сетевое зарядное устройство'
+const APPLE_CHARGER_SKIP = /кабель|cable|чехол|case|magsafe|повербанк|battery|watch|ремешок|стекло|iphone|ipad|macbook|airpods|samsung|galaxy|playstation|ps5/
+
+export function appleChargerOf(name) {
+  const text = String(name || '').toLowerCase()
+  if (!/apple/.test(text) || APPLE_CHARGER_SKIP.test(text)) return null
+  if (/dynamic/.test(text)) return 'dynamic-40-60'
+  if (!/сетев|зарядн|adapter|адаптер|usb/.test(text)) return null
+  const power = text.match(/(?<![a-z0-9.])(\d+)\s*(?:w|вт)/)
+  if (!power) return null
+  return ['20', '35', '96'].includes(power[1]) ? `${power[1]}w` : null
+}
+
+async function applyAppleChargers(client, rows, changes) {
+  const totals = new Map()
+  for (const row of rows) {
+    const qty = Number(row.stock || 0)
+    const key = qty > 0 ? appleChargerOf(row.name) : null
+    if (key) totals.set(key, (totals.get(key) || 0) + qty)
+  }
+  const found = await client.query(
+    `SELECT v.id, v.package_label, v.status, v.stock_qty, p.id AS product_id, p.status AS product_status, p.stock_qty AS product_qty
+     FROM products_variants v
+     JOIN products p ON p.id = v._parent_id
+     WHERE btrim(p.name) = $1`,
+    [APPLE_CHARGER_PRODUCT],
+  )
+  const products = new Map()
+  for (const row of found.rows) {
+    const key = appleChargerOf(row.package_label)
+    const qty = key ? totals.get(key) || 0 : null
+    let status = row.status
+    if (qty !== null) {
+      status = qty > 0 ? 'in_stock' : 'preorder'
+      if (row.status !== status || Number(row.stock_qty) !== qty) {
+        await client.query(
+          `UPDATE products_variants SET status = $2::"enum_products_variants_status", stock_qty = $3 WHERE id = $1`,
+          [row.id, status, qty],
+        )
+        changes.push({ id: row.id, name: `${APPLE_CHARGER_PRODUCT} ${String(row.package_label).trim()}`, to: status, qty })
+      }
+    }
+    const entry = products.get(row.product_id) || { row, statuses: [], qty: 0 }
+    entry.statuses.push(status)
+    entry.qty += qty || 0
+    products.set(row.product_id, entry)
+  }
+  for (const [id, entry] of products) {
+    const status = entry.statuses.includes('in_stock') ? 'in_stock' : entry.statuses.includes('preorder') ? 'preorder' : 'out_of_stock'
+    if (entry.row.product_status === status && Number(entry.row.product_qty) === entry.qty) continue
+    await client.query(
+      `UPDATE products SET status = $2::"enum_products_status", stock_qty = $3 WHERE id = $1`,
+      [id, status, entry.qty],
+    )
+    changes.push({ id, name: APPLE_CHARGER_PRODUCT, to: status, qty: entry.qty, product: true })
+  }
+}
+
 async function applyAccessories(client, rows, changes) {
   const totals = new Map()
   const caseColors = new Map()
@@ -541,6 +599,7 @@ async function main() {
       )
     }
     await applyAccessories(client, rows, changes)
+    await applyAppleChargers(client, rows, changes)
     await client.query('COMMIT')
     console.log(JSON.stringify({ ok: true, dry, msRows: rows.length, items: items.length, managedVariants: decisions.size, updated: changes.length }))
   } catch (error) {
