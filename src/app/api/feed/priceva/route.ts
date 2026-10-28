@@ -4,6 +4,7 @@ import config from '@payload-config'
 import { productCanonicalUrl } from '@/lib/product-url'
 import { CONTACTS, SELLER } from '@/lib/constants'
 import { buildOfferName } from '@/lib/priceva-offer-name'
+import { pricevaAvailability } from '@/lib/priceva-availability'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -160,7 +161,8 @@ export async function GET() {
     const offersXml: string[] = []
 
     for (const product of productsResult.docs as any[]) {
-      if (product.status === 'out_of_stock') continue
+      const productAvailable = pricevaAvailability(product)
+      if (productAvailable === null) continue
 
       const baseName = String(product.name || product.model || '').trim()
       if (!baseName) continue
@@ -189,7 +191,8 @@ export async function GET() {
       if (hasVariants) {
         for (let i = 0; i < product.variants.length; i++) {
           const variant = product.variants[i]
-          if (variant.isAvailable === false || variant.status === 'out_of_stock') continue
+          const available = pricevaAvailability(product, variant)
+          if (available === null) continue
 
           const offerId = (variant.sku && String(variant.sku).trim()) || (product.sku ? `${product.sku}-${variant.id || i + 1}` : `offer-${product.id}-${variant.id || i + 1}`)
           const colorName = extractColorLabel(variant.color) || extractColorLabel(product.color)
@@ -211,7 +214,7 @@ export async function GET() {
           const pictureUrl = resolveOfferImage(product, variant, siteUrl)
 
           offersXml.push(
-            `      <offer id="${escapeXml(offerId)}" available="true">\n` +
+            `      <offer id="${escapeXml(offerId)}" available="${available}">\n` +
             `        <name>${escapeXml(offerName)}</name>\n` +
             `        <url>${escapeXml(offerUrl)}</url>\n` +
             `        <price>${price}</price>\n` +
@@ -243,7 +246,7 @@ export async function GET() {
         const pictureUrl = resolveOfferImage(product, undefined, siteUrl)
 
         offersXml.push(
-          `      <offer id="${escapeXml(offerId)}" available="true">\n` +
+          `      <offer id="${escapeXml(offerId)}" available="${productAvailable}">\n` +
           `        <name>${escapeXml(offerName)}</name>\n` +
           `        <url>${escapeXml(offerUrl)}</url>\n` +
           `        <price>${price}</price>\n` +
