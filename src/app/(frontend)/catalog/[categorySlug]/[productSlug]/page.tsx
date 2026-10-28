@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { ProductDetailClient } from '@/components/ProductDetailClient'
 import { ProductStory } from '@/components/ProductStory'
+import { ProductRecommendations } from '@/components/ProductRecommendations'
 import { RichText } from '@/components/RichText'
 import { getProductBySlugs } from '@/lib/cms'
 import { productCanonicalUrl } from '@/lib/product-url'
@@ -55,6 +56,7 @@ export default async function ProductPage({ params }: Props) {
         />
       </div>
       <ProductStory product={product} />
+      <div className="container"><ProductRecommendations product={product} /></div>
 
       <div className="container product-detail-bottom">
         <p className="offer-note detail-offer-note">Информация на сайте не является публичной офертой.</p>
