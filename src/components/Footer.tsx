@@ -1,6 +1,5 @@
 import Link from 'next/link'
 
-import { BrandWordmark } from '@/components/BrandWordmark'
 import { SELLER } from '@/lib/constants'
 import { normalizePhone, telegramLinkProps } from '@/lib/format'
 import type { SiteSettings } from '@/lib/types'
@@ -12,7 +11,6 @@ export function Footer({ settings }: { settings: SiteSettings }) {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <BrandWordmark className="footer-wordmark" />
           <p>{settings.aboutText}</p>
         </div>
         <div>

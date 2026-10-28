@@ -1849,14 +1849,6 @@ a.contact-item:hover {
   color: rgba(255, 255, 255, 0.9);
 }
 
-.footer-wordmark .brand-wordmark-text {
-  color: #fff;
-  font-size: 26px;
-}
-
-.footer-wordmark .brand-wordmark-subtitle {
-  color: rgba(255, 255, 255, 0.4);
-}
 
 .footer-grid {
   display: grid;
