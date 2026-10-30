@@ -26,6 +26,7 @@ const COLORS = [
   ['sky blue', /sky\s*blue|голубое небо/],
   ['lavender', /lavender|лаванд/],
   ['burgundy', /burgundy|бордов/],
+  ['glacier', /\bglacier\b/],
   ['graphite', /graphite|графит/],
   ['creamy', /creamy|кремов/],
   ['pistachio', /pistachio|фисташ/],
