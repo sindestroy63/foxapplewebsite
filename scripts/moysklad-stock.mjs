@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
-const STOP = /демозона|demo|б\/?у|б\.у|чехол|\bcase\b|стекло|glass|кабель|зарядк|зарядное|ремешок|браслет|keephone|remax|supglass|borofone|folio|spinring|услуга/i
+const STOP = /демозона|demo|б\/?у|б\.у|чехол|\bcase\b|стекло|glass|кабель|зарядк|зарядное|ремешок|браслет|keephone|remax|supglass|borofone|folio|spinring|услуга|настройка/i
 
 const COLORS = [
   ['space gray', /space\s*gray|серый космос/],
@@ -15,9 +15,9 @@ const COLORS = [
   ['light gold', /light\s*gold/],
   ['gray camouflage', /gray\s*camouflage|серый\s*камуфляж|камуфляж/],
   ['awesome icyblue', /awesome\s*icy\s*blue|icyblue|icy\s*blue/],
-  ['awesome gray', /awesome\s*gray/],
-  ['awesome lilac', /awesome\s*lilac|сиренев/],
-  ['awesome navy', /awesome\s*navy/],
+  ['awesome gray', /awesome\s*gray|\bgray\b|\bgrey\b/],
+  ['awesome lilac', /awesome\s*lilac|\blilac\b|сиренев/],
+  ['awesome navy', /awesome\s*navy|\bnavy\b/],
   ['cobalt violet', /cobalt\s*violet/],
   ['violet shadow', /violet\s*shadow/],
   ['cosmic orange', /cosmic\s*orange|оранж/],
@@ -222,7 +222,7 @@ export function parseMs(name, qty) {
     screen: screenOf(body),
     ram: ramOf(body),
     straps,
-    sim: simOf(body),
+    sim: simOf(body) || (model.startsWith('galaxy') ? 'SIM_ESIM' : ''),
     qty: Number(qty || 0),
     name,
   }
@@ -265,6 +265,22 @@ export function qtyFor(site, items, sites) {
   if (!site.model) return null
   if (site.colorLabel && !site.color) return 0
   let hits = items.filter((item) => baseFit(item, site))
+  if (site.ram) {
+    const ramHits = hits.filter((item) => item.ram === site.ram)
+    if (ramHits.length) {
+      hits = ramHits
+    } else {
+      const hasLowerRamSibling = sites.some((other) =>
+        other.id !== site.id &&
+        other.model === site.model &&
+        other.color === site.color &&
+        other.storage === site.storage &&
+        other.ram &&
+        Number(other.ram) < Number(site.ram)
+      )
+      if (hasLowerRamSibling) hits = []
+    }
+  }
   if (site.straps.length) {
     const strapped = hits.filter((item) => !item.straps.length || item.straps.some((strap) => site.straps.includes(strap)))
     if (strapped.length) hits = strapped
@@ -412,6 +428,105 @@ async function applyAppleChargers(client, rows, changes) {
     changes.push({ id, name: APPLE_CHARGER_PRODUCT, to: status, qty: entry.qty, product: true })
   }
 }
+export function normRayBanColor(c) {
+  return String(c || '').toLowerCase().replace(/grey/g, 'gray').replace(/\s*\/\s*/g, '/').replace(/[^a-z0-9/]+/g, ' ').trim()
+}
+
+export function normRayBanSize(s) {
+  const text = String(s || '')
+  const m = text.match(/размер[:\s]*([a-z0-9а-яё]+)/i)
+  if (m) {
+    const val = m[1].toLowerCase().trim()
+    if (val === 'l' || val === 'л' || val === 'large') return 'l'
+    if (val === 'm' || val === 'м' || val === 'medium') return 'm'
+    if (val === 's' || val === 'с' || val === 'small') return 's'
+    if (val === '2') return '2'
+    if (val === '3') return '3'
+    return val
+  }
+  const loose = text.match(/\b([sml])\b/i)
+  if (loose) return loose[1].toLowerCase()
+  return ''
+}
+
+export function matchRayBan(msName, variants) {
+  const text = String(msName || '').toLowerCase().replace(/grey/g, 'gray')
+  if (/настройка|ремонт|услуга|демозона|demo|б\/?у/i.test(text)) return null
+  if (!/ray-?\s*ban|умные\s*очки/i.test(text)) return null
+
+  let model = ''
+  if (/wayfarer|rw4012/i.test(text)) model = 'wayfarer'
+  else if (/skyler|rw4014/i.test(text)) model = 'skyler'
+  else if (/display/i.test(text)) model = 'display'
+  else if (/starfire/i.test(text)) model = 'starfire'
+  else if (/meta\s*gen\s*2/i.test(text)) model = 'wayfarer'
+
+  const msSize = normRayBanSize(text)
+
+  for (const v of variants) {
+    const pName = String(v.product_name).toLowerCase()
+    if (model && !pName.includes(model)) continue
+    
+    const vSize = normRayBanSize(v.package_label)
+    if (msSize && vSize && msSize !== vSize) continue
+
+    const vColor = normRayBanColor(v.color)
+    if (vColor && text.includes(vColor)) {
+      return v
+    }
+  }
+  return null
+}
+
+async function applyRayBan(client, rows, changes) {
+  const { rows: rbVariants } = await client.query(`
+    SELECT v.id, v.package_label, c.english_label as color, v.status, v.stock_qty, p.id as product_id, p.name as product_name, p.status as product_status, p.stock_qty as product_qty
+    FROM products_variants v
+    JOIN products p ON p.id = v._parent_id
+    LEFT JOIN colors c ON c.id = v.color_id
+    WHERE p.name ILIKE '%Ray%Ban%' OR p.slug ILIKE '%ray%ban%' OR p.slug = 'umnye-ochki'
+    ORDER BY p.id, v._order
+  `)
+
+  const totals = new Map()
+  for (const row of rows) {
+    const qty = Number(row.stock || 0)
+    if (qty <= 0) continue
+    const hit = matchRayBan(row.name, rbVariants)
+    if (hit) {
+      totals.set(hit.id, (totals.get(hit.id) || 0) + qty)
+    }
+  }
+
+  const products = new Map()
+  for (const v of rbVariants) {
+    const qty = totals.get(v.id) || 0
+    const status = qty > 0 ? 'in_stock' : (v.status === 'preorder' ? 'preorder' : 'out_of_stock')
+    const isAvail = qty > 0 ? true : v.is_available
+    if (v.status !== status || Number(v.stock_qty) !== qty) {
+      await client.query(
+        `UPDATE products_variants SET status = $2::"enum_products_variants_status", stock_qty = $3, is_available = $4 WHERE id = $1`,
+        [v.id, status, qty, isAvail],
+      )
+      changes.push({ id: v.id, name: `${v.product_name} ${v.package_label || ''} ${v.color || ''}`.trim(), to: status, qty })
+    }
+    const entry = products.get(v.product_id) || { name: v.product_name, rowStatus: v.product_status, rowQty: v.product_qty, statuses: [], qty: 0 }
+    entry.statuses.push(status)
+    entry.qty += qty
+    products.set(v.product_id, entry)
+  }
+
+  for (const [id, entry] of products) {
+    const status = entry.statuses.includes('in_stock') ? 'in_stock' : (entry.statuses.includes('preorder') ? 'preorder' : 'out_of_stock')
+    if (entry.rowStatus === status && Number(entry.rowQty) === entry.qty) continue
+    await client.query(
+      `UPDATE products SET status = $2::"enum_products_status", stock_qty = $3, is_available = true WHERE id = $1`,
+      [id, status, entry.qty],
+    )
+    changes.push({ id, name: entry.name, to: status, qty: entry.qty, product: true })
+  }
+}
+
 
 async function applyAccessories(client, rows, changes) {
   const totals = new Map()
@@ -601,6 +716,7 @@ async function main() {
     }
     await applyAccessories(client, rows, changes)
     await applyAppleChargers(client, rows, changes)
+    await applyRayBan(client, rows, changes)
     await client.query('COMMIT')
     console.log(JSON.stringify({ ok: true, dry, msRows: rows.length, items: items.length, managedVariants: decisions.size, updated: changes.length }))
   } catch (error) {
