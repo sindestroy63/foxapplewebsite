@@ -1,6 +1,7 @@
 import type { Endpoint } from "payload";
 import { hasFullAdminAccess } from "./access";
 import { catalogPlacementFilter, catalogPlacementHref, getCatalogPlacementByChildKey } from "@/lib/product-catalog-placement";
+import { belongsToChild, matchesProductFilter } from "@/lib/catalog-navigation-membership";
 
 type InputItem = Record<string, unknown>;
 
@@ -364,7 +365,7 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
           const childKey = String(update.childKey ?? '');
           const product = productById.get(id);
           const child = childByKey.get(childKey);
-          if (!product || !child || !matchesProductFilter(product, child.filter)) throw new StructureError('productUpdates', 'product does not belong to the selected subcategory');
+          if (!product || !child || !belongsToChild(product, child)) throw new StructureError('productUpdates', 'product does not belong to the selected subcategory');
         }
         field = "updateGlobal";
         const saved = await req.payload.updateGlobal({
@@ -392,17 +393,3 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
     },
   },
 ];
-
-function matchesProductFilter(product: Record<string, any>, filter: any): boolean {
-  if (!filter || typeof filter !== 'object') return false;
-  if (filter.group && product.productGroup !== filter.group) return false;
-  if (filter.brand && product.brand !== filter.brand) return false;
-  if (filter.line) {
-    if (filter.line === 'MacBook' && !String(product.productLine || '').includes('MacBook')) return false;
-    else if (filter.line === 'Apple Mac' && !['iMac', 'Mac mini', 'Mac Studio', 'Mac Pro'].some((line) => String(product.productLine || '').includes(line))) return false;
-    else if (!['MacBook', 'Apple Mac'].includes(filter.line) && product.productLine !== filter.line) return false;
-  }
-  if (filter.q && !`${product.name || ''} ${product.model || ''} ${product.productLine || ''}`.toLowerCase().includes(String(filter.q).toLowerCase())) return false;
-  if (filter.appleAccessories && !(product.productGroup === 'other' && product.brand === 'Apple')) return false;
-  return true;
-}
