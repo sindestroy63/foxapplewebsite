@@ -25,26 +25,39 @@ jobs:
       - name: Strip build cache before transfer
         run: rm -rf .next/cache
 
-      - name: Deploy .next to server
+      - name: Prepare staging directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.56.34.120
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: rm -rf /opt/foxapple/.next-new
+
+      - name: Upload .next to staging
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 72.56.34.120
           username: root
           password: ${{ secrets.SSH_PASSWORD }}
           source: ".next/*"
-          target: "/opt/foxapple/.next"
+          target: "/opt/foxapple/.next-new"
           strip_components: 1
           timeout: 120s
           command_timeout: 15m
 
-      - name: Restart app
+      - name: Swap build and restart app
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 72.56.34.120
           username: root
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            set -e
             cd /opt/foxapple
+            test -f .next-new/BUILD_ID
+            rm -rf .next-old
+            mv .next .next-old
+            mv .next-new .next
             sed -i 's/next", "dev"/next", "start"/' docker-compose.yml
             docker compose up -d app
             docker restart foxapple-app-1
