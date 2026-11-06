@@ -23,13 +23,16 @@ test('does not guess when the labelled price is missing', () => {
   assert.equal(parseRepremiumPrice('<html><h1>x</h1></html>'), null)
 })
 
-test('only https repremium.ru hosts are fetched', () => {
+test('only repremium.ru hosts are fetched, links pasted without scheme are accepted', () => {
   assert.ok(isAllowedCompetitorUrl('https://repremium.ru/catalog/a/'))
   assert.ok(isAllowedCompetitorUrl('https://klg.repremium.ru/catalog/a/'))
-  assert.equal(isAllowedCompetitorUrl('http://repremium.ru/catalog/a/'), null)
+  assert.equal(isAllowedCompetitorUrl('repremium.ru/catalog/a/')?.href, 'https://repremium.ru/catalog/a/')
+  assert.equal(isAllowedCompetitorUrl('  http://repremium.ru/catalog/a/ ')?.href, 'https://repremium.ru/catalog/a/')
   assert.equal(isAllowedCompetitorUrl('https://repremium.ru.evil.com/a'), null)
   assert.equal(isAllowedCompetitorUrl('https://evil.com/repremium.ru'), null)
+  assert.equal(isAllowedCompetitorUrl('ftp://repremium.ru/a'), null)
   assert.equal(isAllowedCompetitorUrl('not a url'), null)
+  assert.equal(isAllowedCompetitorUrl(''), null)
 })
 
 test('rendered page exposes a single machine-readable price', () => {

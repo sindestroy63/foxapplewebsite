@@ -13,12 +13,15 @@ function textOf(fragment: string): string {
 }
 
 export function isAllowedCompetitorUrl(value: string): URL | null {
+  const trimmed = value.trim()
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
   let url: URL
   try {
-    url = new URL(value)
+    url = new URL(withScheme)
   } catch {
     return null
   }
+  if (url.protocol === 'http:') url.protocol = 'https:'
   if (url.protocol !== 'https:') return null
   const host = url.hostname.toLowerCase()
   if (host !== 'repremium.ru' && !host.endsWith('.repremium.ru')) return null
