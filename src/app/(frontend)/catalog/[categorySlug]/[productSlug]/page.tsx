@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const seoName = product.name?.trim() || product.model?.trim() || 'Техника в ФОХСТОР'
   const seoTitle = `${seoName} — купить в Самаре | ФОХСТОР`
-  const seoDescription = `${seoName}. Цена, наличие и доставка в Самаре. ФОХСТОР.`
+  const seoDescription = `${seoName}. Цена и наличие в Самаре. ФОХСТОР.`
   return {
     title: seoTitle,
     description: seoDescription,

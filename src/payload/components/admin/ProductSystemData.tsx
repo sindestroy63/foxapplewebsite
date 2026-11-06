@@ -43,7 +43,7 @@ export default function ProductSystemData() {
         <dt>Адрес товара</dt><dd>{values.slug || 'Будет сформирован автоматически'}</dd>
         <dt>Порядок карточек</dt><dd>{values.sortOrder ?? 'По умолчанию'}</dd>
         <dt>SEO preview</dt><dd>Title: {name} — купить в Самаре | ФОХСТОР</dd>
-        <dd>Description: {name}. Цена, наличие и доставка в Самаре. ФОХСТОР.</dd>
+        <dd>Description: {name}. Цена и наличие в Самаре. ФОХСТОР.</dd>
         {values.createdAt && <><dt>Создан</dt><dd>{String(values.createdAt)}</dd></>}
         {values.updatedAt && <><dt>Обновлён</dt><dd>{String(values.updatedAt)}</dd></>}
         {isSuperadmin && <>

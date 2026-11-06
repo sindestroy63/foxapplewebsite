@@ -47,7 +47,7 @@ export function CartPageClient({ settings }: Props) {
             <h3>Заказ успешно отправлен</h3>
             <p className="form-success-text">
               Спасибо за обращение. Наш менеджер свяжется с вами в ближайшее время
-              для подтверждения заказа и уточнения деталей доставки.
+              для подтверждения заказа.
             </p>
             <p className="form-success-redirect">
               Через {countdown} сек. вы будете автоматически перенаправлены на главную страницу.
@@ -175,9 +175,6 @@ export function CartPageClient({ settings }: Props) {
                 <span>Товаров на сумму</span>
                 <strong>{formatPrice(total)}</strong>
               </div>
-              <p className="cart-delivery-note">
-                Стоимость доставки уточнит менеджер.
-              </p>
             </div>
           </div>
 

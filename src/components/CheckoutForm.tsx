@@ -39,12 +39,6 @@ type FormFields = {
   name: string
   phone: string
   telegramUsername: string
-  deliveryStreet: string
-  deliveryHouse: string
-  deliveryEntrance: string
-  deliveryFloor: string
-  deliveryApartment: string
-  deliveryIntercom: string
   comment: string
 }
 
@@ -52,12 +46,6 @@ const initialFormFields: FormFields = {
   name: '',
   phone: '',
   telegramUsername: '',
-  deliveryStreet: '',
-  deliveryHouse: '',
-  deliveryEntrance: '',
-  deliveryFloor: '',
-  deliveryApartment: '',
-  deliveryIntercom: '',
   comment: '',
 }
 
@@ -65,7 +53,6 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
   const { items } = useCart()
   const [state, formAction] = useActionState(submitCartOrder, initialCartOrderState)
 
-  const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery'>('pickup')
   const [contactMethod, setContactMethod] = useState('')
   const [consent, setConsent] = useState(false)
   const [formData, setFormData] = useState<FormFields>(initialFormFields)
@@ -189,118 +176,11 @@ export function CheckoutForm({ settings, total, onSuccess }: Props) {
           </label>
         )}
 
-        <label className="checkout-field">
-          <span>Способ получения *</span>
-          <select
-            name="deliveryMethod"
-            required
-            value={deliveryMethod}
-            onChange={(e) => setDeliveryMethod(e.target.value as 'pickup' | 'delivery')}
-          >
-            <option value="pickup">Самовывоз</option>
-            <option value="delivery">Доставка</option>
-          </select>
-        </label>
-
-        {deliveryMethod === 'pickup' && (
-          <div className="checkout-pickup-address">
-            <span className="checkout-field-label">Адрес магазина</span>
-            <p className="checkout-address-text">{settings.address}</p>
-            <p className="checkfield-hint">{settings.workTime}</p>
-          </div>
-        )}
-
-        {deliveryMethod === 'delivery' && (
-          <>
-            <div className="checkout-field-row">
-              <label className="checkout-field">
-                <span>Улица *</span>
-                <input
-                  name="deliveryStreet"
-                  value={formData.deliveryStreet}
-                  onChange={(e) => updateField('deliveryStreet', e.target.value)}
-                  placeholder="Московское шоссе"
-                  required
-                  type="text"
-                  maxLength={100}
-                />
-                {state.errors?.deliveryStreet ? <small className="form-error">{state.errors.deliveryStreet}</small> : null}
-              </label>
-              <label className="checkout-field checkout-field-narrow">
-                <span>Дом *</span>
-                <input
-                  name="deliveryHouse"
-                  value={formData.deliveryHouse}
-                  onChange={(e) => updateField('deliveryHouse', e.target.value)}
-                  placeholder="55"
-                  required
-                  type="text"
-                  maxLength={20}
-                  inputMode="numeric"
-                />
-                {state.errors?.deliveryHouse ? <small className="form-error">{state.errors.deliveryHouse}</small> : null}
-              </label>
-            </div>
-
-            <div className="checkout-delivery-details">
-              <span className="checkout-field-label">Дополнительная информация для курьера</span>
-              <div className="checkout-delivery-grid">
-                <label className="checkout-field">
-                  <span>Подъезд</span>
-                  <input
-                    name="deliveryEntrance"
-                    value={formData.deliveryEntrance}
-                    onChange={(e) => updateField('deliveryEntrance', e.target.value)}
-                    placeholder="1"
-                    type="text"
-                    maxLength={5}
-                    inputMode="numeric"
-                  />
-                </label>
-                <label className="checkout-field">
-                  <span>Этаж</span>
-                  <input
-                    name="deliveryFloor"
-                    value={formData.deliveryFloor}
-                    onChange={(e) => updateField('deliveryFloor', e.target.value)}
-                    placeholder="5"
-                    type="text"
-                    maxLength={3}
-                    inputMode="numeric"
-                  />
-                </label>
-                <label className="checkout-field">
-                  <span>Квартира</span>
-                  <input
-                    name="deliveryApartment"
-                    value={formData.deliveryApartment}
-                    onChange={(e) => updateField('deliveryApartment', e.target.value)}
-                    placeholder="10"
-                    type="text"
-                    maxLength={10}
-                    inputMode="numeric"
-                  />
-                </label>
-                <label className="checkout-field">
-                  <span>Домофон</span>
-                  <input
-                    name="deliveryIntercom"
-                    value={formData.deliveryIntercom}
-                    onChange={(e) => updateField('deliveryIntercom', e.target.value)}
-                    placeholder="код"
-                    type="text"
-                    maxLength={20}
-                  />
-                </label>
-              </div>
-              <p className="checkfield-hint">Заполняется при необходимости и поможет курьеру быстрее найти адрес.</p>
-            </div>
-
-            <p className="cart-delivery-note">
-              Стоимость доставки уточнит менеджер.
-            </p>
-          </>
-        )}
+        <div className="checkout-pickup-address">
+          <span className="checkout-field-label">Адрес магазина</span>
+          <p className="checkout-address-text">{settings.address}</p>
+          <p className="checkfield-hint">{settings.workTime}</p>
+        </div>
 
         <label className="checkout-field checkout-field-full">
           <span>Комментарий</span>

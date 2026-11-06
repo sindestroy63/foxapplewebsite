@@ -9,12 +9,6 @@ export type CartOrderState = {
     consent?: string
     contactMethod?: string
     telegramUsername?: string
-    deliveryStreet?: string
-    deliveryHouse?: string
-    deliveryEntrance?: string
-    deliveryFloor?: string
-    deliveryApartment?: string
-    deliveryIntercom?: string
     comment?: string
   }
   message?: string
@@ -74,13 +68,6 @@ function formatTelegramMessage(data: {
   phone: string
   contactMethod: string
   telegramUsername?: string
-  deliveryMethod: string
-  deliveryStreet?: string
-  deliveryHouse?: string
-  deliveryEntrance?: string
-  deliveryFloor?: string
-  deliveryApartment?: string
-  deliveryIntercom?: string
   comment?: string
   items: CartItemData[]
   total: number
@@ -97,22 +84,9 @@ function formatTelegramMessage(data: {
     lines.push('   ' + escapeHtml(data.telegramUsername))
   }
   lines.push('')
-  lines.push('\uD83D\uDCCD <b>Получение:</b> ' + escapeHtml(data.deliveryMethod))
-  if (data.deliveryMethod === 'Самовывоз' && data.shopAddress) {
+  lines.push('\uD83D\uDCCD <b>Получение:</b> Самовывоз')
+  if (data.shopAddress) {
     lines.push('   Адрес магазина: ' + escapeHtml(data.shopAddress))
-  }
-  if (data.deliveryMethod === 'Доставка') {
-    if (data.deliveryStreet && data.deliveryHouse) {
-      lines.push('   Адрес: ул. ' + escapeHtml(data.deliveryStreet) + ', дом ' + escapeHtml(data.deliveryHouse))
-    }
-    const extra: string[] = []
-    if (data.deliveryEntrance) extra.push('подъезд ' + escapeHtml(data.deliveryEntrance))
-    if (data.deliveryFloor) extra.push('этаж ' + escapeHtml(data.deliveryFloor))
-    if (data.deliveryApartment) extra.push('квартира ' + escapeHtml(data.deliveryApartment))
-    if (data.deliveryIntercom) extra.push('домофон ' + escapeHtml(data.deliveryIntercom))
-    if (extra.length > 0) {
-      lines.push('   ' + extra.join(', '))
-    }
   }
   lines.push('')
   lines.push('\uD83D\uDED2 <b>Товары:</b>')
@@ -166,13 +140,6 @@ export async function submitCartOrder(
   const phone = one(formData.get('phone'))
   const contactMethod = one(formData.get('contactMethod'))
   const telegramUsername = one(formData.get('telegramUsername'))
-  const deliveryMethod = one(formData.get('deliveryMethod'))
-  const deliveryStreet = one(formData.get('deliveryStreet'))
-  const deliveryHouse = one(formData.get('deliveryHouse'))
-  const deliveryEntrance = one(formData.get('deliveryEntrance'))
-  const deliveryFloor = one(formData.get('deliveryFloor'))
-  const deliveryApartment = one(formData.get('deliveryApartment'))
-  const deliveryIntercom = one(formData.get('deliveryIntercom'))
   const comment = one(formData.get('comment'))
   const consent = formData.get('consent') === 'on'
   const itemsRaw = formData.get('items')
@@ -180,8 +147,6 @@ export async function submitCartOrder(
   const shopAddress = one(formData.get('shopAddress'))
   const utmString = one(formData.get('utm'))
   const utm = parseUtm(utmString)
-
-  const deliveryLabel = deliveryMethod === 'delivery' ? 'Доставка' : 'Самовывоз'
 
   console.log(`[CheckoutForm] [${timestamp}] Processing cart order`)
 
@@ -214,33 +179,6 @@ export async function submitCartOrder(
     }
     if (cleaned.length > 32) {
       return { errors: { telegramUsername: 'Telegram username: не более 32 символов.' }, success: false }
-    }
-  }
-
-  if (deliveryMethod === 'delivery') {
-    if (!deliveryStreet) {
-      return { errors: { deliveryStreet: 'Укажите улицу.' }, success: false }
-    }
-    if (deliveryStreet.length > 100) {
-      return { errors: { deliveryStreet: 'Улица: не более 100 символов.' }, success: false }
-    }
-    if (!deliveryHouse) {
-      return { errors: { deliveryHouse: 'Укажите номер дома.' }, success: false }
-    }
-    if (deliveryHouse.length > 20) {
-      return { errors: { deliveryHouse: 'Дом: не более 20 символов.' }, success: false }
-    }
-    if (deliveryEntrance.length > 5) {
-      return { errors: { deliveryEntrance: 'Подъезд: не более 5 символов.' }, success: false }
-    }
-    if (deliveryFloor.length > 3) {
-      return { errors: { deliveryFloor: 'Этаж: не более 3 символов.' }, success: false }
-    }
-    if (deliveryApartment.length > 10) {
-      return { errors: { deliveryApartment: 'Квартира: не более 10 символов.' }, success: false }
-    }
-    if (deliveryIntercom.length > 20) {
-      return { errors: { deliveryIntercom: 'Домофон: не более 20 символов.' }, success: false }
     }
   }
 
@@ -281,13 +219,6 @@ export async function submitCartOrder(
     phone,
     contactMethod,
     telegramUsername,
-    deliveryMethod: deliveryLabel,
-    deliveryStreet,
-    deliveryHouse,
-    deliveryEntrance,
-    deliveryFloor,
-    deliveryApartment,
-    deliveryIntercom,
     comment,
     items,
     total,

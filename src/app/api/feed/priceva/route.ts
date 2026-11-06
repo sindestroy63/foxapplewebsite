@@ -221,7 +221,6 @@ export async function GET() {
             `        <currencyId>RUR</currencyId>\n` +
             `        <categoryId>${escapeXml(categoryId)}</categoryId>\n` +
             (pictureUrl ? `        <picture>${escapeXml(pictureUrl)}</picture>\n` : '') +
-            `        <delivery>true</delivery>\n` +
             `        <vendor>${escapeXml(vendor)}</vendor>\n` +
             `      </offer>`
           )
@@ -253,7 +252,6 @@ export async function GET() {
           `        <currencyId>RUR</currencyId>\n` +
           `        <categoryId>${escapeXml(categoryId)}</categoryId>\n` +
           (pictureUrl ? `        <picture>${escapeXml(pictureUrl)}</picture>\n` : '') +
-          `        <delivery>true</delivery>\n` +
           `        <vendor>${escapeXml(vendor)}</vendor>\n` +
           `      </offer>`
         )

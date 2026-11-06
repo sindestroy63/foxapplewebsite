@@ -3670,15 +3670,6 @@ a.contact-item:hover {
   font-weight: 700;
 }
 
-.cart-delivery-note {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #fff8e1;
-  border-radius: var(--radius-sm);
-}
-
 .checkout-form-card {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -3752,17 +3743,6 @@ a.contact-item:hover {
   border-radius: var(--radius-sm);
 }
 
-.checkout-field-row {
-  display: grid;
-  grid-template-columns: 1fr 140px;
-  gap: 12px;
-}
-
-@media (max-width: 480px) {
-  .checkout-field-row {
-    grid-template-columns: 1fr;
-  }
-}
 .launch-banner-section {
   padding: clamp(24px, 4vw, 48px) 0 0;
 }
@@ -4083,35 +4063,6 @@ a.contact-item:hover {
     min-height: 300px;
     transform: scale(0.72);
   }
-}
-
-.checkout-delivery-details {
-  padding: 16px;
-  background: var(--bg);
-  border-radius: var(--radius-sm);
-}
-
-.checkout-delivery-details .checkout-field-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 10px;
-}
-
-.checkout-delivery-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.checkout-delivery-grid .checkout-field {
-  gap: 4px;
-}
-
-.checkout-delivery-grid .checkout-field input {
-  padding: 8px 10px;
-  font-size: 14px;
 }
 
 .checkout-address-text {

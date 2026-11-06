@@ -79,7 +79,7 @@ export const SiteSettings: GlobalConfig = {
       name: 'heroSubtitle',
       type: 'textarea',
       label: 'Hero подзаголовок',
-      defaultValue: 'Оригинальная техника Apple, гарантия 1 год, Trade-In, рассрочка и доставка.',
+      defaultValue: 'Оригинальная техника Apple, гарантия 1 год, Trade-In и рассрочка.',
     },
     {
       name: 'aboutText',
