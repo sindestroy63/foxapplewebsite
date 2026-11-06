@@ -68,6 +68,7 @@ export const Products: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'sku', 'price', 'status', 'isAvailable', 'sortOrder'],
+    listSearchableFields: ['name', 'sku', 'slug'],
   },
   access: {
     read: anyone,
@@ -495,6 +496,7 @@ export const Products: CollectionConfig = {
           value: 'out_of_stock',
         },
       ],
+      admin: { description: 'Для товаров, которые ведутся по остаткам МойСклад, статус обновляется автоматически и перезаписывает ручное значение.' },
     },
     {
       name: 'isAvailable',
@@ -615,26 +617,21 @@ export const Products: CollectionConfig = {
       },
     },
     {
-      name: 'variantGenerator',
-      type: 'ui',
-      admin: {
-        condition: () => false,
-        components: {
-          Field: '/payload/components/admin/VariantGenerator',
-        },
-      },
-    },
-    {
       name: 'variantsSection',
       type: 'ui',
       admin: { components: { Field: '/payload/components/admin/ProductSection#VariantsSection' } },
+    },
+    {
+      name: 'variantBuilderLink',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/admin/VariantBuilderLink' } },
     },
     {
       name: 'variants',
       type: 'array',
       label: 'Варианты товара',
       admin: {
-        description: 'Конфигурации товара (цвет, память, размер и т.д.). Если не заданы — используются основные поля.',
+        description: 'Конфигурации товара (цвет, память, размер и т.д.). Чтобы добавить сразу несколько комбинаций, используйте «Конструктор вариантов» выше. Если варианты не заданы — используются основные поля.',
       },
       fields: [
         { type: 'row', fields: [
@@ -674,8 +671,8 @@ export const Products: CollectionConfig = {
           { label: 'В наличии', value: 'in_stock' },
           { label: 'Под заказ', value: 'preorder' },
           { label: 'Нет в наличии', value: 'out_of_stock' },
-        ] },
-        { name: 'isAvailable', type: 'checkbox', label: 'Доступен', defaultValue: true },
+        ], admin: { description: 'Для позиций, которые ведутся по остаткам МойСклад, статус обновляется автоматически и перезаписывает ручное значение.' } },
+        { name: 'isAvailable', type: 'checkbox', label: 'Доступен', defaultValue: true, admin: { description: 'Снимите галочку, если вариант нельзя заказать. Он останется на странице со статусом, пока не включено «Скрывать цвета не в наличии».' } },
         { name: 'images', type: 'upload', label: 'Фото варианта', relationTo: 'media', hasMany: true,
           filterOptions: { mimeType: { like: 'image/' } },
           admin: { description: '1000×1000 px, JPG/PNG/WebP. Пусто → общие фото товара.' },

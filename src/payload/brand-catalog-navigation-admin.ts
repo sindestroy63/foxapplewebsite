@@ -206,6 +206,17 @@ export const normalizeBrandCatalogGroups = (input: unknown) => {
   });
 };
 
+export const assertGroupsAreReachable = (groups: ReturnType<typeof normalizeBrandCatalogGroups>) => {
+  groups.forEach((group, index) => {
+    const hasTarget = Boolean(group.href) || (group.filter ? Object.keys(group.filter).length > 0 : false);
+    if (group.isVisible && !hasTarget && !group.children.some((item) => item.isVisible))
+      throw new StructureError(
+        `groups[${index}]`,
+        `у группы «${group.title}» нет ссылки, фильтра и видимых пунктов: плитка на главной никуда не ведёт. Добавьте пункты или укажите ссылку.`,
+      );
+  });
+};
+
 const errorDetails = (error: unknown) => {
   const value = error instanceof Error ? error : new Error(String(error));
   return {
@@ -327,6 +338,7 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
         body = (await req.json?.()) as InputItem;
         field = "groups";
         groups = normalizeBrandCatalogGroups(body?.groups);
+        assertGroupsAreReachable(groups);
         if (groups.length < defaults.length)
           throw new StructureError(
             "groups",

@@ -29,21 +29,25 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { MediaSection as MediaSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
-import { default as default_32083bbf911ecfc703edfa28fdf4fc48 } from '../../../payload/components/admin/VariantGenerator'
 import { VariantsSection as VariantsSection_0f23eed0731f5cda2046b74e09ae11a5 } from '../../../payload/components/admin/ProductSection'
+import { default as default_e199b84bf8843122d5542aa5f74a2ddd } from '../../../payload/components/admin/VariantBuilderLink'
 import { default as default_b5b131095d52421d2a0942d2135f4a23 } from '../../../payload/components/admin/ProductSystemData'
 import { default as default_50e108fbf1d801da66d76e1dca79dd25 } from '../../../payload/components/admin/BestOffersField'
 import { NavIcon as NavIcon_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { LoginLogo as LoginLogo_9af2d0fe85839e313d2e5c5821154635 } from '../../../payload/components/admin/Branding'
 import { default as default_ca949f8f6193ba30f0631b21a631f5e1 } from '../../../payload/components/admin/BestOffersNavLink'
 import { default as default_ec5053350bda77791279610b7dbe999f } from '../../../payload/components/admin/PriceUpdateNavLink'
+import { default as default_be08436a418f230d81bf9b975d58801f } from '../../../payload/components/admin/VariantToolsNavLink'
 import { default as default_fb2e118bae473c01606aa87efac53d6b } from '../../../payload/components/admin/TradeInNavLink'
 import { default as default_075e1f6d8a1452089a59e3491038ddc1 } from '../../../payload/components/admin/CatalogNavigationNavLink'
 import { default as default_344063fa61d0dbeb16e9b57e01226dfc } from '../../../payload/components/admin/PriceUpdateView'
 import { default as default_516bd9d8b1b67af76d8b375a39242e01 } from '../../../payload/components/admin/TradeInAdminView'
 import { default as default_cc8dc95a2bccc5ab171a0a2eb9f4a2df } from '../../../payload/components/admin/CatalogNavigationView'
+import { default as default_41e36588e0da5c1f72c7fb269a290202 } from '../../../payload/components/admin/StockPricesView'
+import { default as default_309b1f625b808760f6e36f2ff2c236b4 } from '../../../payload/components/admin/VariantBuilderView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
+/** @type import('payload').ImportMap */
 export const importMap = {
   "/payload/components/admin/ProductSection#BasicsSection": BasicsSection_0f23eed0731f5cda2046b74e09ae11a5,
   "/payload/components/admin/ProductSlugField#default": default_8ea1fec1fbdc06b6f021a8ef233fc70c,
@@ -76,18 +80,21 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/payload/components/admin/ProductSection#MediaSection": MediaSection_0f23eed0731f5cda2046b74e09ae11a5,
-  "/payload/components/admin/VariantGenerator#default": default_32083bbf911ecfc703edfa28fdf4fc48,
   "/payload/components/admin/ProductSection#VariantsSection": VariantsSection_0f23eed0731f5cda2046b74e09ae11a5,
+  "/payload/components/admin/VariantBuilderLink#default": default_e199b84bf8843122d5542aa5f74a2ddd,
   "/payload/components/admin/ProductSystemData#default": default_b5b131095d52421d2a0942d2135f4a23,
   "/payload/components/admin/BestOffersField#default": default_50e108fbf1d801da66d76e1dca79dd25,
   "/payload/components/admin/Branding#NavIcon": NavIcon_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/Branding#LoginLogo": LoginLogo_9af2d0fe85839e313d2e5c5821154635,
   "/payload/components/admin/BestOffersNavLink#default": default_ca949f8f6193ba30f0631b21a631f5e1,
   "/payload/components/admin/PriceUpdateNavLink#default": default_ec5053350bda77791279610b7dbe999f,
+  "/payload/components/admin/VariantToolsNavLink#default": default_be08436a418f230d81bf9b975d58801f,
   "/payload/components/admin/TradeInNavLink#default": default_fb2e118bae473c01606aa87efac53d6b,
   "/payload/components/admin/CatalogNavigationNavLink#default": default_075e1f6d8a1452089a59e3491038ddc1,
   "/payload/components/admin/PriceUpdateView#default": default_344063fa61d0dbeb16e9b57e01226dfc,
   "/payload/components/admin/TradeInAdminView#default": default_516bd9d8b1b67af76d8b375a39242e01,
   "/payload/components/admin/CatalogNavigationView#default": default_cc8dc95a2bccc5ab171a0a2eb9f4a2df,
+  "/payload/components/admin/StockPricesView#default": default_41e36588e0da5c1f72c7fb269a290202,
+  "/payload/components/admin/VariantBuilderView#default": default_309b1f625b808760f6e36f2ff2c236b4,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

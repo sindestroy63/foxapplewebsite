@@ -34,6 +34,7 @@ import { migrations } from './migrations'
 import { catalogNavigationAdminEndpoints } from './payload/catalog-navigation-admin'
 import { brandCatalogNavigationEndpoints } from './payload/brand-catalog-navigation-admin'
 import { tradeInAdminEndpoints } from './payload/trade-in-admin'
+import { variantToolsEndpoints } from './payload/variant-tools-admin'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -62,7 +63,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     components: {
-      afterNavLinks: ['/payload/components/admin/BestOffersNavLink', '/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/TradeInNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
+      afterNavLinks: ['/payload/components/admin/BestOffersNavLink', '/payload/components/admin/PriceUpdateNavLink', '/payload/components/admin/VariantToolsNavLink', '/payload/components/admin/TradeInNavLink', '/payload/components/admin/CatalogNavigationNavLink'],
       graphics: {
         Icon: '/payload/components/admin/Branding#NavIcon',
         Logo: '/payload/components/admin/Branding#LoginLogo',
@@ -86,6 +87,18 @@ export default buildConfig({
           exact: true,
           meta: { title: 'Навигация каталога' },
         },
+        stockPrices: {
+          Component: '/payload/components/admin/StockPricesView',
+          path: '/stock-prices',
+          exact: true,
+          meta: { title: 'Цены и наличие' },
+        },
+        variantBuilder: {
+          Component: '/payload/components/admin/VariantBuilderView',
+          path: '/variant-builder',
+          exact: true,
+          meta: { title: 'Конструктор вариантов' },
+        },
       },
     },
     importMap: {
@@ -106,7 +119,7 @@ export default buildConfig({
     Users, Media, Categories, Products, Services, UrlRedirects, PriceUpdateBatches, PriceUpdateItems, PriceImportSessions, PriceImportItems,
     Pages, Colors, StorageOptions, SimOptions, DeviceModels, RamOptions, VariantSizeOptions, ScreenSizeOptions, ConnectivityOptions, CatalogNavigation,
   ],
-  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...brandCatalogNavigationEndpoints, ...tradeInAdminEndpoints],
+  endpoints: [...priceUpdateEndpoints, ...catalogNavigationAdminEndpoints, ...brandCatalogNavigationEndpoints, ...tradeInAdminEndpoints, ...variantToolsEndpoints],
   globals: [SiteSettings, SiteAppearance, BrandCatalogNavigation],
   bin: [
     {
