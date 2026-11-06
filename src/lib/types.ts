@@ -56,6 +56,7 @@ export type CatalogFilters = {
   sim?: string
   ram?: string
   placement?: string
+  section?: string
 }
 
 export type VariantColor = {

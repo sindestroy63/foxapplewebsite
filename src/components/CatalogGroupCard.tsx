@@ -8,6 +8,6 @@ export function CatalogGroupCard({ slug, label, compact = false, coverImage, hre
   const image = getMediaUrl(coverImage, 'card') || catalogGroupAssetUrl(slug)
   const destination = navigationNode ? catalogNavigationHref(navigationNode) : href || `/catalog?group=${slug}`
   return <Link className={compact ? 'catalog-group-card catalog-group-card--compact' : 'catalog-group-card'} href={destination} aria-label={label}>
-    {image ? <img className="catalog-group-card-image" src={image} alt="" loading="lazy" /> : <span className="catalog-group-card-image catalog-group-card-image--placeholder" aria-hidden="true" />}
+    {image ? <img className="catalog-group-card-image" src={image} alt="" loading="lazy" /> : <span className="catalog-group-card-image catalog-group-card-image--placeholder" aria-hidden="true"><span className="catalog-group-card-label">{label}</span></span>}
   </Link>
 }

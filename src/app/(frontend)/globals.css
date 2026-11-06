@@ -793,6 +793,8 @@ p {
 }
 .catalog-group-card--compact { min-height: 170px; }
 .catalog-group-card-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: 0; }
+.catalog-group-card-image--placeholder { display: grid; place-items: center; padding: 12px; text-align: center; }
+.catalog-group-card-label { font-size: clamp(13px, 4vw, 20px); font-weight: 800; line-height: 1.15; letter-spacing: 0.01em; text-transform: uppercase; overflow-wrap: break-word; }
 .catalog-group-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 
 .category-card::before {

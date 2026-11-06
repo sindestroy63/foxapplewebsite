@@ -70,6 +70,7 @@ export function readCatalogParams(searchParams: SearchParams): CatalogFilters {
     sim: one(searchParams.sim)?.trim() || undefined,
     ram: one(searchParams.ram)?.trim() || undefined,
     placement: one(searchParams.placement)?.trim() || undefined,
+    section: one(searchParams.section)?.trim() || undefined,
   }
 }
 
@@ -463,6 +464,7 @@ export function visibleNavigationChildren(group: BrandCatalogNavigationItem | un
 export function findBrandNavigationRoot(navigation: BrandCatalogNavigationItem[], params: CatalogFilters): BrandCatalogNavigationItem | undefined {
   return navigation.find((group) => {
     if (group.isVisible === false) return false
+    if (params.section) return group.key === params.section
     if (navigationFilterMatchesCatalogParams(group.filter, params)) return true
     return !params.line && !params.placement && params.brand?.toLowerCase() === group.key.toLowerCase()
   })
@@ -495,6 +497,14 @@ export function filterProductsForNavigationChild(products: any[], children: Bran
 
 function resolveBrandHref(key: string, href: unknown, filter: unknown): string | undefined {
   return catalogNavigationHref({ key, href: typeof href === 'string' ? href : undefined, filter: filter && typeof filter === 'object' && !Array.isArray(filter) ? filter as Record<string, string> : undefined })
+}
+
+function groupHref(group: any, children: any[]): string | undefined {
+  const href = resolveBrandHref(String(group.key), group.href, group.filter)
+  const hasOwnTarget = Boolean(group.href) || Boolean(group.filter && typeof group.filter === 'object' && Object.keys(group.filter).length > 0)
+  return !hasOwnTarget && children.some((child) => child.isVisible !== false)
+    ? `/catalog?section=${encodeURIComponent(String(group.key))}`
+    : href
 }
 
 function hrefFromFilter(filter: unknown): string | undefined {
@@ -573,7 +583,7 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
     const menu = visibleBrandMenu(source.map((group: any) => {
       const children = Array.isArray(group.children) ? group.children : []
       return {
-        label: String(group.title ?? group.label), key: String(group.key), href: resolveBrandHref(String(group.key), group.href, group.filter), filter: group.filter || undefined,
+        label: String(group.title ?? group.label), key: String(group.key), href: groupHref(group, children), filter: group.filter || undefined,
         coverImage: group.coverImage || null, isVisible: group.isVisible !== false, isNew: group.isNew === true, sortOrder: Number(group.sortOrder ?? 0),
         items: children.map((child: any) => {
           const filter = menuChildFilter(child, group)
