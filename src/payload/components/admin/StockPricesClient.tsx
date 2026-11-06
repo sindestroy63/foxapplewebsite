@@ -174,7 +174,7 @@ export function StockPricesClient() {
       {!products && !message && <div className={styles.muted}>Загрузка…</div>}
 
       {products && (
-        <table className={styles.table}>
+        <table className={`${styles.table} ${styles.stockTable}`}>
           <thead>
             <tr>
               <th>Позиция</th>
@@ -263,7 +263,7 @@ function ProductRows({ product, rows, productEdits, productChanged, busy, onPatc
         const status = edit?.status ?? (isVariantStatus(row.status) ? row.status : 'in_stock')
         const available = edit?.isAvailable ?? row.isAvailable
         return (
-          <tr key={row.id} className={changed ? styles.rowChanged : undefined}>
+          <tr key={row.id} className={`${styles.stockRow} ${changed ? styles.rowChanged : ''}`}>
             <td>
               <div className={styles.variantName}>
                 {row.colorHex && <span className={styles.swatch} style={{ background: row.colorHex }} />}
@@ -273,17 +273,19 @@ function ProductRows({ product, rows, productEdits, productChanged, busy, onPatc
                 </div>
               </div>
             </td>
-            <td className={styles.right}>
+            <td className={styles.right} data-label="Цена, ₽">
               <input
                 className={`${styles.input} ${styles.priceInput}`}
                 inputMode="numeric"
+                aria-label={`Цена: ${product.name}, ${row.title}`}
                 value={price}
                 onChange={(event) => onPatch(product.id, row.id, { price: event.target.value.replace(/[^\d]/g, '') })}
               />
             </td>
-            <td>
+            <td data-label="Статус">
               <select
                 className={styles.select}
+                aria-label={`Статус: ${product.name}, ${row.title}`}
                 value={status}
                 onChange={(event) => {
                   const next = event.target.value
@@ -295,8 +297,15 @@ function ProductRows({ product, rows, productEdits, productChanged, busy, onPatc
                 ))}
               </select>
             </td>
-            <td>
-              <input type="checkbox" checked={available} onChange={(event) => onPatch(product.id, row.id, { isAvailable: event.target.checked })} />
+            <td data-label={row.id === PRODUCT_ROW ? 'Показывать на сайте' : 'Доступен к заказу'}>
+              <label className={styles.availabilityToggle}>
+                <input
+                  type="checkbox"
+                  aria-label={`${row.id === PRODUCT_ROW ? 'Показывать на сайте' : 'Доступен к заказу'}: ${product.name}, ${row.title}`}
+                  checked={available}
+                  onChange={(event) => onPatch(product.id, row.id, { isAvailable: event.target.checked })}
+                />
+              </label>
             </td>
           </tr>
         )
