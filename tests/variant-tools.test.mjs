@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const { planVariants, applyVariantChanges, comboKey } = await import('../src/payload/variant-tools/plan.ts')
+const { planVariants, pendingPriceGroups, applyVariantChanges, comboKey } = await import('../src/payload/variant-tools/plan.ts')
+const { parseCapacity, compareCapacity, normalizeHex, colorSlug, uniqueSlug, validateNewColor } = await import('../src/payload/variant-tools/options.ts')
 
 const existing = [
   { id: 'a', sku: 'VAR-A', color: 5, storage: 1, sim: 9, price: 100000, status: 'in_stock', isAvailable: true },
@@ -9,7 +10,7 @@ const existing = [
 
 test('adds only missing combinations and keeps existing ones untouched', () => {
   const plan = planVariants(
-    { dims: { color: [5], storage: [1, 2], sim: [9] }, priceByStorage: { 1: 100000, 2: 120000 } },
+    { dims: { color: [5], storage: [1, 2], sim: [9] }, prices: { '1|': 100000, '2|': 120000 } },
     existing,
   )
   assert.equal(plan.ok, true)
@@ -34,7 +35,7 @@ test('treats numeric and object relation ids as the same combination', () => {
 
 test('builds the full product of selected values with per-storage prices', () => {
   const plan = planVariants(
-    { dims: { color: [1, 2], storage: [10, 20], sim: [7] }, priceByStorage: { 10: 90000, 20: 110000 }, status: 'preorder' },
+    { dims: { color: [1, 2], storage: [10, 20], sim: [7] }, prices: { '10|': 90000, '20|': 110000 }, status: 'preorder' },
     [],
   )
   assert.equal(plan.ok, true)
@@ -59,10 +60,82 @@ test('copies common text fields and ignores blank ones', () => {
 test('rejects empty selection, missing price and oversized batches', () => {
   assert.equal(planVariants({ dims: {}, basePrice: 1 }, []).ok, false)
   assert.equal(planVariants({ dims: { color: [1] } }, []).ok, false)
-  assert.equal(planVariants({ dims: { color: [1], storage: [1, 2] }, priceByStorage: { 1: 10 } }, []).ok, false)
+  assert.equal(planVariants({ dims: { color: [1], storage: [1, 2] }, prices: { '1|': 10 } }, []).ok, false)
   assert.equal(planVariants({ dims: { color: [1], storage: [1] }, basePrice: 1.5 }, []).ok, false)
   const many = Array.from({ length: 15 }, (_, index) => index + 1)
   assert.equal(planVariants({ dims: { color: many, storage: many }, basePrice: 1 }, []).ok, false)
+})
+
+test('prices every storage and sim pair separately when two sim types are chosen', () => {
+  const prices = { '1|7': 100000, '1|8': 95000, '2|7': 120000, '2|8': 115000 }
+  const plan = planVariants({ dims: { color: [1, 2], storage: [1, 2], sim: [7, 8] }, prices }, [])
+  assert.equal(plan.ok, true)
+  assert.equal(plan.add.length, 8)
+  for (const row of plan.add) assert.equal(row.price, prices[`${row.storage}|${row.sim}`])
+})
+
+test('keeps one price per storage when a single sim type is chosen', () => {
+  const plan = planVariants({ dims: { color: [1], storage: [1, 2], sim: [7] }, prices: { '1|': 100000, '2|': 120000 } }, [])
+  assert.equal(plan.ok, true)
+  assert.deepEqual(plan.add.map((row) => row.price), [100000, 120000])
+})
+
+test('asks for a price per sim when storage is not selected', () => {
+  assert.equal(planVariants({ dims: { color: [1], sim: [7, 8] }, prices: { '|7': 90000 } }, []).ok, false)
+  const plan = planVariants({ dims: { color: [1], sim: [7, 8] }, prices: { '|7': 90000, '|8': 85000 } }, [])
+  assert.equal(plan.ok, true)
+  assert.deepEqual(plan.add.map((row) => [row.sim, row.price]), [[7, 90000], [8, 85000]])
+})
+
+test('requires every storage and sim pair to be priced', () => {
+  const plan = planVariants({ dims: { storage: [1, 2], sim: [7, 8] }, prices: { '1|7': 1, '1|8': 2, '2|7': 3 } }, [])
+  assert.equal(plan.ok, false)
+  assert.match(plan.error, /памяти и SIM/)
+})
+
+test('lists only price groups that still have variants to add', () => {
+  const rows = [{ id: 'a', color: 5, storage: 1, sim: 7 }, { id: 'b', color: 5, storage: 1, sim: 8 }]
+  assert.deepEqual(
+    pendingPriceGroups({ color: [5], storage: [1, 2], sim: [7, 8] }, rows),
+    [{ key: '2|7', storage: '2', sim: '7' }, { key: '2|8', storage: '2', sim: '8' }],
+  )
+  assert.deepEqual(pendingPriceGroups({ color: [5], storage: [1, 2], sim: [7] }, rows), [{ key: '2|', storage: '2', sim: '' }])
+  assert.deepEqual(pendingPriceGroups({ color: [5, 6] }, []), [])
+  assert.deepEqual(pendingPriceGroups({}, []), [])
+})
+
+test('parses storage and RAM capacities and keeps terabytes out of RAM', () => {
+  assert.deepEqual(parseCapacity(' 256 gb ', 'storage'), { value: '256GB', gb: 256 })
+  assert.deepEqual(parseCapacity('1 ТБ', 'storage'), { value: '1TB', gb: 1024 })
+  assert.deepEqual(parseCapacity('512гб', 'storage'), { value: '512GB', gb: 512 })
+  assert.deepEqual(parseCapacity('8GB', 'ram'), { value: '8GB', gb: 8 })
+  assert.equal(parseCapacity('1TB', 'ram'), null)
+  for (const bad of ['', '0GB', '256', 'GB', '12/256GB', '8|128', '-8GB', '8.5GB', '10000GB', null, 8]) assert.equal(parseCapacity(bad, 'storage'), null)
+})
+
+test('orders capacities by size and leaves unparsable labels last', () => {
+  const sorted = ['1TB', '256GB', '8GB', 'ПАМЯТЬ', '36GB', '2TB', '64GB'].sort(compareCapacity)
+  assert.deepEqual(sorted, ['8GB', '36GB', '64GB', '256GB', '1TB', '2TB', 'ПАМЯТЬ'])
+})
+
+test('normalizes hex colors and builds latin slugs', () => {
+  assert.equal(normalizeHex('#ABC'), '#aabbcc')
+  assert.equal(normalizeHex(' 7A3CFF '), '#7a3cff')
+  for (const bad of ['', '#12', '#12345', 'red', '#gggggg', null]) assert.equal(normalizeHex(bad), null)
+  assert.equal(colorSlug('Ultra Violet'), 'ultra-violet')
+  assert.equal(colorSlug('Белый'), '')
+  assert.equal(uniqueSlug('green', new Set(['green', 'green-2'])), 'green-3')
+  assert.equal(uniqueSlug('teal', new Set(['green'])), 'teal')
+})
+
+test('validates new colors before creation', () => {
+  const ok = validateNewColor({ englishLabel: '  Deep   Blue ', russianLabel: ' Глубокий синий', primaryHex: '#1A2B3C' })
+  assert.deepEqual(ok, { ok: true, data: { englishLabel: 'Deep Blue', russianLabel: 'Глубокий синий', primaryHex: '#1a2b3c', slug: 'deep-blue' } })
+  assert.equal(validateNewColor({ englishLabel: '', russianLabel: 'Синий', primaryHex: '#000000' }).ok, false)
+  assert.equal(validateNewColor({ englishLabel: 'Blue', russianLabel: '', primaryHex: '#000000' }).ok, false)
+  assert.equal(validateNewColor({ englishLabel: 'Синий', russianLabel: 'Синий', primaryHex: '#000000' }).ok, false)
+  assert.equal(validateNewColor({ englishLabel: 'Blue', russianLabel: 'Синий', primaryHex: 'blue' }).ok, false)
+  assert.equal(validateNewColor({ englishLabel: 'x'.repeat(61), russianLabel: 'Синий', primaryHex: '#000000' }).ok, false)
 })
 
 test('applies price and status edits to matching variants only', () => {

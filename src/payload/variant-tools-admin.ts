@@ -21,6 +21,7 @@ import {
   type VariantRow,
 } from './variant-tools/plan.ts'
 import { profileFor } from './variant-tools/profiles.ts'
+import { compareCapacity, isCreatableDimension, parseCapacity, uniqueSlug, validateNewColor, type CapacityKind } from './variant-tools/options.ts'
 
 type Doc = Record<string, unknown>
 
@@ -198,6 +199,58 @@ async function saveProductFields(req: PayloadRequest, productId: string | number
   }
 }
 
+function optionOf(key: DimensionKey, doc: Doc) {
+  return { id: doc.id, label: dictionaryLabel(key, doc), hex: text(doc.primaryHex) }
+}
+
+function capacityError(kind: CapacityKind): Response {
+  return fail(400, kind === 'storage' ? 'Введите объём памяти, например 256GB или 1TB.' : 'Введите объём оперативной памяти, например 8GB.')
+}
+
+async function createColor(req: PayloadRequest, body: Doc): Promise<Response> {
+  const checked = validateNewColor(body)
+  if (!checked.ok) return fail(400, checked.error)
+  const { englishLabel, russianLabel, primaryHex, slug } = checked.data
+  const found = await req.payload.find({ collection: 'colors', depth: 0, limit: 5000, pagination: false, req })
+  const colors = found.docs.map((raw) => record(raw))
+  const same = colors.find(
+    (doc) =>
+      text(doc.englishLabel).toLowerCase() === englishLabel.toLowerCase() &&
+      text(doc.russianLabel).toLowerCase() === russianLabel.toLowerCase() &&
+      text(doc.primaryHex).toLowerCase() === primaryHex,
+  )
+  if (same) return Response.json({ option: optionOf('color', same), existed: true })
+  const value = uniqueSlug(slug, new Set(colors.map((doc) => text(doc.value).toLowerCase())))
+  const created = await req.payload.create({ collection: 'colors', data: { value, englishLabel, russianLabel, primaryHex }, depth: 0, req })
+  return Response.json({ option: optionOf('color', record(created)), existed: false })
+}
+
+async function createStorage(req: PayloadRequest, body: Doc): Promise<Response> {
+  const parsed = parseCapacity(body.value, 'storage')
+  if (!parsed) return capacityError('storage')
+  const found = await req.payload.find({ collection: 'storage-options', depth: 0, limit: 1000, pagination: false, req })
+  const same = found.docs.map((raw) => record(raw)).find((doc) => parseCapacity(doc.value, 'storage')?.value === parsed.value)
+  if (same) {
+    if (same.archived === true) await req.payload.update({ collection: 'storage-options', id: relationId(same.id), data: { archived: false }, depth: 0, req })
+    return Response.json({ option: optionOf('storage', same), existed: true })
+  }
+  const created = await req.payload.create({ collection: 'storage-options', data: { value: parsed.value }, depth: 0, req })
+  return Response.json({ option: optionOf('storage', record(created)), existed: false })
+}
+
+async function createRam(req: PayloadRequest, body: Doc): Promise<Response> {
+  const parsed = parseCapacity(body.value, 'ram')
+  if (!parsed) return capacityError('ram')
+  const found = await req.payload.find({ collection: 'ram-options', depth: 0, limit: 1000, pagination: false, req })
+  const same = found.docs.map((raw) => record(raw)).find((doc) => parseCapacity(doc.label, 'ram')?.value === parsed.value || parseCapacity(doc.key, 'ram')?.value === parsed.value)
+  if (same) {
+    if (same.archived === true) await req.payload.update({ collection: 'ram-options', id: relationId(same.id), data: { archived: false }, depth: 0, req })
+    return Response.json({ option: optionOf('ramOption', same), existed: true })
+  }
+  const created = await req.payload.create({ collection: 'ram-options', data: { key: parsed.value, label: parsed.value }, depth: 0, req })
+  return Response.json({ option: optionOf('ramOption', record(created)), existed: false })
+}
+
 export const variantToolsEndpoints: Endpoint[] = [
   {
     path: '/variant-tools/overview',
@@ -261,7 +314,8 @@ export const variantToolsEndpoints: Endpoint[] = [
             options: found.docs
               .map((raw) => record(raw))
               .filter((doc) => key !== 'storage' || isAllowedStorageValue(doc.value))
-              .map((doc) => ({ id: doc.id, label: dictionaryLabel(key, doc), hex: text(doc.primaryHex) })),
+              .map((doc) => optionOf(key, doc))
+              .sort((a, b) => (key === 'storage' || key === 'ramOption' ? compareCapacity(a.label, b.label) : 0)),
           }
         }),
       )
@@ -279,6 +333,22 @@ export const variantToolsEndpoints: Endpoint[] = [
     },
   },
   {
+    path: '/variant-tools/create-option',
+    method: 'post',
+    handler: async (req) => {
+      if (!hasFullAdminAccess(req.user)) return fail(403, 'Нет доступа.')
+      const body = await readBody(req)
+      if (!isCreatableDimension(body.dimension)) return fail(400, 'Для этого параметра нельзя добавить значение.')
+      try {
+        if (body.dimension === 'color') return await createColor(req, body)
+        if (body.dimension === 'storage') return await createStorage(req, body)
+        return await createRam(req, body)
+      } catch (error) {
+        return fail(400, error instanceof Error ? error.message : 'Не удалось добавить значение.')
+      }
+    },
+  },
+  {
     path: '/variant-tools/build',
     method: 'post',
     handler: async (req) => {
@@ -293,7 +363,7 @@ export const variantToolsEndpoints: Endpoint[] = [
         dims: parseDimensions(body.dims),
         common: parseCommon(body.common),
         basePrice: typeof body.basePrice === 'number' ? body.basePrice : undefined,
-        priceByStorage: parsePriceMap(body.priceByStorage),
+        prices: parsePriceMap(body.prices),
         status: isVariantStatus(body.status) ? body.status : undefined,
       }
       const rows = existingRows(product)

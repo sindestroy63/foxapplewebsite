@@ -296,6 +296,80 @@
   justify-self: start;
 }
 
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.disclosure:focus-visible {
+  outline: 2px solid var(--theme-success-500, #25834d);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.chevron {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+}
+
+.chevronOpen {
+  margin-top: -4px;
+  transform: rotate(45deg);
+}
+
+.summary {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--theme-elevation-600, #667085);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionForm {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px dashed var(--theme-elevation-300, #aab1bd);
+  border-radius: 8px;
+}
+
+.colorField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorField .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.colorPicker {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 38px;
+  padding: 2px;
+  border: 1px solid var(--theme-elevation-200, #c8cdd6);
+  border-radius: 6px;
+  background: var(--theme-input-bg, #fff);
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 20px 16px 56px;
@@ -428,5 +502,16 @@
 @media (max-width: 480px) {
   .stockRow {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .disclosure {
+    min-height: 44px;
+  }
+
+  .colorPicker {
+    width: 56px;
+    height: 44px;
   }
 }

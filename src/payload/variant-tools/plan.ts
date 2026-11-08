@@ -16,9 +16,11 @@ export type BuildInput = {
   dims: Partial<Record<DimensionKey, RelationId[]>>
   common?: Partial<Record<CommonTextKey, string>>
   basePrice?: number
-  priceByStorage?: Record<string, number>
+  prices?: Record<string, number>
   status?: VariantStatus
 }
+
+export type PriceGroup = { key: string; storage: string; sim: string }
 
 export type BuildPlan =
   | { ok: true; add: VariantRow[]; skipped: number }
@@ -78,9 +80,11 @@ function product(lists: RelationId[][]): RelationId[][] {
   return lists.reduce<RelationId[][]>((rows, list) => rows.flatMap((row) => list.map((item) => [...row, item])), [[]])
 }
 
-export function planVariants(input: BuildInput, existing: Array<Record<string, unknown>>): BuildPlan {
+type Expansion = { ok: true; fresh: Array<Record<string, unknown>>; skipped: number; splitSim: boolean } | { ok: false; error: string }
+
+function expand(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>): Expansion {
   const lists = DIMENSION_KEYS.map((key) => {
-    const raw = input.dims[key] || []
+    const raw = dims[key] || []
     return [...new Map(raw.map((item) => [relationId(item), item])).values()]
   })
   const hasDimension = lists.some((list) => list.length > 0)
@@ -91,19 +95,8 @@ export function planVariants(input: BuildInput, existing: Array<Record<string, u
     return { ok: false, error: `Слишком много комбинаций (${combos.length}). За один раз можно добавить не более ${MAX_NEW_VARIANTS}.` }
   }
 
-  const status = input.status ?? 'in_stock'
-  if (!isVariantStatus(status)) return { ok: false, error: 'Неизвестный статус.' }
-
   const taken = new Set(existing.map((row) => comboKey(row)))
-  const storageIndex = DIMENSION_KEYS.indexOf('storage')
-  const common = Object.fromEntries(
-    COMMON_TEXT_KEYS.flatMap((key) => {
-      const value = input.common?.[key]?.trim()
-      return value ? [[key, value]] : []
-    }),
-  )
-
-  const add: VariantRow[] = []
+  const fresh: Array<Record<string, unknown>> = []
   let skipped = 0
 
   for (const combo of combos) {
@@ -115,16 +108,57 @@ export function planVariants(input: BuildInput, existing: Array<Record<string, u
       skipped += 1
       continue
     }
-    const storage = relationId(combo[storageIndex])
-    const price = (storage && input.priceByStorage?.[storage]) || input.basePrice
-    if (!isValidPrice(price)) {
-      return { ok: false, error: storage ? 'Укажите цену для каждой выбранной памяти.' : 'Укажите цену.' }
-    }
     taken.add(comboKey(row))
+    fresh.push(row)
+  }
+
+  return { ok: true, fresh, skipped, splitSim: lists[DIMENSION_KEYS.indexOf('sim')].length > 1 }
+}
+
+function priceGroupOf(row: Record<string, unknown>, splitSim: boolean): PriceGroup {
+  const storage = relationId(row.storage)
+  const sim = splitSim ? relationId(row.sim) : ''
+  return { key: `${storage}|${sim}`, storage, sim }
+}
+
+export function pendingPriceGroups(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>): PriceGroup[] {
+  const expanded = expand(dims, existing)
+  if (!expanded.ok) return []
+  const groups = new Map<string, PriceGroup>()
+  for (const row of expanded.fresh) {
+    const group = priceGroupOf(row, expanded.splitSim)
+    if (group.storage || group.sim) groups.set(group.key, group)
+  }
+  return [...groups.values()]
+}
+
+export function planVariants(input: BuildInput, existing: Array<Record<string, unknown>>): BuildPlan {
+  const expanded = expand(input.dims, existing)
+  if (!expanded.ok) return expanded
+
+  const status = input.status ?? 'in_stock'
+  if (!isVariantStatus(status)) return { ok: false, error: 'Неизвестный статус.' }
+
+  const common = Object.fromEntries(
+    COMMON_TEXT_KEYS.flatMap((key) => {
+      const value = input.common?.[key]?.trim()
+      return value ? [[key, value]] : []
+    }),
+  )
+
+  const add: VariantRow[] = []
+  for (const row of expanded.fresh) {
+    const group = priceGroupOf(row, expanded.splitSim)
+    const price = input.prices?.[group.key] || input.basePrice
+    if (!isValidPrice(price)) {
+      if (group.storage && group.sim) return { ok: false, error: 'Укажите цену для каждого сочетания памяти и SIM.' }
+      if (group.sim) return { ok: false, error: 'Укажите цену для каждого типа SIM.' }
+      return { ok: false, error: group.storage ? 'Укажите цену для каждой выбранной памяти.' : 'Укажите цену.' }
+    }
     add.push({ ...row, ...common, price, status, isAvailable: availabilityFor(status) })
   }
 
-  return { ok: true, add, skipped }
+  return { ok: true, add, skipped: expanded.skipped }
 }
 
 export function applyVariantChanges(
