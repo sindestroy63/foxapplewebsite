@@ -15,6 +15,7 @@ type Options = {
   dimensions: Dimension[]
   common: Array<{ key: CommonTextKey; title: string }>
   existing: Existing[]
+  photoColors: Record<string, number>
 }
 type Overview = { products: Array<{ id: RelationId; name: string; group: string; brand: string; variants: unknown[] }> }
 
@@ -125,12 +126,13 @@ type PanelProps = {
   dimension: Dimension
   selected: RelationId[]
   used: Set<string>
+  photos?: Record<string, number>
   create?: CreateAction
   onToggle: (id: RelationId) => void
   onChange: (ids: RelationId[]) => void
 }
 
-function DimensionPanel({ dimension, selected, used, create, onToggle, onChange }: PanelProps) {
+function DimensionPanel({ dimension, selected, used, photos, create, onToggle, onChange }: PanelProps) {
   const bodyId = useId()
   const [needle, setNeedle] = useState('')
   const [open, setOpen] = useState(true)
@@ -140,12 +142,13 @@ function DimensionPanel({ dimension, selected, used, create, onToggle, onChange 
 
   const options = useMemo(() => {
     const text = needle.trim().toLowerCase()
+    const rankOf = (id: string) => (photos?.[id] ? 0 : used.has(id) ? 1 : 2)
     return dimension.options
       .filter((option) => !text || option.label.toLowerCase().includes(text))
-      .map((option, index) => ({ option, index, rank: used.has(relationId(option.id)) ? 0 : 1 }))
+      .map((option, index) => ({ option, index, rank: rankOf(relationId(option.id)) }))
       .sort((a, b) => a.rank - b.rank || a.index - b.index)
       .map((item) => item.option)
-  }, [dimension.options, needle, used])
+  }, [dimension.options, needle, used, photos])
 
   const summary = useMemo(
     () => dimension.options.filter((option) => chosen.has(relationId(option.id))).map((option) => option.label).join(', '),
@@ -213,13 +216,16 @@ function DimensionPanel({ dimension, selected, used, create, onToggle, onChange 
       {open ? (
         <div id={bodyId} className={styles.optionGrid}>
           {options.map((option) => {
-            const on = chosen.has(relationId(option.id))
+            const id = relationId(option.id)
+            const on = chosen.has(id)
+            const photoCount = photos?.[id] ?? 0
             return (
               <label key={String(option.id)} className={`${styles.chip} ${on ? styles.chipOn : ''}`}>
                 <input type="checkbox" checked={on} onChange={() => onToggle(option.id)} />
                 {option.hex && <span className={styles.swatch} style={{ background: option.hex }} />}
                 {option.label}
-                {used.has(relationId(option.id)) && <span className={styles.muted}>есть</span>}
+                {photoCount > 0 && <span className={styles.photoMark}>{photoCount} фото</span>}
+                {used.has(id) && <span className={styles.muted}>есть</span>}
               </label>
             )
           })}
@@ -390,6 +396,7 @@ function Builder({ productId }: { productId: string }) {
             dimension={dimension}
             selected={picked[dimension.key] || []}
             used={usedByDimension.get(dimension.key) || EMPTY_SET}
+            photos={dimension.key === 'color' ? data.photoColors : undefined}
             create={kind ? { kind, submit: (fields) => createOption(kind, fields) } : undefined}
             onToggle={(id) => toggle(dimension.key, id)}
             onChange={(ids) => setPicked((current) => ({ ...current, [dimension.key]: ids }))}

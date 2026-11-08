@@ -1,3 +1,5 @@
+import { relationId } from './plan.ts'
+
 export type CapacityKind = 'storage' | 'ram'
 export type Capacity = { value: string; gb: number }
 
@@ -71,4 +73,16 @@ export function validateNewColor(input: { englishLabel?: unknown; russianLabel?:
   const primaryHex = normalizeHex(input.primaryHex)
   if (!primaryHex) return { ok: false, error: 'Укажите цвет в формате #RRGGBB.' }
   return { ok: true, data: { englishLabel, russianLabel, primaryHex, slug } }
+}
+
+export function colorPhotoCounts(colorImages: unknown): Record<string, number> {
+  const counts: Record<string, number> = {}
+  if (!Array.isArray(colorImages)) return counts
+  for (const group of colorImages) {
+    if (group === null || typeof group !== 'object') continue
+    const color = relationId('color' in group ? group.color : null)
+    const images = 'images' in group && Array.isArray(group.images) ? group.images.length : 0
+    if (color && images > 0) counts[color] = (counts[color] ?? 0) + images
+  }
+  return counts
 }

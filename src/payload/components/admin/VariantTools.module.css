@@ -296,6 +296,16 @@
   justify-self: start;
 }
 
+.photoMark {
+  padding: 1px 7px;
+  border: 1px solid var(--theme-success-500, #25834d);
+  border-radius: 999px;
+  color: var(--theme-success-500, #25834d);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .disclosure {
   display: inline-flex;
   align-items: center;

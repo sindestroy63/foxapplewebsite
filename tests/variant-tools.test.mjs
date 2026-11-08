@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 const { planVariants, pendingPriceGroups, applyVariantChanges, comboKey } = await import('../src/payload/variant-tools/plan.ts')
-const { parseCapacity, compareCapacity, normalizeHex, colorSlug, uniqueSlug, validateNewColor } = await import('../src/payload/variant-tools/options.ts')
+const { parseCapacity, compareCapacity, normalizeHex, colorSlug, uniqueSlug, validateNewColor, colorPhotoCounts } = await import('../src/payload/variant-tools/options.ts')
 
 const existing = [
   { id: 'a', sku: 'VAR-A', color: 5, storage: 1, sim: 9, price: 100000, status: 'in_stock', isAvailable: true },
@@ -166,4 +166,20 @@ test('validates product level price and status edits', async () => {
   assert.equal(validateProductChange({ price: 0 }).ok, false)
   assert.equal(validateProductChange({ price: 10.5 }).ok, false)
   assert.equal(validateProductChange({ status: 'gone' }).ok, false)
+})
+
+test('counts photos per color from the product color photo groups', () => {
+  const groups = [
+    { id: 'a', color: 5, images: [1, 2, 3] },
+    { id: 'b', color: { id: 7, englishLabel: 'Blue' }, images: [{ id: 9 }] },
+    { id: 'c', color: 5, images: [4] },
+    { id: 'd', color: 8, images: [] },
+    { id: 'e', color: null, images: [5] },
+    { id: 'f', images: [6] },
+    null,
+    'x',
+  ]
+  assert.deepEqual(colorPhotoCounts(groups), { 5: 4, 7: 1 })
+  assert.deepEqual(colorPhotoCounts(undefined), {})
+  assert.deepEqual(colorPhotoCounts([]), {})
 })

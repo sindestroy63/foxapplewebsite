@@ -21,7 +21,7 @@ import {
   type VariantRow,
 } from './variant-tools/plan.ts'
 import { profileFor } from './variant-tools/profiles.ts'
-import { compareCapacity, isCreatableDimension, parseCapacity, uniqueSlug, validateNewColor, type CapacityKind } from './variant-tools/options.ts'
+import { colorPhotoCounts, compareCapacity, isCreatableDimension, parseCapacity, uniqueSlug, validateNewColor, type CapacityKind } from './variant-tools/options.ts'
 
 type Doc = Record<string, unknown>
 
@@ -324,6 +324,7 @@ export const variantToolsEndpoints: Endpoint[] = [
         product: { id: product.id, name: text(product.name), deviceType, hint: profile.hint },
         dimensions,
         common: profile.common.map((key) => ({ key, title: COMMON_TITLES[key] })),
+        photoColors: colorPhotoCounts(product.colorImages),
         existing: existingRows(product).map((row) => ({
           id: text(row.id),
           title: variantTitle(row),
