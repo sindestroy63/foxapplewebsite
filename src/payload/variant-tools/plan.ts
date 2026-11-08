@@ -17,10 +17,12 @@ export type BuildInput = {
   common?: Partial<Record<CommonTextKey, string>>
   basePrice?: number
   prices?: Record<string, number>
+  colorPrices?: Record<string, number>
   status?: VariantStatus
 }
 
 export type PriceGroup = { key: string; storage: string; sim: string }
+export type ColorPriceCell = { key: string; color: string; group: PriceGroup }
 
 export type BuildPlan =
   | { ok: true; add: VariantRow[]; skipped: number }
@@ -132,6 +134,24 @@ export function pendingPriceGroups(dims: BuildInput['dims'], existing: Array<Rec
   return [...groups.values()]
 }
 
+export function colorPriceKey(color: string, groupKey: string): string {
+  return `${color}:${groupKey}`
+}
+
+export function pendingColorPriceCells(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>): ColorPriceCell[] {
+  const expanded = expand(dims, existing)
+  if (!expanded.ok) return []
+  const cells = new Map<string, ColorPriceCell>()
+  for (const row of expanded.fresh) {
+    const color = relationId(row.color)
+    if (!color) continue
+    const group = priceGroupOf(row, expanded.splitSim)
+    const key = colorPriceKey(color, group.key)
+    cells.set(key, { key, color, group })
+  }
+  return [...cells.values()]
+}
+
 export function planVariants(input: BuildInput, existing: Array<Record<string, unknown>>): BuildPlan {
   const expanded = expand(input.dims, existing)
   if (!expanded.ok) return expanded
@@ -149,7 +169,10 @@ export function planVariants(input: BuildInput, existing: Array<Record<string, u
   const add: VariantRow[] = []
   for (const row of expanded.fresh) {
     const group = priceGroupOf(row, expanded.splitSim)
-    const price = input.prices?.[group.key] || input.basePrice
+    const color = relationId(row.color)
+    const override = color ? input.colorPrices?.[colorPriceKey(color, group.key)] : undefined
+    if (override !== undefined && !isValidPrice(override)) return { ok: false, error: 'Цена для цвета должна быть целым числом больше нуля.' }
+    const price = override ?? (input.prices?.[group.key] || input.basePrice)
     if (!isValidPrice(price)) {
       if (group.storage && group.sim) return { ok: false, error: 'Укажите цену для каждого сочетания памяти и SIM.' }
       if (group.sim) return { ok: false, error: 'Укажите цену для каждого типа SIM.' }

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const { planVariants, pendingPriceGroups, applyVariantChanges, comboKey } = await import('../src/payload/variant-tools/plan.ts')
+const { planVariants, pendingPriceGroups, pendingColorPriceCells, applyVariantChanges, comboKey } = await import('../src/payload/variant-tools/plan.ts')
 const { parseCapacity, compareCapacity, normalizeHex, colorSlug, uniqueSlug, validateNewColor, colorPhotoCounts } = await import('../src/payload/variant-tools/options.ts')
 
 const existing = [
@@ -182,4 +182,50 @@ test('counts photos per color from the product color photo groups', () => {
   assert.deepEqual(colorPhotoCounts(groups), { 5: 4, 7: 1 })
   assert.deepEqual(colorPhotoCounts(undefined), {})
   assert.deepEqual(colorPhotoCounts([]), {})
+})
+
+test('a color price overrides the group price for that color only', () => {
+  const plan = planVariants(
+    { dims: { color: [1, 2], storage: [10, 20] }, prices: { '10|': 90000, '20|': 110000 }, colorPrices: { '2:20|': 115000 } },
+    [],
+  )
+  assert.equal(plan.ok, true)
+  const priceOf = (color, storage) => plan.add.find((row) => row.color === color && row.storage === storage).price
+  assert.equal(priceOf(1, 10), 90000)
+  assert.equal(priceOf(1, 20), 110000)
+  assert.equal(priceOf(2, 10), 90000)
+  assert.equal(priceOf(2, 20), 115000)
+})
+
+test('a color price can replace the missing group price and applies per sim', () => {
+  const colorPrices = { '1:5|7': 100000, '1:5|8': 95000, '2:5|7': 101000, '2:5|8': 96000 }
+  const plan = planVariants({ dims: { color: [1, 2], storage: [5], sim: [7, 8] }, colorPrices }, [])
+  assert.equal(plan.ok, true)
+  for (const row of plan.add) assert.equal(row.price, colorPrices[`${row.color}:${row.storage}|${row.sim}`])
+  assert.equal(planVariants({ dims: { color: [1, 2], storage: [5], sim: [7, 8] }, colorPrices: { '1:5|7': 1 } }, []).ok, false)
+})
+
+test('a color price works without storage or sim and falls back to the base price', () => {
+  const plan = planVariants({ dims: { color: [1, 2, 3] }, basePrice: 5000, colorPrices: { '2:|': 5500 } }, [])
+  assert.equal(plan.ok, true)
+  assert.deepEqual(plan.add.map((row) => row.price), [5000, 5500, 5000])
+})
+
+test('rejects an invalid color price instead of silently using the group price', () => {
+  for (const bad of [0, -5, 1.5, Number.NaN]) {
+    const plan = planVariants({ dims: { color: [1], storage: [10] }, prices: { '10|': 90000 }, colorPrices: { '1:10|': bad } }, [])
+    assert.equal(plan.ok, false)
+    assert.match(plan.error, /цвета/)
+  }
+})
+
+test('lists color price cells only for variants that still have to be added', () => {
+  const rows = [{ id: 'a', color: 1, storage: 10, sim: 7 }]
+  assert.deepEqual(
+    pendingColorPriceCells({ color: [1, 2], storage: [10], sim: [7, 8] }, rows).map((cell) => cell.key),
+    ['1:10|8', '2:10|7', '2:10|8'],
+  )
+  assert.deepEqual(pendingColorPriceCells({ color: [4], storage: [10] }, []).map((cell) => [cell.key, cell.group.key]), [['4:10|', '10|']])
+  assert.deepEqual(pendingColorPriceCells({ color: [4] }, []).map((cell) => cell.key), ['4:|'])
+  assert.deepEqual(pendingColorPriceCells({ storage: [10] }, []), [])
 })

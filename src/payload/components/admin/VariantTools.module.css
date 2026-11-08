@@ -296,6 +296,43 @@
   justify-self: start;
 }
 
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkRow input {
+  margin: 0;
+}
+
+.colorPrices {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.colorPriceCard {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--theme-elevation-150, #d8dce3);
+  border-radius: 8px;
+}
+
+.colorPriceTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .photoMark {
   padding: 1px 7px;
   border: 1px solid var(--theme-success-500, #25834d);
@@ -523,5 +560,11 @@
   .colorPicker {
     width: 56px;
     height: 44px;
+  }
+}
+
+@media (max-width: 768px) {
+  .checkRow {
+    min-height: 44px;
   }
 }

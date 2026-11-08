@@ -365,6 +365,7 @@ export const variantToolsEndpoints: Endpoint[] = [
         common: parseCommon(body.common),
         basePrice: typeof body.basePrice === 'number' ? body.basePrice : undefined,
         prices: parsePriceMap(body.prices),
+        colorPrices: parsePriceMap(body.colorPrices),
         status: isVariantStatus(body.status) ? body.status : undefined,
       }
       const rows = existingRows(product)

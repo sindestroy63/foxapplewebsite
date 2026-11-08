@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from 'react'
 
 import { compareCapacity, isCreatableDimension, normalizeHex, type CreatableDimension } from '../../variant-tools/options'
-import { COMMON_TEXT_KEYS, isVariantStatus, pendingPriceGroups, planVariants, relationId, type CommonTextKey, type DimensionKey, type RelationId, type VariantStatus } from '../../variant-tools/plan'
+import { COMMON_TEXT_KEYS, isVariantStatus, pendingColorPriceCells, pendingPriceGroups, planVariants, relationId, type CommonTextKey, type DimensionKey, type RelationId, type VariantStatus } from '../../variant-tools/plan'
 import { api, formatPrice, STATUS_LABELS } from './variant-tools-api'
 import styles from './VariantTools.module.css'
 
@@ -247,6 +247,8 @@ function Builder({ productId }: { productId: string }) {
   const [common, setCommon] = useState<Partial<Record<CommonTextKey, string>>>({})
   const [prices, setPrices] = useState<Record<string, string>>({})
   const [basePrice, setBasePrice] = useState('')
+  const [colorPricing, setColorPricing] = useState(false)
+  const [colorPrices, setColorPrices] = useState<Record<string, string>>({})
   const [status, setStatus] = useState<VariantStatus>('in_stock')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState('')
@@ -327,12 +329,39 @@ function Builder({ productId }: { productId: string }) {
       .sort((a, b) => compareCapacity(storageLabel(a.storage), storageLabel(b.storage)))
   }, [data, picked, labels])
 
+  const colorPriceMap = useMemo(() => {
+    const map: Record<string, number> = {}
+    if (!colorPricing) return map
+    for (const [key, value] of Object.entries(colorPrices)) {
+      if (value.trim()) map[key] = Number(value)
+    }
+    return map
+  }, [colorPricing, colorPrices])
+
+  const colorCards = useMemo(() => {
+    if (!data) return []
+    const hexById = new Map<string, string>()
+    data.dimensions.find((dimension) => dimension.key === 'color')?.options.forEach((option) => hexById.set(relationId(option.id), option.hex))
+    const storageLabel = (id: string) => labels.get(`storage:${id}`) ?? ''
+    const byColor = new Map<string, Array<{ key: string; groupKey: string; storage: string; title: string }>>()
+    for (const cell of pendingColorPriceCells(picked, data.existing.map((item) => item.combo))) {
+      const title = [labels.get(`storage:${cell.group.storage}`), labels.get(`sim:${cell.group.sim}`)].filter(Boolean).join(' · ') || 'Цена, ₽'
+      byColor.set(cell.color, [...(byColor.get(cell.color) ?? []), { key: cell.key, groupKey: cell.group.key, storage: cell.group.storage, title }])
+    }
+    return [...byColor].map(([color, cells]) => ({
+      color,
+      label: labels.get(`color:${color}`) ?? '',
+      hex: hexById.get(color) ?? '',
+      cells: cells.sort((a, b) => compareCapacity(storageLabel(a.storage), storageLabel(b.storage))),
+    }))
+  }, [data, picked, labels])
+
   const plan = useMemo(() => {
     if (!data) return null
     const hasSelection = Object.values(picked).some((list) => list && list.length > 0)
     if (!hasSelection) return null
-    return planVariants({ dims: picked, common, basePrice: base, prices: priceMap, status }, data.existing.map((item) => item.combo))
-  }, [data, picked, common, base, priceMap, status])
+    return planVariants({ dims: picked, common, basePrice: base, prices: priceMap, colorPrices: colorPriceMap, status }, data.existing.map((item) => item.combo))
+  }, [data, picked, common, base, priceMap, colorPriceMap, status])
 
   const preview = useMemo(() => {
     if (!plan || !plan.ok) return []
@@ -355,12 +384,15 @@ function Builder({ productId }: { productId: string }) {
         common,
         basePrice: base,
         prices: priceMap,
+        colorPrices: colorPriceMap,
         status,
       })
       setDone(`Добавлено вариантов: ${result.added}. Всего у товара: ${result.total}.`)
       setPicked({})
       setPrices({})
       setBasePrice('')
+      setColorPrices({})
+      setColorPricing(false)
       load()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось добавить варианты.')
@@ -430,6 +462,39 @@ function Builder({ productId }: { productId: string }) {
               Цена, ₽
               <input className={styles.input} inputMode="numeric" value={basePrice} onChange={(event) => setBasePrice(event.target.value)} />
             </label>
+          </div>
+        )}
+        {colorCards.length > 0 && (
+          <label className={styles.checkRow}>
+            <input type="checkbox" checked={colorPricing} onChange={(event) => setColorPricing(event.target.checked)} />
+            Цена зависит от цвета
+          </label>
+        )}
+        {colorPricing && colorCards.length > 0 && (
+          <div className={styles.colorPrices}>
+            <div className={styles.muted}>Заполните только цвета с другой ценой: у остальных останется общая цена выше.</div>
+            {colorCards.map((card) => (
+              <div key={card.color} className={styles.colorPriceCard}>
+                <div className={styles.colorPriceTitle}>
+                  {card.hex && <span className={styles.swatch} style={{ background: card.hex }} />}
+                  {card.label}
+                </div>
+                <div className={styles.priceGrid}>
+                  {card.cells.map((cell) => (
+                    <label key={cell.key}>
+                      {cell.title}
+                      <input
+                        className={styles.input}
+                        inputMode="numeric"
+                        placeholder={(prices[cell.groupKey] || basePrice).trim() || 'Как в общей цене'}
+                        value={colorPrices[cell.key] || ''}
+                        onChange={(event) => setColorPrices((current) => ({ ...current, [cell.key]: event.target.value.replace(/[^\d]/g, '') }))}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
         <div className={styles.fieldGrid}>
