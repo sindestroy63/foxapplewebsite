@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CatalogNavNode } from '@/lib/cms'
-import type { BrandMenu } from '@/lib/brand-catalog-menu'
+import type { BrandMenu, BrandMenuItem } from '@/lib/brand-catalog-menu'
+import type { MenuProduct } from '@/lib/menu-series'
 
 const PANEL_WIDTH = 252
 const PRODUCT_PANEL_WIDTH = 320
@@ -14,6 +15,47 @@ const CLOSE_DELAY = 220
 const Badge = ({ node }: { node: CatalogNavNode }) => node.isNew
   ? <small className="nav-new-badge">{node.badgeText || 'Новинка'}</small>
   : null
+
+function ProductLink({ product }: { product: MenuProduct }) {
+  return <Link href={product.href}>{product.name}{product.isNew ? <small className="nav-new-badge">Новинка</small> : null}</Link>
+}
+
+function ItemFlyout({ item }: { item: BrandMenuItem }) {
+  const series = item.series || []
+  const grouped = new Set(series.flatMap((entry) => entry.products.map((product) => String(product.id))))
+  const loose = (item.products || []).filter((product) => !grouped.has(String(product.id)))
+  const expandable = series.length > 0 || loose.length > 0
+  return (
+    <div className="nav-dropdown-submenu">
+      <Link href={item.href}>{item.label}{expandable ? <span className="nav-arrow" aria-hidden="true">›</span> : null}</Link>
+      {expandable && (
+        <div className="nav-dropdown-menu nav-dropdown-products">
+          {series.map((entry) => (
+            <div key={entry.key} className="nav-dropdown-submenu">
+              <Link href={item.href}>{entry.label}<span className="nav-arrow" aria-hidden="true">›</span></Link>
+              <div className="nav-dropdown-menu nav-dropdown-products">{entry.products.map((product) => <ProductLink key={product.id} product={product} />)}</div>
+            </div>
+          ))}
+          {loose.map((product) => <ProductLink key={product.id} product={product} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function BrandDropdown({ brand }: { brand: BrandMenu }) {
+  return (
+    <div className="nav-dropdown">
+      <span className="nav-dropdown-trigger">{brand.label}{brand.items.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</span>
+      {brand.items.length > 0 && (
+        <div className="nav-dropdown-menu">
+          {brand.items.map((item) => <ItemFlyout key={item.href + item.label} item={item} />)}
+          <Link href={brand.href} className="nav-dropdown-all">Все товары</Link>
+        </div>
+      )}
+    </div>
+  )
+}
 
 type Direction = 'right' | 'left'
 
@@ -104,7 +146,7 @@ export function DesktopCatalogMenu({ nodes, trailingLink, brandMenu }: { nodes: 
   return <div ref={rootRef} className={`desktop-catalog-nav desktop-catalog-nav--${direction}`} onPointerEnter={cancelClose} onPointerLeave={(event) => { const next = event.relatedTarget; if (!next || next instanceof Window || !(next instanceof Node) || (!rootRef.current?.contains(next) && !flyoutRef.current?.contains(next))) scheduleClose() }} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); closeMenu() } }}>
     <div className="desktop-catalog-groups">{brandMenu ? brandMenu.filter((brand) => brand.isVisible !== false).map((brand) => (brand.key === 'trade-in' || brand.key === 'services')
       ? <Link key={brand.label} href={brand.href} className="nav-dropdown-trigger">{brand.label}{brand.isNew && <small className="nav-new-badge">Новинка</small>}</Link>
-      : <div key={brand.label} className="nav-dropdown"><span className="nav-dropdown-trigger">{brand.label}{brand.items.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</span>{brand.items.length > 0 && <div className="nav-dropdown-menu">{brand.items.map((item) => <div key={item.href + item.label} className="nav-dropdown-submenu"><Link href={item.href}>{item.label}{item.products?.length ? <span className="nav-arrow" aria-hidden="true">›</span> : null}</Link>{item.products?.length ? <div className="nav-dropdown-menu nav-dropdown-products">{item.products.map((product) => <Link key={product.id} href={product.href}>{product.name}{product.isNew ? <small className="nav-new-badge">Новинка</small> : null}</Link>)}</div> : null}</div>)}</div>}</div>) : groups.map((group) => <span key={group.id} data-group-id={group.id} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</span>)}{trailingLink && <Link href={trailingLink.href} className="nav-dropdown-trigger">{trailingLink.label}</Link>}</div>
+      : <BrandDropdown key={brand.label} brand={brand} />) : groups.map((group) => <span key={group.id} data-group-id={group.id} className="nav-dropdown-trigger" aria-haspopup={group.children.length ? 'menu' : undefined} aria-expanded={activeGroup?.id === group.id} onPointerEnter={(event) => openGroup(group, event.currentTarget)} onFocus={(event) => openGroup(group, event.currentTarget)}><span>{group.title}</span><Badge node={group}/>{group.children.length > 0 && <span className="nav-arrow" aria-hidden="true">›</span>}</span>)}{trailingLink && <Link href={trailingLink.href} className="nav-dropdown-trigger">{trailingLink.label}</Link>}</div>
     {typeof document !== 'undefined' && flyout ? createPortal(flyout, document.body) : null}
   </div>
 }

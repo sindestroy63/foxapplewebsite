@@ -6,9 +6,10 @@ import { getPayload } from 'payload'
 import { CATEGORY_SEED, CONTACTS } from './constants'
 import { normalizeProduct, normalizeProducts } from './normalize'
 import { sortProductsByPriority } from '@/lib/sort'
-import type { CatalogFilters, Category, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
+import type { CatalogFilters, Category, Media, PageDoc, Product, SiteAppearance, SiteSettings } from './types'
 import { CATALOG_GROUPS, getCatalogGroup, productGroupSlug } from './catalog-groups'
 import { DEFAULT_BRAND_CATALOG_MENU, visibleBrandMenu, type BrandMenu } from './brand-catalog-menu'
+import { buildMenuSeries, type MenuProduct, type MenuSeries } from './menu-series'
 import { catalogPlacementHref, getCatalogPlacementByChildKey } from './product-catalog-placement'
 import { rankSearchResults } from './search'
 import { sortCatalogProducts } from './catalog-sort.ts'
@@ -443,7 +444,7 @@ export type CatalogNavNode = {
   children: CatalogNavNode[]
 }
 
-export type BrandCatalogNavigationItem = { title: string; key: string; href?: string; filter?: Record<string, string>; isVisible?: boolean; sortOrder?: number; coverImage?: import('./types').Media | null; children?: BrandCatalogNavigationItem[]; products?: Array<{ id: string | number; name: string; href: string; isNew?: boolean }> }
+export type BrandCatalogNavigationItem = { title: string; key: string; href?: string; filter?: Record<string, string>; isVisible?: boolean; isNew?: boolean; sortOrder?: number; coverImage?: Media | null; children?: BrandCatalogNavigationItem[]; products?: MenuProduct[]; series?: MenuSeries[] }
 
 export function navigationFilterMatchesCatalogParams(filter: Record<string, string> | undefined, params: CatalogFilters): boolean {
   if (!filter) return false
@@ -588,10 +589,13 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
         items: children.map((child: any) => {
           const filter = menuChildFilter(child, group)
           const href = catalogNavigationHref({ key: String(child.key), href: typeof child.href === 'string' ? child.href : undefined, filter, preserveKey: true })
+          const listed = productsForMenuChild(products, children, child).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || Number(a.id) - Number(b.id))
+          const entries = listed.map((product) => ({ brand: product.brand, product: { id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) } satisfies MenuProduct }))
           return {
           label: String(child.title ?? child.label), key: String(child.key), href, filter,
           coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),
-          products: productsForMenuChild(products, children, child).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || Number(a.id) - Number(b.id)).map((product) => ({ id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) })),
+          products: entries.map((entry) => entry.product),
+          series: buildMenuSeries(entries),
           }
         }),
       }
@@ -599,7 +603,7 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
     return menu.map((group) => ({
       title: group.label, key: group.key, href: group.href, filter: group.filter, coverImage: group.coverImage,
       isVisible: group.isVisible, isNew: group.isNew, sortOrder: group.sortOrder,
-      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder, products: child.products })),
+      children: group.items.map((child) => ({ title: child.label, key: child.key, href: child.href, filter: child.filter, coverImage: child.coverImage, isVisible: child.isVisible, isNew: child.isNew, sortOrder: child.sortOrder, products: child.products, series: child.series })),
     }))
   } catch {
     return DEFAULT_BRAND_CATALOG_MENU.map((group) => ({

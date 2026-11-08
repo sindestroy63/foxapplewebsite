@@ -2779,9 +2779,14 @@ a.contact-item:hover {
   transition: transform var(--transition);
 }
 
-.nav-dropdown:hover > .nav-dropdown-trigger .nav-arrow,
-.nav-dropdown-submenu:hover > a .nav-arrow {
+.nav-dropdown:hover > .nav-dropdown-trigger .nav-arrow {
   transform: rotate(180deg);
+}
+
+.nav-dropdown-menu .nav-arrow {
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.5;
 }
 
 .nav-dropdown-menu {
@@ -2799,6 +2804,27 @@ a.contact-item:hover {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
+}
+
+.nav-dropdown > .nav-dropdown-menu {
+  left: 0;
+  transform: none;
+}
+
+.nav-dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+}
+
+.nav-dropdown-submenu > .nav-dropdown-products::before {
+  top: 0;
+  left: -4px;
+  width: 4px;
+  height: 100%;
 }
 
 .nav-dropdown:hover > .nav-dropdown-menu,
@@ -2829,7 +2855,10 @@ a.contact-item:hover {
 }
 
 .nav-dropdown-menu a {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 400;
@@ -2840,6 +2869,12 @@ a.contact-item:hover {
 
 .nav-dropdown-menu a:hover {
   background: var(--bg);
+}
+
+.nav-dropdown-menu .nav-dropdown-all {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+  font-weight: 600;
 }
 
 .nav-dropdown-category {
@@ -2919,6 +2954,7 @@ a.contact-item:hover {
 .mobile-tree-level-1 > summary, .mobile-tree-level-1 > .mobile-tree-link { padding-left: 16px; font-size: 15px; font-weight: 500; }
 .mobile-tree-level-2 > summary, .mobile-tree-level-2 > .mobile-tree-link { padding-left: 32px; font-size: 14px; }
 .mobile-tree-level-3 > summary, .mobile-tree-level-3 > .mobile-tree-link { padding-left: 48px; font-size: 13px; }
+.mobile-tree-series > .mobile-tree-link { padding-left: 48px; font-size: 13px; }
 .mobile-tree-link span, .mobile-tree-level summary span { min-width: 0; overflow-wrap: anywhere; }
 
 @media (max-width: 1100px) {
@@ -4873,6 +4909,26 @@ a.contact-item:hover {
   padding-left: 14px !important;
   font-size: 14px !important;
   color: #424245 !important;
+}
+
+.mobile-catalog-tree .mobile-nav-group .mobile-tree-series {
+  padding-left: 0 !important;
+}
+
+.mobile-catalog-tree .mobile-nav-group .mobile-tree-series > summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 18px 10px 38px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #6e6e73 !important;
+}
+
+.mobile-catalog-tree .mobile-nav-group .mobile-tree-series > .mobile-tree-link {
+  padding: 10px 18px 10px 54px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
 }
 
 .mobile-catalog-tree .mobile-nav-group > summary:active,

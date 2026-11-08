@@ -1,4 +1,5 @@
 import type { Media } from './types'
+import type { MenuProduct, MenuSeries } from './menu-series'
 import { PRODUCT_CATALOG_PLACEMENTS, catalogPlacementFilter, catalogPlacementHref } from './product-catalog-placement'
 
 export { BRAND_PLACEMENT_MAP, resolveProductCatalogPlacement } from './product-catalog-placement'
@@ -12,7 +13,8 @@ export type BrandMenuItem = {
   isVisible?: boolean
   isNew?: boolean
   sortOrder?: number
-  products?: Array<{ id: string | number; name: string; href: string; isNew?: boolean }>
+  products?: MenuProduct[]
+  series?: MenuSeries[]
 }
 
 export type BrandMenu = {
