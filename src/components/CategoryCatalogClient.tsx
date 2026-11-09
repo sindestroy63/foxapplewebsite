@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Product, ProductVariant } from '@/lib/types'
 import { ProductDetailClient } from './ProductDetailClient'
 import { ProductStory } from './ProductStory'
 import { ProductRecommendations } from './ProductRecommendations'
 import { catalogPlacementHref, type CatalogPlacementDefinition } from '@/lib/product-catalog-placement'
+import { productCanonicalUrl } from '@/lib/product-url'
+import { productSeoTitle } from '@/lib/product-seo'
 
 const CATEGORY_SUBTITLES: Record<string, string> = {
   iphone: 'Изысканные технологии в каждой детали.',
@@ -88,9 +90,10 @@ type Props = {
   breadcrumbChild?: string
   placementTabs?: CatalogPlacementDefinition[]
   activePlacement?: CatalogPlacementDefinition | null
+  syncProductUrl?: boolean
 }
 
-export function CategoryCatalogClient({ categoryName, categorySlug, products, telegramUsername, initialModelSlug, breadcrumbBrand, breadcrumbChild, placementTabs, activePlacement }: Props) {
+export function CategoryCatalogClient({ categoryName, categorySlug, products, telegramUsername, initialModelSlug, breadcrumbBrand, breadcrumbChild, placementTabs, activePlacement, syncProductUrl }: Props) {
   const merged = useMemo(() => mergeByScreenSize(products), [products])
 
   const [selectedIndex, setSelectedIndex] = useState(() => {
@@ -109,6 +112,24 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, te
   })
 
   const selectedProduct = merged[selectedIndex] || null
+
+  const selectModel = (index: number) => {
+    setSelectedIndex(index)
+    const next = merged[index]
+    const url = syncProductUrl && next ? productCanonicalUrl(next) : null
+    if (!url) return
+    window.history.replaceState(window.history.state, '', url)
+    document.title = `${productSeoTitle(next)} | ФОХСТОР`
+  }
+
+  const tabsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const list = tabsRef.current
+    const active = list?.querySelector<HTMLElement>('.model-tab--active')
+    if (!list || !active || list.scrollWidth <= list.clientWidth) return
+    const offset = active.getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft
+    list.scrollTo({ left: offset - (list.clientWidth - active.offsetWidth) / 2 })
+  }, [selectedIndex])
 
   if (!merged.length) {
     return <div className="empty-state catalog-empty-state">
@@ -141,13 +162,13 @@ export function CategoryCatalogClient({ categoryName, categorySlug, products, te
       )}
 
       {merged.length > 1 && (
-        <div className="model-tabs">
+        <div className="model-tabs" ref={tabsRef}>
           {merged.map((product, idx) => (
             <button
               key={product.id}
               type="button"
               className={`model-tab${idx === selectedIndex ? ' model-tab--active' : ''}`}
-              onClick={() => setSelectedIndex(idx)}
+              onClick={() => selectModel(idx)}
             >
               {product.name}
             </button>

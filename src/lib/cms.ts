@@ -10,6 +10,7 @@ import type { CatalogFilters, Category, Media, PageDoc, Product, SiteAppearance,
 import { CATALOG_GROUPS, getCatalogGroup, productGroupSlug } from './catalog-groups'
 import { DEFAULT_BRAND_CATALOG_MENU, visibleBrandMenu, type BrandMenu } from './brand-catalog-menu'
 import { buildMenuSeries, type MenuProduct, type MenuSeries } from './menu-series'
+import { findProductFamily } from './product-family'
 import { catalogPlacementHref, getCatalogPlacementByChildKey } from './product-catalog-placement'
 import { rankSearchResults } from './search'
 import { sortCatalogProducts } from './catalog-sort.ts'
@@ -572,7 +573,7 @@ function productHref(product: any): string {
   return `/catalog/${productGroupSlug(product.productGroup) || category || 'other'}/${product.slug}`
 }
 
-export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
+async function loadBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[]> {
   try {
     const payload = await getPayloadClient()
     const [value, productResult] = await Promise.all([
@@ -612,6 +613,19 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
     }))
   }
 }
+
+export const getBrandCatalogNavigation = cache(loadBrandCatalogNavigation)
+
+export const getProductFamily = cache(async function getProductFamily(productId: string | number): Promise<{ groupTitle: string; child: BrandCatalogNavigationItem; products: Product[] } | null> {
+  const navigation = await getBrandCatalogNavigation()
+  const found = findProductFamily(navigation, productId)
+  if (!found) return null
+  const query = Object.fromEntries(new URL(found.child.href || '/catalog', 'http://local').searchParams)
+  const filters = { ...readCatalogParams(query), placement: found.child.key }
+  const products = await getProducts({ filters })
+  if (products.length < 2 || !products.some((product) => String(product.id) === String(productId))) return null
+  return { groupTitle: found.group.title, child: found.child, products }
+})
 
 export { sortProductsByPriority }
 

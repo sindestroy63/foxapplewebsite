@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
+import { CategoryCatalogClient } from '@/components/CategoryCatalogClient'
 import { ProductDetailClient } from '@/components/ProductDetailClient'
 import { ProductStory } from '@/components/ProductStory'
 import { ProductRecommendations } from '@/components/ProductRecommendations'
 import { RichText } from '@/components/RichText'
-import { getProductBySlugs } from '@/lib/cms'
+import { getProductBySlugs, getProductFamily } from '@/lib/cms'
 import { productCanonicalUrl } from '@/lib/product-url'
+import { productSeoTitle } from '@/lib/product-seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const seoName = product.name?.trim() || product.model?.trim() || 'Техника в ФОХСТОР'
-  const seoTitle = `${seoName} — купить в Самаре | ФОХСТОР`
+  const seoTitle = productSeoTitle(product)
   const seoDescription = `${seoName}. Цена и наличие в Самаре. ФОХСТОР.`
   return {
     title: seoTitle,
@@ -48,6 +50,30 @@ export default async function ProductPage({ params }: Props) {
     notFound()
   }
 
+  const family = await getProductFamily(product.id)
+  if (family) {
+    return (
+      <section className="page-section">
+        <div className="container">
+          <CategoryCatalogClient
+            categoryName={family.child.title}
+            categorySlug="other"
+            products={family.products}
+            initialModelSlug={product.slug}
+            breadcrumbBrand={family.groupTitle}
+            breadcrumbChild={family.child.title}
+            syncProductUrl
+          />
+          <div className="catalog-bottom">
+            <p className="offer-note detail-offer-note">Информация на сайте не является публичной офертой.</p>
+            {categorySlug !== 'used' && (
+              <p className="offer-note detail-offer-note">Товар имеет недостаток в виде невозможности предустановки RuStore.</p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
   return (
     <section className="page-section">
       <div className="container product-detail product-detail-panel">
