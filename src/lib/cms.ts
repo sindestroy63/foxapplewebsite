@@ -590,7 +590,7 @@ export async function getBrandCatalogNavigation(): Promise<BrandCatalogNavigatio
           const filter = menuChildFilter(child, group)
           const href = catalogNavigationHref({ key: String(child.key), href: typeof child.href === 'string' ? child.href : undefined, filter, preserveKey: true })
           const listed = productsForMenuChild(products, children, child).sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || Number(a.id) - Number(b.id))
-          const entries = listed.map((product) => ({ brand: product.brand, product: { id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) } satisfies MenuProduct }))
+          const entries = listed.map((product) => ({ brand: product.brand, series: product.menuSeries, product: { id: product.id, name: product.name, href: productHref(product), isNew: Boolean(product.isNew) } satisfies MenuProduct }))
           return {
           label: String(child.title ?? child.label), key: String(child.key), href, filter,
           coverImage: child.coverImage || null, isVisible: child.isVisible !== false, isNew: child.isNew === true, sortOrder: Number(child.sortOrder ?? 0),

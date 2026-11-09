@@ -3,7 +3,10 @@
 import React from 'react'
 import { useDocumentInfo, useField, useFormFields } from '@payloadcms/ui'
 import { getCatalogPlacementByChildKey, resolveProductCatalogPlacement } from '@/lib/product-catalog-placement'
+import { SERIES_NONE, autoSeriesLabel, collectSeriesLabels, normalizeSeriesLabel } from '@/lib/menu-series'
 import { ErrorBoundary } from './ErrorBoundary'
+
+type NavigationProduct = { id?: string | number; name?: string; brand?: string; menuSeries?: string }
 
 type NavigationItem = {
   title: string
@@ -12,27 +15,33 @@ type NavigationItem = {
   filter?: Record<string, string>
   isVisible?: boolean
   children?: NavigationItem[]
-  products?: Array<{ id?: string | number } | string | number>
+  products?: Array<NavigationProduct | string | number>
 }
 
 const labelForGroup = (key: string, title: string) => key === 'trade-in' ? 'TRADE-IN' : title
+
+const NEW_SERIES = '__new__'
 
 function ProductCatalogPlacement() {
   const productGroupField = useField<string>({ path: 'productGroup' })
   const brandField = useField<string>({ path: 'brand' })
   const productLineField = useField<string>({ path: 'productLine' })
   const conditionField = useField<string>({ path: 'condition' })
+  const menuSeriesField = useField<string>({ path: 'menuSeries' })
   const { id: productId } = useDocumentInfo()
   const values = useFormFields(([fields]: any) => ({
     productGroup: fields.productGroup?.value,
     brand: fields.brand?.value,
     productLine: fields.productLine?.value,
     condition: fields.condition?.value,
+    name: fields.name?.value,
   }))
   const [groups, setGroups] = React.useState<NavigationItem[]>([])
   const [groupKey, setGroupKey] = React.useState('')
   const [childKey, setChildKey] = React.useState('')
   const [status, setStatus] = React.useState('')
+  const [seriesChoice, setSeriesChoice] = React.useState('')
+  const [newSeries, setNewSeries] = React.useState('')
 
   React.useEffect(() => {
     try {
@@ -94,14 +103,26 @@ function ProductCatalogPlacement() {
     return () => { active = false }
   }, [])
 
+  const storedSeries = typeof menuSeriesField.value === 'string' ? menuSeriesField.value : ''
+  React.useEffect(() => {
+    setSeriesChoice(storedSeries)
+  }, [storedSeries])
+
   const selectedGroup = groups.find((group) => group.key === groupKey)
   const children = selectedGroup?.children || []
   const selectedChild = children.find((child) => child.key === childKey)
-  const currentPath = [selectedGroup?.title, selectedChild?.title].filter(Boolean).join(' → ')
+  const childProducts = (selectedChild?.products || []).filter((item): item is NavigationProduct => typeof item === 'object' && item !== null)
+  const knownSeries = collectSeriesLabels(childProducts.map((item) => ({ brand: item.brand, name: item.name || '', series: item.menuSeries })))
+  const currentSeries = seriesChoice && seriesChoice !== SERIES_NONE && seriesChoice !== NEW_SERIES ? seriesChoice : ''
+  const seriesOptions = currentSeries && !knownSeries.includes(currentSeries) ? [...knownSeries, currentSeries] : knownSeries
+  const autoLabel = autoSeriesLabel(values.brand || selectedChild?.filter?.brand || '', typeof values.name === 'string' ? values.name : '')
+  const pathSeries = seriesChoice === NEW_SERIES ? normalizeSeriesLabel(newSeries) || '' : seriesChoice === '' ? autoLabel : currentSeries
+  const currentPath = [selectedGroup?.title, selectedChild?.title, pathSeries].filter(Boolean).join(' → ')
 
   const chooseGroup = (nextKey: string) => {
     setGroupKey(nextKey)
     setChildKey('')
+    setSeriesChoice('')
     const group = groups.find((item) => item.key === nextKey)
     if (group?.key === 'trade-in') {
       productGroupField.setValue('trade-in')
@@ -123,6 +144,16 @@ function ProductCatalogPlacement() {
       setStatus('Размещение Trade-in подготовлено к сохранению')
       return
     }
+    let series = ''
+    if (selectedChild) {
+      if (seriesChoice === NEW_SERIES) {
+        const label = normalizeSeriesLabel(newSeries)
+        if (!label) { setStatus('Введите название серии, не длиннее 60 символов'); return }
+        series = knownSeries.find((known) => known.toLowerCase() === label.toLowerCase()) ?? label
+      } else {
+        series = seriesChoice
+      }
+    }
     const placement = getCatalogPlacementByChildKey(selectedChild?.key)
     const filter = selectedChild?.filter || {}
     const productGroup = placement?.productGroup || filter.group || filter.productGroup || (filter.appleAccessories ? 'other' : '')
@@ -133,7 +164,7 @@ function ProductCatalogPlacement() {
         const response = await fetch('/api/brand-catalog-placement', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId, childKey: selectedChild.key }),
+          body: JSON.stringify({ productId, childKey: selectedChild.key, series }),
         })
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}))
@@ -145,6 +176,9 @@ function ProductCatalogPlacement() {
       brandField.setValue(brand)
       productLineField.setValue(productLine)
       conditionField.setValue('new')
+      menuSeriesField.setValue(series)
+      setSeriesChoice(series)
+      setNewSeries('')
       setStatus('Размещение сохранено')
     }
     void save()
@@ -162,10 +196,21 @@ function ProductCatalogPlacement() {
           </select>
         </label>
         {selectedGroup?.key !== 'trade-in' && <label>Подраздел
-          <select value={childKey} onChange={(event) => setChildKey(event.target.value)} disabled={!selectedGroup}>
+          <select value={childKey} onChange={(event) => { setChildKey(event.target.value); setSeriesChoice('') }} disabled={!selectedGroup}>
             <option value="">Весь раздел</option>
             {children.map((child) => <option key={child.key} value={child.key}>{child.title}</option>)}
           </select>
+        </label>}
+        {selectedGroup && selectedGroup.key !== 'trade-in' && selectedChild && <label>Серия (необязательно)
+          <select value={seriesChoice} onChange={(event) => setSeriesChoice(event.target.value)}>
+            <option value="">{autoLabel ? `Автоматически: ${autoLabel}` : 'Автоматически'}</option>
+            <option value={SERIES_NONE}>Без серии</option>
+            {seriesOptions.map((label) => <option key={label} value={label}>{label}</option>)}
+            <option value={NEW_SERIES}>Новая серия…</option>
+          </select>
+        </label>}
+        {seriesChoice === NEW_SERIES && selectedChild && <label>Название новой серии
+          <input type="text" value={newSeries} maxLength={60} placeholder="Например, Galaxy S" onChange={(event) => setNewSeries(event.target.value)} />
         </label>}
       </div>
       <div className="product-placement-result"><span>Текущий путь:</span> <strong>{currentPath || 'Выберите раздел'}</strong></div>

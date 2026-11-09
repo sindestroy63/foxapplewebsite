@@ -426,6 +426,7 @@ export const Products: CollectionConfig = {
       },
     },
     { name: 'productLine', type: 'text', label: 'Линейка товара', admin: { hidden: true } },
+    { name: 'menuSeries', type: 'text', label: 'Серия в меню', maxLength: 60, admin: { hidden: true } },
     {
       name: 'sku',
       type: 'text',

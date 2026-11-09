@@ -250,6 +250,7 @@ export interface Product {
   deviceType?: string | null;
   productType?: string | null;
   productLine?: string | null;
+  menuSeries?: string | null;
   sku?: string | null;
   badge?: string | null;
   memory?: string | null;
@@ -834,6 +835,7 @@ export interface ProductsSelect<T extends boolean = true> {
   deviceType?: T;
   productType?: T;
   productLine?: T;
+  menuSeries?: T;
   sku?: T;
   badge?: T;
   memory?: T;

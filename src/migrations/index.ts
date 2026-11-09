@@ -64,6 +64,7 @@ import * as migration_20261010_100000_add_services_to_locked_docs from './202610
 import * as migration_20261010_101500_add_url_redirects_to_locked_docs from './20261010_101500_add_url_redirects_to_locked_docs';
 import * as migration_20261010_sync_locked_documents_rels from './20261010_sync_locked_documents_rels';
 import * as migration_20261011_100000_fix_playstation_menu_structure from './20261011_100000_fix_playstation_menu_structure';
+import * as migration_20261109_100000_product_menu_series from './20261109_100000_product_menu_series';
 
 export const migrations = [
   {
@@ -395,5 +396,10 @@ export const migrations = [
     up: migration_20261011_100000_fix_playstation_menu_structure.up,
     down: migration_20261011_100000_fix_playstation_menu_structure.down,
     name: '20261011_100000_fix_playstation_menu_structure'
+  },
+  {
+    up: migration_20261109_100000_product_menu_series.up,
+    down: migration_20261109_100000_product_menu_series.down,
+    name: '20261109_100000_product_menu_series'
   },
 ];

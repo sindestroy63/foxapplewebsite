@@ -1,7 +1,9 @@
 import type { Endpoint } from "payload";
+import { sql } from "@payloadcms/db-postgres";
 import { hasFullAdminAccess } from "./access";
 import { catalogPlacementFilter, catalogPlacementHref, getCatalogPlacementByChildKey } from "@/lib/product-catalog-placement";
 import { belongsToChild, matchesProductFilter } from "@/lib/catalog-navigation-membership";
+import { normalizeSeriesInput } from "@/lib/menu-series";
 
 type InputItem = Record<string, unknown>;
 
@@ -13,6 +15,8 @@ type NavigationProduct = {
   isAvailable?: boolean;
   sortOrder?: number;
   images?: unknown;
+  brand?: string;
+  menuSeries?: string;
 };
 
 const child = (title: string, key: string, href?: string, visible = true) => {
@@ -265,11 +269,22 @@ const errorResponse = (error: unknown, context?: { field?: string; groups?: unkn
   }, { status: 500 });
 };
 
+async function writeMenuSeries(db: unknown, productId: unknown, value: string): Promise<boolean> {
+  const id = Number(productId);
+  if (!Number.isInteger(id) || db === null || typeof db !== "object" || !("drizzle" in db)) return false;
+  const drizzle = db.drizzle;
+  if (drizzle === null || typeof drizzle !== "object" || !("execute" in drizzle) || typeof drizzle.execute !== "function") return false;
+  const result: unknown = await Reflect.apply(drizzle.execute, drizzle, [sql`UPDATE "products" SET "menu_series" = ${value === "" ? null : value} WHERE "id" = ${id} RETURNING "id"`]);
+  return typeof result === "object" && result !== null && "rows" in result && Array.isArray(result.rows) && result.rows.length > 0;
+}
+
 export const brandCatalogNavigationEndpoints: Endpoint[] = [
   { path: '/brand-catalog-placement', method: 'post', handler: async (req) => {
     if (!hasFullAdminAccess(req.user)) return Response.json({ error: 'Forbidden' }, { status: 403 })
     const body = await req.json?.() as any
     if (!body?.productId || !body?.childKey) return Response.json({ error: 'productId and childKey are required' }, { status: 400 })
+    const series = body.series === undefined ? undefined : normalizeSeriesInput(body.series)
+    if (series && !series.ok) return Response.json({ error: series.error }, { status: 400 })
     const current = await req.payload.findGlobal({ slug: 'brand-catalog-navigation', depth: 0 }) as any
     const groups = Array.isArray(current.groups) ? current.groups : []
     let found = false
@@ -283,6 +298,9 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
     }) }))
     if (!found) return Response.json({ error: 'Подраздел каталога не найден' }, { status: 404 })
     const saved = await req.payload.updateGlobal({ slug: 'brand-catalog-navigation', data: { groups: nextGroups }, depth: 0, req })
+    if (series?.ok && !(await writeMenuSeries(req.payload.db, body.productId, series.value))) {
+      return Response.json({ error: 'Размещение сохранено, но серию сохранить не удалось: товар не найден' }, { status: 404 })
+    }
     return Response.json({ ok: true, groups: (saved as any).groups })
   } },
   {
@@ -317,7 +335,7 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
           ...group,
           children: group.children.map((child) => ({
             ...child,
-            products: productsForChild(group, child).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.id).localeCompare(String(b.id))).map((product): NavigationProduct => ({ id: product.id, name: product.name, slug: product.slug, isNew: product.isNew === true, isAvailable: product.isAvailable !== false, sortOrder: Number(product.sortOrder) || 0, images: product.images })),
+            products: productsForChild(group, child).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.id).localeCompare(String(b.id))).map((product): NavigationProduct => ({ id: product.id, name: product.name, slug: product.slug, isNew: product.isNew === true, isAvailable: product.isAvailable !== false, sortOrder: Number(product.sortOrder) || 0, images: product.images, brand: typeof product.brand === 'string' ? product.brand : '', menuSeries: typeof product.menuSeries === 'string' ? product.menuSeries : '' })),
           })),
         })) });
       } catch (error) {

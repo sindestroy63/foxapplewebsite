@@ -271,7 +271,8 @@
     font-weight: 600;
   }
 
-  select {
+  select,
+  input[type='text'] {
     min-height: 38px;
     min-width: 0;
     padding: 7px 10px;
@@ -279,6 +280,12 @@
     background: var(--theme-input-bg);
     border: 1px solid var(--theme-elevation-300);
     border-radius: 4px;
+  }
+
+  input[type='text']:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--theme-success-500);
+    outline-offset: 1px;
   }
 
   p {
