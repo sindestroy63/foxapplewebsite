@@ -4,6 +4,7 @@ import { hasFullAdminAccess } from "./access";
 import { catalogPlacementFilter, catalogPlacementHref, getCatalogPlacementByChildKey } from "@/lib/product-catalog-placement";
 import { belongsToChild, matchesProductFilter } from "@/lib/catalog-navigation-membership";
 import { normalizeSeriesInput } from "@/lib/menu-series";
+import { invalidateBrandNavigation } from "@/lib/navigation-cache";
 
 type InputItem = Record<string, unknown>;
 
@@ -301,6 +302,7 @@ export const brandCatalogNavigationEndpoints: Endpoint[] = [
     if (series?.ok && !(await writeMenuSeries(req.payload.db, body.productId, series.value))) {
       return Response.json({ error: 'Размещение сохранено, но серию сохранить не удалось: товар не найден' }, { status: 404 })
     }
+    invalidateBrandNavigation()
     return Response.json({ ok: true, groups: (saved as any).groups })
   } },
   {

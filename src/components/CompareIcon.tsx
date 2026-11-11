@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { CompareGlyph } from '@/components/CompareGlyph'
 import { useCompare } from '@/contexts/CompareContext'

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 import { getServices } from '@/lib/services'
 import { getSiteSettings } from '@/lib/cms'
 import { getMediaUrl } from '@/lib/media'

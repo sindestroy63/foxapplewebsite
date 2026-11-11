@@ -7,7 +7,7 @@ import { useCart } from '@/contexts/CartContext'
 import { formatPrice } from '@/lib/format'
 import type { SiteSettings } from '@/lib/types'
 import { CheckoutForm } from './CheckoutForm'
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 type Props = {
   settings: SiteSettings

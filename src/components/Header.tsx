@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { CallIcon } from '@/components/CallIcon'
 import { CartIcon } from '@/components/CartIcon'

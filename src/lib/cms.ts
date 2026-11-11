@@ -11,6 +11,7 @@ import { CATALOG_GROUPS, getCatalogGroup, productGroupSlug } from './catalog-gro
 import { DEFAULT_BRAND_CATALOG_MENU, visibleBrandMenu, type BrandMenu } from './brand-catalog-menu'
 import { buildMenuSeries, type MenuProduct, type MenuSeries } from './menu-series'
 import { findProductFamily } from './product-family'
+import { BRAND_NAVIGATION_REVALIDATE_SECONDS, BRAND_NAVIGATION_TAG } from './navigation-cache'
 import { catalogPlacementHref, getCatalogPlacementByChildKey } from './product-catalog-placement'
 import { rankSearchResults } from './search'
 import { sortCatalogProducts } from './catalog-sort.ts'
@@ -614,7 +615,12 @@ async function loadBrandCatalogNavigation(): Promise<BrandCatalogNavigationItem[
   }
 }
 
-export const getBrandCatalogNavigation = cache(loadBrandCatalogNavigation)
+const getCachedBrandCatalogNavigation = unstable_cache(loadBrandCatalogNavigation, ['frontend-brand-navigation'], {
+  revalidate: BRAND_NAVIGATION_REVALIDATE_SECONDS,
+  tags: [BRAND_NAVIGATION_TAG],
+})
+
+export const getBrandCatalogNavigation = cache(getCachedBrandCatalogNavigation)
 
 export const getProductFamily = cache(async function getProductFamily(productId: string | number): Promise<{ groupTitle: string; child: BrandCatalogNavigationItem; products: Product[] } | null> {
   const navigation = await getBrandCatalogNavigation()

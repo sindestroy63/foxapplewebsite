@@ -1,5 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { anyone, hasFullAdminAccess } from '../access'
+import { invalidateBrandNavigation } from '../../lib/navigation-cache'
 
 const cover = { name: 'coverImage', type: 'relationship' as const, relationTo: 'media' as const, required: false }
 
@@ -8,6 +9,14 @@ export const BrandCatalogNavigation: GlobalConfig = {
   label: 'Навигация каталога (бренды)',
   admin: { hidden: true },
   access: { read: anyone, update: ({ req }) => hasFullAdminAccess(req.user) },
+  hooks: {
+    afterChange: [
+      ({ doc }) => {
+        invalidateBrandNavigation()
+        return doc
+      },
+    ],
+  },
   fields: [{ name: 'groups', type: 'array', required: true, fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'key', type: 'text', required: true },

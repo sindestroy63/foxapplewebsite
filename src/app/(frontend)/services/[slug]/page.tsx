@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 import { getService } from '@/lib/services'
 import { getSiteSettings } from '@/lib/cms'
 import { getMediaUrl } from '@/lib/media'

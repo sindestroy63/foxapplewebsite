@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 import { catalogGroupAssetUrl } from '@/lib/catalog-group-assets'
 import { getMediaUrl } from '@/lib/media'
 import type { Media } from '@/lib/types'

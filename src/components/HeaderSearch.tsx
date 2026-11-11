@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 import { useEffect, useRef, useState } from 'react'
 
 type Suggestion = { id: string | number; name: string; href: string; price?: number; thumbnail?: { url: string; width: number; height: number }; configuration?: string; available?: boolean }

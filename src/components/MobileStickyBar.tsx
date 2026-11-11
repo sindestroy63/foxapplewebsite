@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { normalizePhone, telegramLinkProps } from '@/lib/format'
 import type { SiteSettings } from '@/lib/types'

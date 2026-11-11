@@ -2,6 +2,7 @@ import { APIError, type CollectionConfig } from 'payload'
 import { randomBytes } from 'node:crypto'
 
 import { admins, anyone } from '../access'
+import { invalidateBrandNavigation } from '../../lib/navigation-cache'
 import { composeProductSlug, isProductSlug } from '../utils/slugify'
 import { ensureVariantSkus, validateProductSkus } from '../utils/sku'
 import { productTypeCondition, resolveProductType } from '../products/product-type'
@@ -243,6 +244,13 @@ export const Products: CollectionConfig = {
           req.payload.logger.error({ err: error, productId: doc.id }, 'Product saved but post-processing failed')
         }
 
+        invalidateBrandNavigation()
+        return doc
+      },
+    ],
+    afterDelete: [
+      ({ doc }) => {
+        invalidateBrandNavigation()
         return doc
       },
     ],

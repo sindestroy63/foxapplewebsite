@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { usePathname } from 'next/navigation'
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { submitLeadAction, type LeadActionState } from '@/actions/leads'
 import { ConsentCheckbox } from '@/components/ConsentCheckbox'

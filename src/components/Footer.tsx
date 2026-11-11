@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { SELLER } from '@/lib/constants'
 import { normalizePhone, telegramLinkProps } from '@/lib/format'

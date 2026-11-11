@@ -1,6 +1,6 @@
 import { HeroSlideshow, type HeroSlide } from '@/components/HeroSlideshow'
 import { ScrollReveal } from '@/components/ScrollReveal'
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { ProductGrid } from '@/components/ProductGrid'
 import { normalizeProducts } from '@/lib/normalize'

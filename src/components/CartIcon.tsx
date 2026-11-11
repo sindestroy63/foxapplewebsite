@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 import { useCart } from '@/contexts/CartContext'
 
 export function CartIcon() {

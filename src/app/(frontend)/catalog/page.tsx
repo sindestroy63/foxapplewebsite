@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 
 import { findBrandNavigationRoot, getBrandCatalogNavigation, getProducts, getProductsByProductGroup, getSiteSettings, readCatalogParams, visibleNavigationChildren } from '@/lib/cms'
 import { ProductGrid } from '@/components/ProductGrid'

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/SiteLink'
 import { Fragment, useEffect, useMemo, useState, type CSSProperties } from 'react'
 
 import { CompareGlyph } from '@/components/CompareGlyph'
