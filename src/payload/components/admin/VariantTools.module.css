@@ -568,3 +568,24 @@
     min-height: 44px;
   }
 }
+
+.priceCell {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  align-content: start;
+}
+
+.priceGrid .checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .priceGrid .checkRow {
+    min-height: 44px;
+  }
+}

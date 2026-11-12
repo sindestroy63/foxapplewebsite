@@ -9,6 +9,7 @@ import { useCompare } from '@/contexts/CompareContext'
 import { COMPARE_LIMIT, buildCompareRows, type CompareItem } from '@/lib/compare'
 import { getCatalogGroup } from '@/lib/catalog-groups'
 import { formatPrice } from '@/lib/format'
+import { OUT_OF_STOCK_LABEL } from '@/lib/stock-status'
 
 export function CompareView() {
   const { ids, group, ready, remove, clear, retain } = useCompare()
@@ -146,7 +147,7 @@ export function CompareView() {
                 {lowest !== null && item.price === lowest && <span className="compare-card__best">ниже всех</span>}
               </div>
               <span className={`compare-card__status${item.available ? '' : ' compare-card__status--off'}`}>
-                {item.available ? item.statusLabel : 'Нет в наличии'}
+                {item.available ? item.statusLabel : OUT_OF_STOCK_LABEL}
               </span>
               <Link href={item.href} className="button small compare-card__open">
                 Выбрать

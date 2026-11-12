@@ -4,10 +4,9 @@ import {
   cardPrice,
   formatPrice,
   normalizePhone,
-  statusLabel,
-  statusTone,
   telegramLinkProps,
 } from '@/lib/format'
+import { statusLabel, statusTone } from '@/lib/stock-status'
 import { getProductImage } from '@/lib/media'
 import type { Product, SiteSettings } from '@/lib/types'
 import { ProductPill } from './ProductPill'

@@ -2,7 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 const { planVariants, pendingPriceGroups, pendingColorPriceCells, applyVariantChanges, comboKey } = await import('../src/payload/variant-tools/plan.ts')
-const { parseCapacity, compareCapacity, normalizeHex, colorSlug, uniqueSlug, validateNewColor, colorPhotoCounts } = await import('../src/payload/variant-tools/options.ts')
+const { parseCapacity, parseStorage, compareCapacity, normalizeHex, colorSlug, uniqueSlug, validateNewColor, colorPhotoCounts } = await import('../src/payload/variant-tools/options.ts')
+const { profileFor, supportsRam } = await import('../src/payload/variant-tools/profiles.ts')
 
 const existing = [
   { id: 'a', sku: 'VAR-A', color: 5, storage: 1, sim: 9, price: 100000, status: 'in_stock', isAvailable: true },
@@ -97,9 +98,9 @@ test('lists only price groups that still have variants to add', () => {
   const rows = [{ id: 'a', color: 5, storage: 1, sim: 7 }, { id: 'b', color: 5, storage: 1, sim: 8 }]
   assert.deepEqual(
     pendingPriceGroups({ color: [5], storage: [1, 2], sim: [7, 8] }, rows),
-    [{ key: '2|7', storage: '2', sim: '7' }, { key: '2|8', storage: '2', sim: '8' }],
+    [{ key: '2|7', storage: '2', sim: '7', ram: '' }, { key: '2|8', storage: '2', sim: '8', ram: '' }],
   )
-  assert.deepEqual(pendingPriceGroups({ color: [5], storage: [1, 2], sim: [7] }, rows), [{ key: '2|', storage: '2', sim: '' }])
+  assert.deepEqual(pendingPriceGroups({ color: [5], storage: [1, 2], sim: [7] }, rows), [{ key: '2|', storage: '2', sim: '', ram: '' }])
   assert.deepEqual(pendingPriceGroups({ color: [5, 6] }, []), [])
   assert.deepEqual(pendingPriceGroups({}, []), [])
 })
@@ -228,4 +229,85 @@ test('lists color price cells only for variants that still have to be added', ()
   assert.deepEqual(pendingColorPriceCells({ color: [4], storage: [10] }, []).map((cell) => [cell.key, cell.group.key]), [['4:10|', '10|']])
   assert.deepEqual(pendingColorPriceCells({ color: [4] }, []).map((cell) => cell.key), ['4:|'])
   assert.deepEqual(pendingColorPriceCells({ storage: [10] }, []), [])
+})
+
+test('prices every ram and storage pair separately once two rams are chosen', () => {
+  const prices = { '1||20': 30000, '1||21': 33000, '2||20': 36000, '2||21': 39000 }
+  const plan = planVariants({ dims: { color: [5], storage: [1, 2], ramOption: [20, 21] }, prices }, [])
+  assert.equal(plan.ok, true)
+  assert.equal(plan.add.length, 4)
+  for (const row of plan.add) assert.equal(row.price, prices[`${row.storage}||${row.ramOption}`])
+  assert.deepEqual(
+    pendingPriceGroups({ color: [5], storage: [1], ramOption: [20, 21] }, []).map((group) => group.key),
+    ['1||20', '1||21'],
+  )
+})
+
+test('a single ram keeps one price per storage and does not enter the group key', () => {
+  const plan = planVariants({ dims: { color: [5], storage: [1, 2], ramOption: [20] }, prices: { '1|': 30000, '2|': 36000 } }, [])
+  assert.equal(plan.ok, true)
+  assert.deepEqual(plan.add.map((row) => [row.storage, row.ramOption, row.price]), [[1, 20, 30000], [2, 20, 36000]])
+  assert.deepEqual(pendingPriceGroups({ color: [5], storage: [1, 2], ramOption: [20] }, []).map((group) => group.ram), ['', ''])
+})
+
+test('ram with sim and storage keeps all three parts in the price key', () => {
+  const groups = pendingPriceGroups({ storage: [1], sim: [7, 8], ramOption: [20, 21] }, [])
+  assert.deepEqual(groups.map((group) => group.key), ['1|7|20', '1|7|21', '1|8|20', '1|8|21'])
+  assert.equal(planVariants({ dims: { storage: [1], sim: [7, 8], ramOption: [20, 21] }, prices: { '1|7|20': 1, '1|7|21': 2, '1|8|20': 3 } }, []).ok, false)
+})
+
+test('asks for a price per ram when ram is the only priced dimension', () => {
+  const plan = planVariants({ dims: { color: [5], ramOption: [20, 21] }, prices: { '||20': 1 } }, [])
+  assert.equal(plan.ok, false)
+  assert.match(plan.error, /сочетания выбранных параметров/)
+  assert.equal(planVariants({ dims: { color: [5], ramOption: [20, 21] }, prices: { '||20': 1, '||21': 2 } }, []).ok, true)
+})
+
+test('skipped price groups remove unwanted ram and storage pairs from the plan and from price cells', () => {
+  const dims = { color: [5, 6], storage: [1, 2], ramOption: [20, 21] }
+  const prices = { '1||20': 30000, '2||21': 39000 }
+  const plan = planVariants({ dims, prices, skip: ['1||21', '2||20'] }, [])
+  assert.equal(plan.ok, true)
+  assert.deepEqual(plan.add.map((row) => [row.color, row.storage, row.ramOption, row.price]), [[5, 1, 20, 30000], [5, 2, 21, 39000], [6, 1, 20, 30000], [6, 2, 21, 39000]])
+  assert.equal(planVariants({ dims, prices }, []).ok, false)
+  assert.deepEqual(pendingColorPriceCells(dims, [], ['1||21', '2||20']).map((cell) => cell.key), ['5:1||20', '5:2||21', '6:1||20', '6:2||21'])
+  assert.equal(pendingPriceGroups(dims, []).length, 4)
+})
+
+test('skipping every group leaves nothing to add and does not count as already existing', () => {
+  const plan = planVariants({ dims: { storage: [1], ramOption: [20, 21] }, prices: {}, skip: ['1||20', '1||21'] }, [])
+  assert.equal(plan.ok, true)
+  assert.deepEqual([plan.add.length, plan.skipped], [0, 0])
+})
+
+test('parses combined ram and storage values and keeps plain storage working', () => {
+  assert.deepEqual(parseStorage('8/128GB'), { value: '8/128GB', gb: 128, ramGb: 8 })
+  assert.deepEqual(parseStorage(' 12 / 1 тб '), { value: '12/1TB', gb: 1024, ramGb: 12 })
+  assert.deepEqual(parseStorage('256 гб'), { value: '256GB', gb: 256, ramGb: 0 })
+  assert.deepEqual(parseStorage('1TB'), { value: '1TB', gb: 1024, ramGb: 0 })
+  for (const bad of ['', '/128GB', '8/', '0/128GB', '8/0GB', '123/128GB', '8|128', '8/128', '8/128MB', '8/128GB/1', '4TB/128GB', null, 8]) assert.equal(parseStorage(bad), null)
+})
+
+test('orders combined storage values by storage size first and ram second', () => {
+  const sorted = ['12/256GB', '256GB', '8/128GB', '128GB', '4/128GB', '1TB', '12/1TB', '8/256GB', 'ПАМЯТЬ'].sort(compareCapacity)
+  assert.deepEqual(sorted, ['128GB', '4/128GB', '8/128GB', '256GB', '8/256GB', '12/256GB', '1TB', '12/1TB', 'ПАМЯТЬ'])
+})
+
+test('phones that are not Apple get a ram dimension and Apple phones do not', () => {
+  assert.deepEqual(profileFor('phone', { brand: 'Samsung' }).dimensions, ['color', 'storage', 'ramOption', 'sim'])
+  assert.deepEqual(profileFor('phone', { brand: '', productType: '' }).dimensions, ['color', 'storage', 'ramOption', 'sim'])
+  assert.deepEqual(profileFor('phone').dimensions, ['color', 'storage', 'ramOption', 'sim'])
+  assert.deepEqual(profileFor('phone', { brand: ' apple ' }).dimensions, ['color', 'storage', 'sim'])
+  assert.deepEqual(profileFor('phone', { brand: 'Xiaomi', productType: 'iphone' }).dimensions, ['color', 'storage', 'sim'])
+  assert.match(profileFor('phone', { brand: 'Samsung' }).hint, /оперативная память/)
+})
+
+test('ram support is limited to laptops and non Apple phones', () => {
+  assert.equal(supportsRam('laptop', { brand: 'Apple' }), true)
+  assert.equal(supportsRam('phone', { brand: 'Google' }), true)
+  assert.equal(supportsRam('phone', { brand: 'Apple' }), false)
+  assert.equal(supportsRam('tablet', { brand: 'Samsung' }), false)
+  assert.equal(supportsRam('smartwatch'), false)
+  assert.deepEqual(profileFor('laptop', { brand: 'Apple' }).dimensions, ['color', 'storage', 'ramOption', 'screenSizeOption'])
+  assert.deepEqual(profileFor('headphones').dimensions, ['color', 'connectivityOption'])
 })

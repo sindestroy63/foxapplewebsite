@@ -6,7 +6,8 @@ import { ProductGallery } from './ProductGallery'
 import { ProductPill } from './ProductPill'
 import { AddToCartButton } from './AddToCartButton'
 import { CompareToggle } from './CompareToggle'
-import { cardPrice, formatPrice, statusLabel, statusTone } from '@/lib/format'
+import { cardPrice, formatPrice } from '@/lib/format'
+import { statusLabel, statusTone } from '@/lib/stock-status'
 import { PRODUCT_PRICING_NOTICE } from '@/lib/product-pricing-notice'
 
 const SIM_LABELS: Record<string, string> = {

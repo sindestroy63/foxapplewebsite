@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { productSpecs, parseCompareIds, type CompareItem } from '@/lib/compare'
 import { getProductsByIds } from '@/lib/cms'
-import { statusLabel } from '@/lib/format'
+import { statusLabel } from '@/lib/stock-status'
 import { getProductImage } from '@/lib/media'
 import { getCatalogPrice, getCatalogPriceVariant, getCatalogVariants } from '@/lib/pricing'
 import { buildProductUrl } from '@/lib/product-url-builder'

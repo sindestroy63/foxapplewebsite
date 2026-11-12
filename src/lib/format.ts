@@ -1,5 +1,5 @@
 import { CONTACTS } from './constants'
-import type { Product, ProductStatus } from './types'
+import type { Product } from './types'
 
 export { cardPrice } from './pricing'
 
@@ -42,28 +42,4 @@ export function mapEmbedUrl(address?: string, _mapUrl?: string): string {
 
 export function mapLinkUrl(address?: string, _mapUrl?: string): string {
   return `https://yandex.ru/maps/?mode=search&text=${yandexMapQuery(address)}&z=17`
-}
-
-export function statusLabel(status?: ProductStatus): string {
-  switch (status) {
-    case 'preorder':
-      return 'Под заказ'
-    case 'out_of_stock':
-      return 'Нет в наличии'
-    case 'in_stock':
-    default:
-      return 'В наличии'
-  }
-}
-
-export function statusTone(status?: ProductStatus): 'green' | 'orange' | 'gray' {
-  switch (status) {
-    case 'preorder':
-      return 'orange'
-    case 'out_of_stock':
-      return 'gray'
-    case 'in_stock':
-    default:
-      return 'green'
-  }
 }

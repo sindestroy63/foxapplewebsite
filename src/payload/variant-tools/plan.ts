@@ -19,9 +19,10 @@ export type BuildInput = {
   prices?: Record<string, number>
   colorPrices?: Record<string, number>
   status?: VariantStatus
+  skip?: string[]
 }
 
-export type PriceGroup = { key: string; storage: string; sim: string }
+export type PriceGroup = { key: string; storage: string; sim: string; ram: string }
 export type ColorPriceCell = { key: string; color: string; group: PriceGroup }
 
 export type BuildPlan =
@@ -82,9 +83,17 @@ function product(lists: RelationId[][]): RelationId[][] {
   return lists.reduce<RelationId[][]>((rows, list) => rows.flatMap((row) => list.map((item) => [...row, item])), [[]])
 }
 
-type Expansion = { ok: true; fresh: Array<Record<string, unknown>>; skipped: number; splitSim: boolean } | { ok: false; error: string }
+type Split = { sim: boolean; ram: boolean }
+type Expansion = { ok: true; fresh: Array<Record<string, unknown>>; skipped: number; split: Split } | { ok: false; error: string }
 
-function expand(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>): Expansion {
+function priceGroupOf(row: Record<string, unknown>, split: Split): PriceGroup {
+  const storage = relationId(row.storage)
+  const sim = split.sim ? relationId(row.sim) : ''
+  const ram = split.ram ? relationId(row.ramOption) : ''
+  return { key: ram ? `${storage}|${sim}|${ram}` : `${storage}|${sim}`, storage, sim, ram }
+}
+
+function expand(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>, skip: ReadonlySet<string>): Expansion {
   const lists = DIMENSION_KEYS.map((key) => {
     const raw = dims[key] || []
     return [...new Map(raw.map((item) => [relationId(item), item])).values()]
@@ -97,6 +106,10 @@ function expand(dims: BuildInput['dims'], existing: Array<Record<string, unknown
     return { ok: false, error: `Слишком много комбинаций (${combos.length}). За один раз можно добавить не более ${MAX_NEW_VARIANTS}.` }
   }
 
+  const split: Split = {
+    sim: lists[DIMENSION_KEYS.indexOf('sim')].length > 1,
+    ram: lists[DIMENSION_KEYS.indexOf('ramOption')].length > 1,
+  }
   const taken = new Set(existing.map((row) => comboKey(row)))
   const fresh: Array<Record<string, unknown>> = []
   let skipped = 0
@@ -106,6 +119,7 @@ function expand(dims: BuildInput['dims'], existing: Array<Record<string, unknown
     DIMENSION_KEYS.forEach((key, index) => {
       if (combo[index] !== '') row[key] = combo[index]
     })
+    if (skip.has(priceGroupOf(row, split).key)) continue
     if (taken.has(comboKey(row))) {
       skipped += 1
       continue
@@ -114,22 +128,16 @@ function expand(dims: BuildInput['dims'], existing: Array<Record<string, unknown
     fresh.push(row)
   }
 
-  return { ok: true, fresh, skipped, splitSim: lists[DIMENSION_KEYS.indexOf('sim')].length > 1 }
-}
-
-function priceGroupOf(row: Record<string, unknown>, splitSim: boolean): PriceGroup {
-  const storage = relationId(row.storage)
-  const sim = splitSim ? relationId(row.sim) : ''
-  return { key: `${storage}|${sim}`, storage, sim }
+  return { ok: true, fresh, skipped, split }
 }
 
 export function pendingPriceGroups(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>): PriceGroup[] {
-  const expanded = expand(dims, existing)
+  const expanded = expand(dims, existing, new Set())
   if (!expanded.ok) return []
   const groups = new Map<string, PriceGroup>()
   for (const row of expanded.fresh) {
-    const group = priceGroupOf(row, expanded.splitSim)
-    if (group.storage || group.sim) groups.set(group.key, group)
+    const group = priceGroupOf(row, expanded.split)
+    if (group.storage || group.sim || group.ram) groups.set(group.key, group)
   }
   return [...groups.values()]
 }
@@ -138,14 +146,14 @@ export function colorPriceKey(color: string, groupKey: string): string {
   return `${color}:${groupKey}`
 }
 
-export function pendingColorPriceCells(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>): ColorPriceCell[] {
-  const expanded = expand(dims, existing)
+export function pendingColorPriceCells(dims: BuildInput['dims'], existing: Array<Record<string, unknown>>, skip: readonly string[] = []): ColorPriceCell[] {
+  const expanded = expand(dims, existing, new Set(skip))
   if (!expanded.ok) return []
   const cells = new Map<string, ColorPriceCell>()
   for (const row of expanded.fresh) {
     const color = relationId(row.color)
     if (!color) continue
-    const group = priceGroupOf(row, expanded.splitSim)
+    const group = priceGroupOf(row, expanded.split)
     const key = colorPriceKey(color, group.key)
     cells.set(key, { key, color, group })
   }
@@ -153,7 +161,7 @@ export function pendingColorPriceCells(dims: BuildInput['dims'], existing: Array
 }
 
 export function planVariants(input: BuildInput, existing: Array<Record<string, unknown>>): BuildPlan {
-  const expanded = expand(input.dims, existing)
+  const expanded = expand(input.dims, existing, new Set(input.skip ?? []))
   if (!expanded.ok) return expanded
 
   const status = input.status ?? 'in_stock'
@@ -168,12 +176,13 @@ export function planVariants(input: BuildInput, existing: Array<Record<string, u
 
   const add: VariantRow[] = []
   for (const row of expanded.fresh) {
-    const group = priceGroupOf(row, expanded.splitSim)
+    const group = priceGroupOf(row, expanded.split)
     const color = relationId(row.color)
     const override = color ? input.colorPrices?.[colorPriceKey(color, group.key)] : undefined
     if (override !== undefined && !isValidPrice(override)) return { ok: false, error: 'Цена для цвета должна быть целым числом больше нуля.' }
     const price = override ?? (input.prices?.[group.key] || input.basePrice)
     if (!isValidPrice(price)) {
+      if (group.ram) return { ok: false, error: 'Укажите цену для каждого сочетания выбранных параметров.' }
       if (group.storage && group.sim) return { ok: false, error: 'Укажите цену для каждого сочетания памяти и SIM.' }
       if (group.sim) return { ok: false, error: 'Укажите цену для каждого типа SIM.' }
       return { ok: false, error: group.storage ? 'Укажите цену для каждой выбранной памяти.' : 'Укажите цену.' }

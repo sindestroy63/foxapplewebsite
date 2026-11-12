@@ -1,3 +1,4 @@
+export const ALLOWED_STORAGE_VALUES = ['64GB', '128GB', '256GB', '512GB', '1TB', '2TB'] as const
 export const ALLOWED_RAM_VALUES = ['8GB', '12GB', '16GB', '24GB'] as const
 export const ALLOWED_SIZE_VALUES = ['40mm', '42mm', '44mm', '46mm', '47mm', '49mm'] as const
 export const ALLOWED_SCREEN_SIZE_VALUES = ['11"', '13"', '15"'] as const
@@ -5,10 +6,8 @@ export const ALLOWED_CONNECTIVITY_VALUES = ['Wi-Fi', 'LTE', 'Wi-Fi + Cellular'] 
 
 const normalize = (value: string) => value.normalize('NFKC').replace(/[\u00A0\s]+/gu, '').toUpperCase()
 
-const STORAGE_VALUE = /^[1-9]\d{0,3}(GB|TB)$/
-
-export function isAllowedStorageValue(value: unknown): boolean {
-  return typeof value === 'string' && STORAGE_VALUE.test(normalize(value))
+export function isAllowedStorageValue(value: unknown): value is (typeof ALLOWED_STORAGE_VALUES)[number] {
+  return typeof value === 'string' && ALLOWED_STORAGE_VALUES.includes(normalize(value) as (typeof ALLOWED_STORAGE_VALUES)[number])
 }
 
 export function cleanStorageValue(value: unknown): string | null {

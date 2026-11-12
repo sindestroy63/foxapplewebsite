@@ -4,7 +4,8 @@ import Link from '@/components/SiteLink'
 import { useEffect, useState } from 'react'
 
 import { ImageWithFallback } from '@/components/ImageWithFallback'
-import { formatPrice, statusLabel, statusTone } from '@/lib/format'
+import { formatPrice } from '@/lib/format'
+import { statusLabel, statusTone } from '@/lib/stock-status'
 import { recommendationCategory, type RecommendedProduct } from '@/lib/product-recommendations'
 import type { Product } from '@/lib/types'
 

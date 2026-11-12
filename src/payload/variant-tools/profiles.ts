@@ -6,6 +6,8 @@ export type VariantProfile = {
   hint: string
 }
 
+export type ProductHint = { brand?: unknown; productType?: unknown }
+
 const PROFILES: Record<string, VariantProfile> = {
   phone: { dimensions: ['color', 'storage', 'sim'], common: [], hint: 'Цвет, память и SIM' },
   tablet: { dimensions: ['color', 'storage', 'connectivityOption', 'screenSizeOption'], common: ['generation'], hint: 'Цвет, память, подключение и диагональ' },
@@ -15,8 +17,23 @@ const PROFILES: Record<string, VariantProfile> = {
   'game-console': { dimensions: ['color', 'storage'], common: ['packageLabel'], hint: 'Цвет и память' },
 }
 
+const PHONE_WITH_RAM: VariantProfile = {
+  dimensions: ['color', 'storage', 'ramOption', 'sim'],
+  common: [],
+  hint: 'Цвет, память, оперативная память и SIM',
+}
+
 const FALLBACK: VariantProfile = { dimensions: ['color'], common: ['packageLabel', 'generation'], hint: 'Цвет и комплектация' }
 
-export function profileFor(deviceType: string): VariantProfile {
+export function supportsRam(deviceType: string, product?: ProductHint): boolean {
+  if (deviceType === 'laptop') return true
+  if (deviceType !== 'phone') return false
+  const brand = String(product?.brand ?? '').trim().toLowerCase()
+  const type = String(product?.productType ?? '').trim().toLowerCase()
+  return brand !== 'apple' && type !== 'iphone'
+}
+
+export function profileFor(deviceType: string, product?: ProductHint): VariantProfile {
+  if (deviceType === 'phone' && supportsRam(deviceType, product)) return PHONE_WITH_RAM
   return PROFILES[deviceType] ?? FALLBACK
 }

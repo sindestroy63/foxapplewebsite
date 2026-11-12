@@ -2,7 +2,6 @@ import type { CollectionSlug, Endpoint, PayloadRequest, Where } from 'payload'
 
 import type { Product } from '../payload-types.ts'
 import { hasFullAdminAccess } from './access.ts'
-import { isAllowedStorageValue } from './catalog-normalization/allowed-values.ts'
 import { resolveDeviceType } from './products/device-type.ts'
 import {
   DIMENSION_KEYS,
@@ -21,7 +20,7 @@ import {
   type VariantRow,
 } from './variant-tools/plan.ts'
 import { profileFor } from './variant-tools/profiles.ts'
-import { colorPhotoCounts, compareCapacity, isCreatableDimension, parseCapacity, uniqueSlug, validateNewColor, type CapacityKind } from './variant-tools/options.ts'
+import { colorPhotoCounts, compareCapacity, isCreatableDimension, parseCapacity, parseStorage, uniqueSlug, validateNewColor, type CapacityKind } from './variant-tools/options.ts'
 
 type Doc = Record<string, unknown>
 
@@ -121,6 +120,10 @@ function parsePriceMap(value: unknown): Record<string, number> {
   return prices
 }
 
+function parseSkip(value: unknown): string[] {
+  return list(value).filter((item): item is string => typeof item === 'string')
+}
+
 function parseChanges(value: unknown): VariantChange[] | null {
   const changes: VariantChange[] = []
   for (const item of list(value)) {
@@ -204,7 +207,7 @@ function optionOf(key: DimensionKey, doc: Doc) {
 }
 
 function capacityError(kind: CapacityKind): Response {
-  return fail(400, kind === 'storage' ? 'Введите объём памяти, например 256GB или 1TB.' : 'Введите объём оперативной памяти, например 8GB.')
+  return fail(400, kind === 'storage' ? 'Введите объём памяти, например 256GB, 1TB или 8/128GB (оперативная/встроенная).' : 'Введите объём оперативной памяти, например 8GB.')
 }
 
 async function createColor(req: PayloadRequest, body: Doc): Promise<Response> {
@@ -226,10 +229,10 @@ async function createColor(req: PayloadRequest, body: Doc): Promise<Response> {
 }
 
 async function createStorage(req: PayloadRequest, body: Doc): Promise<Response> {
-  const parsed = parseCapacity(body.value, 'storage')
+  const parsed = parseStorage(body.value)
   if (!parsed) return capacityError('storage')
   const found = await req.payload.find({ collection: 'storage-options', depth: 0, limit: 1000, pagination: false, req })
-  const same = found.docs.map((raw) => record(raw)).find((doc) => parseCapacity(doc.value, 'storage')?.value === parsed.value)
+  const same = found.docs.map((raw) => record(raw)).find((doc) => parseStorage(doc.value)?.value === parsed.value)
   if (same) {
     if (same.archived === true) await req.payload.update({ collection: 'storage-options', id: relationId(same.id), data: { archived: false }, depth: 0, req })
     return Response.json({ option: optionOf('storage', same), existed: true })
@@ -294,7 +297,7 @@ export const variantToolsEndpoints: Endpoint[] = [
       const product = await loadProduct(req, productId, 1)
       if (!product) return fail(404, 'Товар не найден.')
       const deviceType = resolveDeviceType(product)
-      const profile = profileFor(deviceType)
+      const profile = profileFor(deviceType, product)
 
       const dimensions = await Promise.all(
         profile.dimensions.map(async (key) => {
@@ -313,7 +316,7 @@ export const variantToolsEndpoints: Endpoint[] = [
             title: DIMENSION_TITLES[key],
             options: found.docs
               .map((raw) => record(raw))
-              .filter((doc) => key !== 'storage' || isAllowedStorageValue(doc.value))
+              .filter((doc) => key !== 'storage' || parseStorage(doc.value) !== null)
               .map((doc) => optionOf(key, doc))
               .sort((a, b) => (key === 'storage' || key === 'ramOption' ? compareCapacity(a.label, b.label) : 0)),
           }
@@ -366,12 +369,13 @@ export const variantToolsEndpoints: Endpoint[] = [
         basePrice: typeof body.basePrice === 'number' ? body.basePrice : undefined,
         prices: parsePriceMap(body.prices),
         colorPrices: parsePriceMap(body.colorPrices),
+        skip: parseSkip(body.skip),
         status: isVariantStatus(body.status) ? body.status : undefined,
       }
       const rows = existingRows(product)
       const plan = planVariants(input, rows)
       if (!plan.ok) return fail(400, plan.error)
-      if (plan.add.length === 0) return fail(400, 'Все выбранные комбинации уже есть у товара.')
+      if (plan.add.length === 0) return fail(400, 'Нет новых комбинаций для добавления.')
       if (body.dryRun === true) return Response.json({ add: plan.add.length, skipped: plan.skipped })
 
       const problem = await saveVariants(req, productId, [...rows, ...plan.add])

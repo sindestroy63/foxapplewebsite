@@ -7,6 +7,7 @@ import { composeProductSlug, isProductSlug } from '../utils/slugify'
 import { ensureVariantSkus, validateProductSkus } from '../utils/sku'
 import { productTypeCondition, resolveProductType } from '../products/product-type'
 import { deviceTypeCondition, resolveDeviceType } from '../products/device-type'
+import { supportsRam } from '../variant-tools/profiles'
 import { validateNewVariantConfigurations } from '../products/variant-validation'
 import { productCanonicalUrl } from '../../lib/product-url'
 import { normalizeSlug, validateSlug, generateUniqueSlug } from '../../lib/slug-generator'
@@ -656,7 +657,7 @@ export const Products: CollectionConfig = {
         { type: 'row', fields: [
           { name: 'chip', type: 'text', label: 'Чип (M1, M4 Pro…)', admin: { condition: deviceTypeCondition(['laptop', 'tablet'], 'chip') } },
           { name: 'ram', type: 'text', label: 'Устаревшая RAM', admin: { condition: (_data: any, siblingData: any) => !siblingData?.ramOption && Boolean(siblingData?.ram) } },
-          { name: 'ramOption', type: 'relationship', relationTo: 'ram-options', label: 'Оперативная память (справочник)', filterOptions: { archived: { not_equals: true } }, admin: { condition: deviceTypeCondition(['laptop'], 'ramOption'), description: 'Выберите RAM для Mac; старое текстовое поле сохраняется.' } },
+          { name: 'ramOption', type: 'relationship', relationTo: 'ram-options', label: 'Оперативная память (справочник)', filterOptions: { archived: { not_equals: true } }, admin: { condition: (data: Record<string, unknown>, siblingData?: Record<string, unknown>) => supportsRam(resolveDeviceType(data), data) || Boolean(siblingData?.ramOption), description: 'Оперативная память из справочника: для ноутбуков и телефонов не Apple; старое текстовое поле сохраняется.' } },
           { name: 'size', type: 'text', label: 'Устаревший размер',
             admin: { condition: (_data: any, siblingData: any) => !siblingData?.sizeOption && Boolean(siblingData?.size), description: 'Старое значение сохранено для совместимости; новое значение можно выбрать рядом.' } },
           { name: 'sizeOption', type: 'relationship', relationTo: 'variant-size-options', label: 'Размер корпуса', filterOptions: { archived: { not_equals: true } },

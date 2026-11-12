@@ -109,7 +109,7 @@ function OptionForm({ kind, onSubmit, onCancel }: { kind: CreatableDimension; on
         <div className={styles.fieldGrid}>
           <label className={styles.field}>
             {kind === 'storage' ? 'Объём памяти' : 'Объём оперативной памяти'}
-            <input className={styles.input} value={fields.value} placeholder={kind === 'storage' ? '256GB или 1TB' : '8GB'} autoComplete="off" autoFocus onChange={(event) => set('value', event.target.value)} />
+            <input className={styles.input} value={fields.value} placeholder={kind === 'storage' ? '256GB, 1TB или 8/128GB' : '8GB'} autoComplete="off" autoFocus onChange={(event) => set('value', event.target.value)} />
           </label>
         </div>
       )}
@@ -249,6 +249,7 @@ function Builder({ productId }: { productId: string }) {
   const [basePrice, setBasePrice] = useState('')
   const [colorPricing, setColorPricing] = useState(false)
   const [colorPrices, setColorPrices] = useState<Record<string, string>>({})
+  const [excluded, setExcluded] = useState<Record<string, boolean>>({})
   const [status, setStatus] = useState<VariantStatus>('in_stock')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState('')
@@ -317,17 +318,27 @@ function Builder({ productId }: { productId: string }) {
   }, [prices])
   const base = basePrice.trim() ? Number(basePrice) : undefined
 
+  const groupTitle = useCallback(
+    (group: { storage: string; sim: string; ram: string }) =>
+      [labels.get(`ramOption:${group.ram}`), labels.get(`storage:${group.storage}`), labels.get(`sim:${group.sim}`)].filter(Boolean).join(' · '),
+    [labels],
+  )
+
+  const compareGroups = useCallback(
+    (a: { storage: string; ram: string }, b: { storage: string; ram: string }) =>
+      compareCapacity(labels.get(`storage:${a.storage}`) ?? '', labels.get(`storage:${b.storage}`) ?? '') ||
+      compareCapacity(labels.get(`ramOption:${a.ram}`) ?? '', labels.get(`ramOption:${b.ram}`) ?? ''),
+    [labels],
+  )
+
   const priceGroups = useMemo(() => {
     if (!data) return []
-    const storageLabel = (id: string) => labels.get(`storage:${id}`) ?? ''
     return pendingPriceGroups(picked, data.existing.map((item) => item.combo))
-      .map((group) => ({
-        key: group.key,
-        title: [labels.get(`storage:${group.storage}`), labels.get(`sim:${group.sim}`)].filter(Boolean).join(' · '),
-        storage: group.storage,
-      }))
-      .sort((a, b) => compareCapacity(storageLabel(a.storage), storageLabel(b.storage)))
-  }, [data, picked, labels])
+      .map((group) => ({ key: group.key, title: groupTitle(group), storage: group.storage, ram: group.ram }))
+      .sort(compareGroups)
+  }, [data, picked, groupTitle, compareGroups])
+
+  const skipKeys = useMemo(() => priceGroups.filter((group) => excluded[group.key]).map((group) => group.key), [priceGroups, excluded])
 
   const colorPriceMap = useMemo(() => {
     const map: Record<string, number> = {}
@@ -342,26 +353,25 @@ function Builder({ productId }: { productId: string }) {
     if (!data) return []
     const hexById = new Map<string, string>()
     data.dimensions.find((dimension) => dimension.key === 'color')?.options.forEach((option) => hexById.set(relationId(option.id), option.hex))
-    const storageLabel = (id: string) => labels.get(`storage:${id}`) ?? ''
-    const byColor = new Map<string, Array<{ key: string; groupKey: string; storage: string; title: string }>>()
-    for (const cell of pendingColorPriceCells(picked, data.existing.map((item) => item.combo))) {
-      const title = [labels.get(`storage:${cell.group.storage}`), labels.get(`sim:${cell.group.sim}`)].filter(Boolean).join(' · ') || 'Цена, ₽'
-      byColor.set(cell.color, [...(byColor.get(cell.color) ?? []), { key: cell.key, groupKey: cell.group.key, storage: cell.group.storage, title }])
+    const byColor = new Map<string, Array<{ key: string; groupKey: string; storage: string; ram: string; title: string }>>()
+    for (const cell of pendingColorPriceCells(picked, data.existing.map((item) => item.combo), skipKeys)) {
+      const title = groupTitle(cell.group) || 'Цена, ₽'
+      byColor.set(cell.color, [...(byColor.get(cell.color) ?? []), { key: cell.key, groupKey: cell.group.key, storage: cell.group.storage, ram: cell.group.ram, title }])
     }
     return [...byColor].map(([color, cells]) => ({
       color,
       label: labels.get(`color:${color}`) ?? '',
       hex: hexById.get(color) ?? '',
-      cells: cells.sort((a, b) => compareCapacity(storageLabel(a.storage), storageLabel(b.storage))),
+      cells: cells.sort(compareGroups),
     }))
-  }, [data, picked, labels])
+  }, [data, picked, labels, skipKeys, groupTitle, compareGroups])
 
   const plan = useMemo(() => {
     if (!data) return null
     const hasSelection = Object.values(picked).some((list) => list && list.length > 0)
     if (!hasSelection) return null
-    return planVariants({ dims: picked, common, basePrice: base, prices: priceMap, colorPrices: colorPriceMap, status }, data.existing.map((item) => item.combo))
-  }, [data, picked, common, base, priceMap, colorPriceMap, status])
+    return planVariants({ dims: picked, common, basePrice: base, prices: priceMap, colorPrices: colorPriceMap, skip: skipKeys, status }, data.existing.map((item) => item.combo))
+  }, [data, picked, common, base, priceMap, colorPriceMap, skipKeys, status])
 
   const preview = useMemo(() => {
     if (!plan || !plan.ok) return []
@@ -385,6 +395,7 @@ function Builder({ productId }: { productId: string }) {
         basePrice: base,
         prices: priceMap,
         colorPrices: colorPriceMap,
+        skip: skipKeys,
         status,
       })
       setDone(`Добавлено вариантов: ${result.added}. Всего у товара: ${result.total}.`)
@@ -393,6 +404,7 @@ function Builder({ productId }: { productId: string }) {
       setBasePrice('')
       setColorPrices({})
       setColorPricing(false)
+      setExcluded({})
       load()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось добавить варианты.')
@@ -440,20 +452,32 @@ function Builder({ productId }: { productId: string }) {
         <h2>Цена и статус</h2>
         {priceGroups.length > 0 ? (
           <>
-            {priceGroups.some((group) => group.title.includes(' · ')) && <div className={styles.muted}>У каждого сочетания памяти и SIM своя цена.</div>}
+            {priceGroups.some((group) => group.title.includes(' · ')) && <div className={styles.muted}>У каждого сочетания параметров своя цена.{priceGroups.length > 1 ? ' Ненужное сочетание отметьте «Не добавлять».' : ''}</div>}
             <div className={styles.priceGrid}>
-              {priceGroups.map((group) => (
-                <label key={group.key}>
-                  {group.title}
-                  <input
-                    className={styles.input}
-                    inputMode="numeric"
-                    placeholder="Цена, ₽"
-                    value={prices[group.key] || ''}
-                    onChange={(event) => setPrices((current) => ({ ...current, [group.key]: event.target.value }))}
-                  />
-                </label>
-              ))}
+              {priceGroups.map((group) => {
+                const off = Boolean(excluded[group.key])
+                return (
+                  <div key={group.key} className={styles.priceCell}>
+                    <label>
+                      {group.title}
+                      <input
+                        className={styles.input}
+                        inputMode="numeric"
+                        placeholder="Цена, ₽"
+                        disabled={off}
+                        value={off ? '' : prices[group.key] || ''}
+                        onChange={(event) => setPrices((current) => ({ ...current, [group.key]: event.target.value }))}
+                      />
+                    </label>
+                    {priceGroups.length > 1 && (
+                      <label className={styles.checkRow}>
+                        <input type="checkbox" checked={off} onChange={(event) => setExcluded((current) => ({ ...current, [group.key]: event.target.checked }))} />
+                        Не добавлять
+                      </label>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </>
         ) : (

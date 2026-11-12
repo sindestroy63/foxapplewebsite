@@ -2,6 +2,7 @@ import { relationId } from './plan.ts'
 
 export type CapacityKind = 'storage' | 'ram'
 export type Capacity = { value: string; gb: number }
+export type Storage = Capacity & { ramGb: number }
 
 export const CREATABLE_DIMENSIONS = ['color', 'storage', 'ramOption'] as const
 export type CreatableDimension = (typeof CREATABLE_DIMENSIONS)[number]
@@ -14,15 +15,18 @@ export function isCreatableDimension(value: unknown): value is CreatableDimensio
   return typeof value === 'string' && (CREATABLE_DIMENSIONS as readonly string[]).includes(value)
 }
 
-export function parseCapacity(raw: unknown, kind: CapacityKind): Capacity | null {
-  if (typeof raw !== 'string') return null
-  const cleaned = raw
+function capacityText(raw: string): string {
+  return raw
     .normalize('NFKC')
     .replace(/[\s\u00A0]+/gu, '')
     .toUpperCase()
     .replace(/ГБ$/u, 'GB')
     .replace(/ТБ$/u, 'TB')
-  const match = /^([1-9]\d{0,3})(GB|TB)$/.exec(cleaned)
+}
+
+export function parseCapacity(raw: unknown, kind: CapacityKind): Capacity | null {
+  if (typeof raw !== 'string') return null
+  const match = /^([1-9]\d{0,3})(GB|TB)$/.exec(capacityText(raw))
   if (!match) return null
   const amount = Number(match[1])
   if (match[2] === 'GB') return { value: `${amount}GB`, gb: amount }
@@ -30,11 +34,26 @@ export function parseCapacity(raw: unknown, kind: CapacityKind): Capacity | null
   return { value: `${amount}TB`, gb: amount * 1024 }
 }
 
+export function parseStorage(raw: unknown): Storage | null {
+  if (typeof raw !== 'string') return null
+  const match = /^(?:([1-9]\d?)\/)?([1-9]\d{0,3})(GB|TB)$/.exec(capacityText(raw))
+  if (!match) return null
+  const ramGb = match[1] ? Number(match[1]) : 0
+  const amount = Number(match[2])
+  const prefix = ramGb ? `${ramGb}/` : ''
+  return { value: `${prefix}${amount}${match[3]}`, gb: match[3] === 'TB' ? amount * 1024 : amount, ramGb }
+}
+
 export function compareCapacity(a: string, b: string): number {
-  const left = parseCapacity(a, 'storage')?.gb ?? Number.POSITIVE_INFINITY
-  const right = parseCapacity(b, 'storage')?.gb ?? Number.POSITIVE_INFINITY
-  if (left === right) return 0
-  return left < right ? -1 : 1
+  const rank = (label: string) => {
+    const parsed = parseStorage(label)
+    return parsed ? [parsed.gb, parsed.ramGb] : [Number.POSITIVE_INFINITY, 0]
+  }
+  const [leftGb, leftRam] = rank(a)
+  const [rightGb, rightRam] = rank(b)
+  if (leftGb !== rightGb) return leftGb < rightGb ? -1 : 1
+  if (leftRam !== rightRam) return leftRam < rightRam ? -1 : 1
+  return 0
 }
 
 export function normalizeHex(raw: unknown): string | null {
